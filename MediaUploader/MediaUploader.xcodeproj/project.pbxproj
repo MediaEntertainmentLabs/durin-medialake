@@ -1,0 +1,757 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 51;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		731C984D252DE9DB008E8A75 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 731C984C252DE9DB008E8A75 /* AppDelegate.swift */; };
+		731C984F252DE9DB008E8A75 /* WindowViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 731C984E252DE9DB008E8A75 /* WindowViewController.swift */; };
+		731C9851252DE9DC008E8A75 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 731C9850252DE9DC008E8A75 /* Assets.xcassets */; };
+		731C9854252DE9DC008E8A75 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 731C9852252DE9DC008E8A75 /* Main.storyboard */; };
+		731C9860252DE9DD008E8A75 /* MediaUploaderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 731C985F252DE9DD008E8A75 /* MediaUploaderTests.swift */; };
+		731C986B252DE9DD008E8A75 /* MediaUploaderUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 731C986A252DE9DD008E8A75 /* MediaUploaderUITests.swift */; };
+		731C9879252E4D1A008E8A75 /* OutlineViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 731C9878252E4D1A008E8A75 /* OutlineViewController.swift */; };
+		731C987B252E4E0A008E8A75 /* OutlineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 731C987A252E4E0A008E8A75 /* OutlineView.swift */; };
+		731C987F252E4FF3008E8A75 /* Node.swift in Sources */ = {isa = PBXBuildFile; fileRef = 731C987E252E4FF3008E8A75 /* Node.swift */; };
+		731C9881252E5216008E8A75 /* OutlineViewController+Helpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 731C9880252E5216008E8A75 /* OutlineViewController+Helpers.swift */; };
+		731C9885252EE911008E8A75 /* OutlineViewController+Restoration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 731C9884252EE911008E8A75 /* OutlineViewController+Restoration.swift */; };
+		731C9887252EEAE0008E8A75 /* SplitViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 731C9886252EEAE0008E8A75 /* SplitViewController.swift */; };
+		731C9889252EF427008E8A75 /* WindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 731C9888252EF427008E8A75 /* WindowController.swift */; };
+		C95E74E7257ACEB80073410F /* AsyncOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = C95E74E6257ACEB80073410F /* AsyncOperation.swift */; };
+		C97621CF25682C3500C48E15 /* IconViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C97621CE25682C3500C48E15 /* IconViewController.swift */; };
+		C97621D4256BA90900C48E15 /* CollectionViewItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C97621D2256BA90900C48E15 /* CollectionViewItem.swift */; };
+		C97621D5256BA90900C48E15 /* CollectionViewItem.xib in Resources */ = {isa = PBXBuildFile; fileRef = C97621D3256BA90900C48E15 /* CollectionViewItem.xib */; };
+		C97621D8256BABCA00C48E15 /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = C97621D7256BABCA00C48E15 /* Info.plist */; };
+		C97621DD256C1C4400C48E15 /* UploadSettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C97621DB256C1C4400C48E15 /* UploadSettingsViewController.swift */; };
+		C97621DE256C1C4400C48E15 /* UploadSettingsViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = C97621DC256C1C4400C48E15 /* UploadSettingsViewController.xib */; };
+		C9807E66257E8FD400488E46 /* ProgressViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9807E64257E8FD400488E46 /* ProgressViewController.swift */; };
+		C9807E67257E8FD400488E46 /* ProgressViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = C9807E65257E8FD400488E46 /* ProgressViewController.xib */; };
+		C9807E69257F923A00488E46 /* TreeElement.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9807E68257F923A00488E46 /* TreeElement.swift */; };
+		C987BB292534CA9500A440A7 /* OutlineViewController+Delegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C987BB282534CA9500A440A7 /* OutlineViewController+Delegate.swift */; };
+		C987BB2B2534CF5400A440A7 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = C987BB2A2534CF5400A440A7 /* Localizable.strings */; };
+		C987BB35253CC93E00A440A7 /* CustomTableCellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C987BB34253CC93E00A440A7 /* CustomTableCellView.swift */; };
+		C987BB37255BC97B00A440A7 /* LoginViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C987BB36255BC97B00A440A7 /* LoginViewController.swift */; };
+		E27783F0928EA7F319BDE5D4 /* Pods_MediaUploader.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 78F0B96BC353C152F8ADDF9A /* Pods_MediaUploader.framework */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		731C985C252DE9DD008E8A75 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 731C9841252DE9DB008E8A75 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 731C9848252DE9DB008E8A75;
+			remoteInfo = MediaUploader;
+		};
+		731C9867252DE9DD008E8A75 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 731C9841252DE9DB008E8A75 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 731C9848252DE9DB008E8A75;
+			remoteInfo = MediaUploader;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		1DCACD4391A22197075AF108 /* Pods-MediaUploader.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MediaUploader.release.xcconfig"; path = "Target Support Files/Pods-MediaUploader/Pods-MediaUploader.release.xcconfig"; sourceTree = "<group>"; };
+		731C9849252DE9DB008E8A75 /* MediaUploader.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MediaUploader.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		731C984C252DE9DB008E8A75 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		731C984E252DE9DB008E8A75 /* WindowViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowViewController.swift; sourceTree = "<group>"; };
+		731C9850252DE9DC008E8A75 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		731C9853252DE9DC008E8A75 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		731C9856252DE9DD008E8A75 /* MediaUploader.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MediaUploader.entitlements; sourceTree = "<group>"; };
+		731C985B252DE9DD008E8A75 /* MediaUploaderTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MediaUploaderTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		731C985F252DE9DD008E8A75 /* MediaUploaderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaUploaderTests.swift; sourceTree = "<group>"; };
+		731C9861252DE9DD008E8A75 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		731C9866252DE9DD008E8A75 /* MediaUploaderUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MediaUploaderUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		731C986A252DE9DD008E8A75 /* MediaUploaderUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaUploaderUITests.swift; sourceTree = "<group>"; };
+		731C986C252DE9DD008E8A75 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		731C9878252E4D1A008E8A75 /* OutlineViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OutlineViewController.swift; sourceTree = "<group>"; };
+		731C987A252E4E0A008E8A75 /* OutlineView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OutlineView.swift; sourceTree = "<group>"; };
+		731C987E252E4FF3008E8A75 /* Node.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Node.swift; sourceTree = "<group>"; };
+		731C9880252E5216008E8A75 /* OutlineViewController+Helpers.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "OutlineViewController+Helpers.swift"; sourceTree = "<group>"; };
+		731C9884252EE911008E8A75 /* OutlineViewController+Restoration.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "OutlineViewController+Restoration.swift"; sourceTree = "<group>"; };
+		731C9886252EEAE0008E8A75 /* SplitViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SplitViewController.swift; sourceTree = "<group>"; };
+		731C9888252EF427008E8A75 /* WindowController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WindowController.swift; sourceTree = "<group>"; };
+		78F0B96BC353C152F8ADDF9A /* Pods_MediaUploader.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_MediaUploader.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		C95E74E6257ACEB80073410F /* AsyncOperation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncOperation.swift; sourceTree = "<group>"; };
+		C97621CE25682C3500C48E15 /* IconViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = IconViewController.swift; sourceTree = "<group>"; };
+		C97621D2256BA90900C48E15 /* CollectionViewItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CollectionViewItem.swift; sourceTree = "<group>"; };
+		C97621D3256BA90900C48E15 /* CollectionViewItem.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = CollectionViewItem.xib; sourceTree = "<group>"; };
+		C97621D7256BABCA00C48E15 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		C97621DB256C1C4400C48E15 /* UploadSettingsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UploadSettingsViewController.swift; sourceTree = "<group>"; };
+		C97621DC256C1C4400C48E15 /* UploadSettingsViewController.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = UploadSettingsViewController.xib; path = MediaUploader/UploadSettingsViewController.xib; sourceTree = "<group>"; };
+		C97795AC256EC65100BEE3CE /* AzureCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AzureCore.framework; path = ThirdPartyFrameworks/AzureCore.framework; sourceTree = "<group>"; };
+		C97795B0256EC65D00BEE3CE /* AzureIdentity.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AzureIdentity.framework; path = ThirdPartyFrameworks/AzureIdentity.framework; sourceTree = "<group>"; };
+		C97795B3256EC66700BEE3CE /* AzureStorageBlob.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AzureStorageBlob.framework; path = ThirdPartyFrameworks/AzureStorageBlob.framework; sourceTree = "<group>"; };
+		C9807E64257E8FD400488E46 /* ProgressViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressViewController.swift; sourceTree = "<group>"; };
+		C9807E65257E8FD400488E46 /* ProgressViewController.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = ProgressViewController.xib; sourceTree = "<group>"; };
+		C9807E68257F923A00488E46 /* TreeElement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TreeElement.swift; sourceTree = "<group>"; };
+		C987BB282534CA9500A440A7 /* OutlineViewController+Delegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "OutlineViewController+Delegate.swift"; sourceTree = "<group>"; };
+		C987BB2A2534CF5400A440A7 /* Localizable.strings */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; path = Localizable.strings; sourceTree = "<group>"; };
+		C987BB34253CC93E00A440A7 /* CustomTableCellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomTableCellView.swift; sourceTree = "<group>"; };
+		C987BB36255BC97B00A440A7 /* LoginViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginViewController.swift; sourceTree = "<group>"; };
+		D31C6861B88CE631791592C4 /* Pods-MediaUploader.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MediaUploader.debug.xcconfig"; path = "Target Support Files/Pods-MediaUploader/Pods-MediaUploader.debug.xcconfig"; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		731C9846252DE9DB008E8A75 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E27783F0928EA7F319BDE5D4 /* Pods_MediaUploader.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		731C9858252DE9DD008E8A75 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		731C9863252DE9DD008E8A75 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		1683C845306D985EFBC98FC8 /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				D31C6861B88CE631791592C4 /* Pods-MediaUploader.debug.xcconfig */,
+				1DCACD4391A22197075AF108 /* Pods-MediaUploader.release.xcconfig */,
+			);
+			path = Pods;
+			sourceTree = "<group>";
+		};
+		731C9840252DE9DB008E8A75 = {
+			isa = PBXGroup;
+			children = (
+				731C984B252DE9DB008E8A75 /* MediaUploader */,
+				C97621D6256BA93700C48E15 /* Resources */,
+				731C985E252DE9DD008E8A75 /* MediaUploaderTests */,
+				731C9869252DE9DD008E8A75 /* MediaUploaderUITests */,
+				731C984A252DE9DB008E8A75 /* Products */,
+				1683C845306D985EFBC98FC8 /* Pods */,
+				E3F4A5FCDAAF2D923869E980 /* Frameworks */,
+			);
+			sourceTree = "<group>";
+		};
+		731C984A252DE9DB008E8A75 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				731C9849252DE9DB008E8A75 /* MediaUploader.app */,
+				731C985B252DE9DD008E8A75 /* MediaUploaderTests.xctest */,
+				731C9866252DE9DD008E8A75 /* MediaUploaderUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		731C984B252DE9DB008E8A75 /* MediaUploader */ = {
+			isa = PBXGroup;
+			children = (
+				731C984C252DE9DB008E8A75 /* AppDelegate.swift */,
+				C95E74E6257ACEB80073410F /* AsyncOperation.swift */,
+				C97621D2256BA90900C48E15 /* CollectionViewItem.swift */,
+				C987BB34253CC93E00A440A7 /* CustomTableCellView.swift */,
+				C97621CE25682C3500C48E15 /* IconViewController.swift */,
+				C987BB36255BC97B00A440A7 /* LoginViewController.swift */,
+				731C987E252E4FF3008E8A75 /* Node.swift */,
+				731C987A252E4E0A008E8A75 /* OutlineView.swift */,
+				731C9878252E4D1A008E8A75 /* OutlineViewController.swift */,
+				C987BB282534CA9500A440A7 /* OutlineViewController+Delegate.swift */,
+				731C9880252E5216008E8A75 /* OutlineViewController+Helpers.swift */,
+				731C9884252EE911008E8A75 /* OutlineViewController+Restoration.swift */,
+				731C9850252DE9DC008E8A75 /* Assets.xcassets */,
+				C9807E64257E8FD400488E46 /* ProgressViewController.swift */,
+				C97621DB256C1C4400C48E15 /* UploadSettingsViewController.swift */,
+				731C9886252EEAE0008E8A75 /* SplitViewController.swift */,
+				C9807E68257F923A00488E46 /* TreeElement.swift */,
+				731C9888252EF427008E8A75 /* WindowController.swift */,
+				731C984E252DE9DB008E8A75 /* WindowViewController.swift */,
+			);
+			path = MediaUploader;
+			sourceTree = "<group>";
+		};
+		731C985E252DE9DD008E8A75 /* MediaUploaderTests */ = {
+			isa = PBXGroup;
+			children = (
+				731C985F252DE9DD008E8A75 /* MediaUploaderTests.swift */,
+				731C9861252DE9DD008E8A75 /* Info.plist */,
+			);
+			path = MediaUploaderTests;
+			sourceTree = "<group>";
+		};
+		731C9869252DE9DD008E8A75 /* MediaUploaderUITests */ = {
+			isa = PBXGroup;
+			children = (
+				731C986A252DE9DD008E8A75 /* MediaUploaderUITests.swift */,
+				731C986C252DE9DD008E8A75 /* Info.plist */,
+			);
+			path = MediaUploaderUITests;
+			sourceTree = "<group>";
+		};
+		C97621D6256BA93700C48E15 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				731C9852252DE9DC008E8A75 /* Main.storyboard */,
+				C97621D3256BA90900C48E15 /* CollectionViewItem.xib */,
+				C97621DC256C1C4400C48E15 /* UploadSettingsViewController.xib */,
+				731C9856252DE9DD008E8A75 /* MediaUploader.entitlements */,
+				C97621D7256BABCA00C48E15 /* Info.plist */,
+				C987BB2A2534CF5400A440A7 /* Localizable.strings */,
+				C9807E65257E8FD400488E46 /* ProgressViewController.xib */,
+			);
+			name = Resources;
+			sourceTree = "<group>";
+		};
+		E3F4A5FCDAAF2D923869E980 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				C97795B3256EC66700BEE3CE /* AzureStorageBlob.framework */,
+				C97795B0256EC65D00BEE3CE /* AzureIdentity.framework */,
+				C97795AC256EC65100BEE3CE /* AzureCore.framework */,
+				78F0B96BC353C152F8ADDF9A /* Pods_MediaUploader.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		731C9848252DE9DB008E8A75 /* MediaUploader */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 731C986F252DE9DD008E8A75 /* Build configuration list for PBXNativeTarget "MediaUploader" */;
+			buildPhases = (
+				0F991482A829CBAC995061AF /* [CP] Check Pods Manifest.lock */,
+				731C9845252DE9DB008E8A75 /* Sources */,
+				731C9846252DE9DB008E8A75 /* Frameworks */,
+				731C9847252DE9DB008E8A75 /* Resources */,
+				D528E389F313EE1A441AE18C /* [CP] Embed Pods Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = MediaUploader;
+			productName = MediaUploader;
+			productReference = 731C9849252DE9DB008E8A75 /* MediaUploader.app */;
+			productType = "com.apple.product-type.application";
+		};
+		731C985A252DE9DD008E8A75 /* MediaUploaderTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 731C9872252DE9DD008E8A75 /* Build configuration list for PBXNativeTarget "MediaUploaderTests" */;
+			buildPhases = (
+				731C9857252DE9DD008E8A75 /* Sources */,
+				731C9858252DE9DD008E8A75 /* Frameworks */,
+				731C9859252DE9DD008E8A75 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				731C985D252DE9DD008E8A75 /* PBXTargetDependency */,
+			);
+			name = MediaUploaderTests;
+			productName = MediaUploaderTests;
+			productReference = 731C985B252DE9DD008E8A75 /* MediaUploaderTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		731C9865252DE9DD008E8A75 /* MediaUploaderUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 731C9875252DE9DD008E8A75 /* Build configuration list for PBXNativeTarget "MediaUploaderUITests" */;
+			buildPhases = (
+				731C9862252DE9DD008E8A75 /* Sources */,
+				731C9863252DE9DD008E8A75 /* Frameworks */,
+				731C9864252DE9DD008E8A75 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				731C9868252DE9DD008E8A75 /* PBXTargetDependency */,
+			);
+			name = MediaUploaderUITests;
+			productName = MediaUploaderUITests;
+			productReference = 731C9866252DE9DD008E8A75 /* MediaUploaderUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		731C9841252DE9DB008E8A75 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastSwiftUpdateCheck = 1010;
+				LastUpgradeCheck = 1010;
+				ORGANIZATIONNAME = "Mykola Gerasymenko";
+				TargetAttributes = {
+					731C9848252DE9DB008E8A75 = {
+						CreatedOnToolsVersion = 10.1;
+					};
+					731C985A252DE9DD008E8A75 = {
+						CreatedOnToolsVersion = 10.1;
+						TestTargetID = 731C9848252DE9DB008E8A75;
+					};
+					731C9865252DE9DD008E8A75 = {
+						CreatedOnToolsVersion = 10.1;
+						TestTargetID = 731C9848252DE9DB008E8A75;
+					};
+				};
+			};
+			buildConfigurationList = 731C9844252DE9DB008E8A75 /* Build configuration list for PBXProject "MediaUploader" */;
+			compatibilityVersion = "Xcode 9.3";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 731C9840252DE9DB008E8A75;
+			productRefGroup = 731C984A252DE9DB008E8A75 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				731C9848252DE9DB008E8A75 /* MediaUploader */,
+				731C985A252DE9DD008E8A75 /* MediaUploaderTests */,
+				731C9865252DE9DD008E8A75 /* MediaUploaderUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		731C9847252DE9DB008E8A75 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C9807E67257E8FD400488E46 /* ProgressViewController.xib in Resources */,
+				731C9851252DE9DC008E8A75 /* Assets.xcassets in Resources */,
+				C97621D5256BA90900C48E15 /* CollectionViewItem.xib in Resources */,
+				C97621DE256C1C4400C48E15 /* UploadSettingsViewController.xib in Resources */,
+				C987BB2B2534CF5400A440A7 /* Localizable.strings in Resources */,
+				C97621D8256BABCA00C48E15 /* Info.plist in Resources */,
+				731C9854252DE9DC008E8A75 /* Main.storyboard in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		731C9859252DE9DD008E8A75 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		731C9864252DE9DD008E8A75 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		0F991482A829CBAC995061AF /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-MediaUploader-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+		D528E389F313EE1A441AE18C /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-MediaUploader/Pods-MediaUploader-frameworks-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-MediaUploader/Pods-MediaUploader-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-MediaUploader/Pods-MediaUploader-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		731C9845252DE9DB008E8A75 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C97621DD256C1C4400C48E15 /* UploadSettingsViewController.swift in Sources */,
+				731C9889252EF427008E8A75 /* WindowController.swift in Sources */,
+				C9807E69257F923A00488E46 /* TreeElement.swift in Sources */,
+				731C9881252E5216008E8A75 /* OutlineViewController+Helpers.swift in Sources */,
+				731C984F252DE9DB008E8A75 /* WindowViewController.swift in Sources */,
+				731C9879252E4D1A008E8A75 /* OutlineViewController.swift in Sources */,
+				731C987F252E4FF3008E8A75 /* Node.swift in Sources */,
+				C97621CF25682C3500C48E15 /* IconViewController.swift in Sources */,
+				731C9887252EEAE0008E8A75 /* SplitViewController.swift in Sources */,
+				731C984D252DE9DB008E8A75 /* AppDelegate.swift in Sources */,
+				C97621D4256BA90900C48E15 /* CollectionViewItem.swift in Sources */,
+				731C9885252EE911008E8A75 /* OutlineViewController+Restoration.swift in Sources */,
+				C987BB35253CC93E00A440A7 /* CustomTableCellView.swift in Sources */,
+				C95E74E7257ACEB80073410F /* AsyncOperation.swift in Sources */,
+				C987BB37255BC97B00A440A7 /* LoginViewController.swift in Sources */,
+				731C987B252E4E0A008E8A75 /* OutlineView.swift in Sources */,
+				C987BB292534CA9500A440A7 /* OutlineViewController+Delegate.swift in Sources */,
+				C9807E66257E8FD400488E46 /* ProgressViewController.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		731C9857252DE9DD008E8A75 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				731C9860252DE9DD008E8A75 /* MediaUploaderTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		731C9862252DE9DD008E8A75 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				731C986B252DE9DD008E8A75 /* MediaUploaderUITests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		731C985D252DE9DD008E8A75 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 731C9848252DE9DB008E8A75 /* MediaUploader */;
+			targetProxy = 731C985C252DE9DD008E8A75 /* PBXContainerItemProxy */;
+		};
+		731C9868252DE9DD008E8A75 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 731C9848252DE9DB008E8A75 /* MediaUploader */;
+			targetProxy = 731C9867252DE9DD008E8A75 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin PBXVariantGroup section */
+		731C9852252DE9DC008E8A75 /* Main.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				731C9853252DE9DC008E8A75 /* Base */,
+			);
+			name = Main.storyboard;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		731C986D252DE9DD008E8A75 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		731C986E252DE9DD008E8A75 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+			};
+			name = Release;
+		};
+		731C9870252DE9DD008E8A75 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = D31C6861B88CE631791592C4 /* Pods-MediaUploader.debug.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = MediaUploader.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = 2CN2WP7M2D;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/ThirdPartyFrameworks",
+				);
+				INFOPLIST_FILE = Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = durin.MediaUploader;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		731C9871252DE9DD008E8A75 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 1DCACD4391A22197075AF108 /* Pods-MediaUploader.release.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = MediaUploader.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = 2CN2WP7M2D;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/ThirdPartyFrameworks",
+				);
+				INFOPLIST_FILE = Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = durin.MediaUploader;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		731C9873252DE9DD008E8A75 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = MediaUploaderTests/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = durin.MediaUploaderTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 4.2;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/MediaUploader.app/Contents/MacOS/MediaUploader";
+			};
+			name = Debug;
+		};
+		731C9874252DE9DD008E8A75 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = MediaUploaderTests/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = durin.MediaUploaderTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 4.2;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/MediaUploader.app/Contents/MacOS/MediaUploader";
+			};
+			name = Release;
+		};
+		731C9876252DE9DD008E8A75 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = MediaUploaderUITests/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = durin.MediaUploaderUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 4.2;
+				TEST_TARGET_NAME = MediaUploader;
+			};
+			name = Debug;
+		};
+		731C9877252DE9DD008E8A75 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = MediaUploaderUITests/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = durin.MediaUploaderUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 4.2;
+				TEST_TARGET_NAME = MediaUploader;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		731C9844252DE9DB008E8A75 /* Build configuration list for PBXProject "MediaUploader" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				731C986D252DE9DD008E8A75 /* Debug */,
+				731C986E252DE9DD008E8A75 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		731C986F252DE9DD008E8A75 /* Build configuration list for PBXNativeTarget "MediaUploader" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				731C9870252DE9DD008E8A75 /* Debug */,
+				731C9871252DE9DD008E8A75 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		731C9872252DE9DD008E8A75 /* Build configuration list for PBXNativeTarget "MediaUploaderTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				731C9873252DE9DD008E8A75 /* Debug */,
+				731C9874252DE9DD008E8A75 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		731C9875252DE9DD008E8A75 /* Build configuration list for PBXNativeTarget "MediaUploaderUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				731C9876252DE9DD008E8A75 /* Debug */,
+				731C9877252DE9DD008E8A75 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 731C9841252DE9DB008E8A75 /* Project object */;
+}
