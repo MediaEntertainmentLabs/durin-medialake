@@ -79,6 +79,8 @@ class ClickedCollectionView: NSCollectionView {
 
 class CollectionViewItem: NSCollectionViewItem {
     
+    @IBOutlet weak var progressIndicator: NSProgressIndicator!
+    
     var node: Node? {
         didSet {
             guard isViewLoaded else { return }

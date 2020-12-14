@@ -65,41 +65,65 @@ class UploadSettingsViewController: NSViewController {
         if (dialog.runModal() ==  NSApplication.ModalResponse.OK) {
             let result = dialog.url
             
-            if (result != nil) {
-                folderPathField.stringValue = result!.path
-                
-                let pathURL = NSURL(fileURLWithPath: folderPathField.stringValue, isDirectory: true)
-                var filePaths : [String] = []
-                if let enumerator = FileManager.default.enumerator(atPath: folderPathField.stringValue) {
-                    for file in enumerator {
-                        let path = NSURL(fileURLWithPath: file as! String, relativeTo: pathURL as URL).path
-                        filePaths.append(path!)
-                    }
-                }
-                let scanItems = filePaths
-                /*
-                let scanItems = filePaths.filter{ fileName in
-                    let fileNameLower = fileName.lowercased()
-                    for keyword in [".mp4", ".mov", ".mxf", ".ari", ".ale", ".xml"] {
-                        if fileNameLower.contains(keyword) {
-                            return true
-                        }
-                    }
-                    return false
-                }
-                */
-                for scanItem in scanItems {
-                    let filename = URL(fileURLWithPath: scanItem).lastPathComponent
-                    let filefolder = URL(fileURLWithPath: scanItem).deletingLastPathComponent()
-
-                    var parsed = filefolder.path.replacingOccurrences(of: pathURL.path!, with: "")
-                    if parsed.hasPrefix("/") {
-                        parsed = String(parsed.dropFirst())
-                    }
-                    let item = ["name": filename, "filePath" : parsed.isEmpty ? filename : parsed + "/" + filename, "checksum":"test2"]
-                    files.append([scanItem : item])
-                }
+            if (result == nil) {
+                return
             }
+            
+            folderPathField.stringValue = result!.path
+            
+            let pathURL = NSURL(fileURLWithPath: folderPathField.stringValue, isDirectory: true)
+            var filePaths : [String : UInt64] = [:]
+            
+            let enumerator = FileManager.default.enumerator(atPath: folderPathField.stringValue)
+            while let element = enumerator?.nextObject() as? String {
+                let filename = URL(fileURLWithPath: element).lastPathComponent
+                if filename == ".DS_Store" {
+                    continue
+                }
+                if let fType = enumerator?.fileAttributes?[FileAttributeKey.type] as? FileAttributeType {
+                    
+                    switch fType{
+                    case .typeRegular:
+                        let path = NSURL(fileURLWithPath: element, relativeTo: pathURL as URL).path
+                        if let fSize = enumerator?.fileAttributes?[FileAttributeKey.size] as? UInt64 {
+                            filePaths[path!]=fSize
+                        }
+                        
+                    case .typeDirectory:
+                        print("a dir")
+                    default:
+                        continue
+                    }
+                }
+                
+            }
+            let scanItems = filePaths
+            /*
+             let scanItems = filePaths.filter{ fileName in
+             let fileNameLower = fileName.lowercased()
+             for keyword in [".mp4", ".mov", ".mxf", ".ari", ".ale", ".xml"] {
+             if fileNameLower.contains(keyword) {
+             return true
+             }
+             }
+             return false
+             }
+             */
+            for scanItem in scanItems {
+                let filename = URL(fileURLWithPath: scanItem.key).lastPathComponent
+                let filefolder = URL(fileURLWithPath: scanItem.key).deletingLastPathComponent()
+                
+                var parsed = filefolder.path.replacingOccurrences(of: pathURL.path!, with: "")
+                if parsed.hasPrefix("/") {
+                    parsed = String(parsed.dropFirst())
+                }
+                let item = ["name": filename,
+                            "filePath": parsed.isEmpty ? filename : parsed + "/" + filename,
+                            "filesize":scanItem.value,
+                            "checksum":"test2"] as [String : Any]
+                files.append([scanItem.key : item])
+            }
+            
         } else {
             // User clicked on "Cancel"
             return
@@ -113,7 +137,7 @@ class UploadSettingsViewController: NSViewController {
         dateFormatter.dateFormat = dateformat
         let strdate = dateFormatter.string(from: shootDate.dateValue)
         
-        NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.UploadShow),
+        NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.OnStartUploadShow),
                                         object: nil,
                                         userInfo: ["showName": self.showNameField.stringValue,
                                                    "shootNumber":shootNoField.stringValue,
@@ -123,7 +147,8 @@ class UploadSettingsViewController: NSViewController {
                                                    "notificationEmail":emailField.stringValue,
                                                    "checksum":"md5",
                                                    "type":"video",
-                                                   "files":files
+                                                   "files":files,
+                                                   "srcDir":folderPathField.stringValue
                                                    ])
         window?.performClose(nil) // nil because I'm not return a message
     }

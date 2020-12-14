@@ -10,8 +10,19 @@ import MSAL
 @NSApplicationMain
 class AppDelegate: NSObject, NSApplicationDelegate {
 
+    enum ErrorStatus {
+        case kNoError
+        case kFailedFetchListShows
+        case kFailedUploadShowSASToken
+        case kFailedFetchShowContent
+    }
+    
     var mainWindowController : NSWindowController!
     var loginWindowController : NSWindowController!
+    
+    static var lastError : ErrorStatus = ErrorStatus.kNoError
+    static var retryContext : [String:Any] = [:]
+    static var cacheSASTokens : [String:String] = [:]
     
     static let appDelegate = NSApplication.shared.delegate as! AppDelegate
     

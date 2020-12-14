@@ -20,10 +20,10 @@ class LoginViewController: NSViewController {
     
     //"https://storage.azure.com/.default"
     let kScopes: [String] = ["user.read"]
-    let cdsUserId: String = "fd895b30-1016-eb11-a812-000d3a530323" // TODO: fetch from portal
+    static let cdsUserId: String = "fd895b30-1016-eb11-a812-000d3a530323" // TODO: fetch from portal
     
     static let kFetchShowsURL = "https://prod-05.southeastasia.logic.azure.com:443/workflows/82c912da1f4b4908a29ab639b1682882/triggers/manual/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=_noguWAh7ijeQAc1Znk7pcnlhfWnk8gGS3ZIqEeEoP8"
-    
+        
     static let kFetchSASTokenURL = "https://prod-06.southeastasia.logic.azure.com:443/workflows/00d8f3606ad740c681afd4ca2a4ce5a4/triggers/manual/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=Kq1sS8N67EEhfQOy5sNxSfHP8om7CxUDteQnsQ_W7tY"
     
     var accessToken = String()
@@ -39,9 +39,6 @@ class LoginViewController: NSViewController {
     @IBOutlet weak var passwordTextField: NSSecureTextField!
     @IBOutlet weak var loginButton: NSButton!
     @IBOutlet weak var loginProgress: NSProgressIndicator!
-    
-    private var windowViewController: WindowViewController!
-    
     
     struct NotificationNames {
         
@@ -274,7 +271,10 @@ class LoginViewController: NSViewController {
                 self.accessToken = ""
                 self.updateCurrentAccount(acc: nil)
                 self.window?.makeKeyAndOrderFront(self)
+                AppDelegate.appDelegate.mainWindowController.contentViewController?.removeFromParent()
+                AppDelegate.appDelegate.mainWindowController.contentViewController = nil
                 AppDelegate.appDelegate.mainWindowController = nil
+                
             })
             
         }
@@ -446,7 +446,7 @@ class LoginViewController: NSViewController {
             
             NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.LoginSuccessfull),
                                             object: nil,
-                                            userInfo: ["cdsUserId": self.cdsUserId])
+                                            userInfo: ["cdsUserId": LoginViewController.cdsUserId])
         }
     }
     

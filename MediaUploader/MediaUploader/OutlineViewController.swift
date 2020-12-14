@@ -9,123 +9,33 @@ import Cocoa
 import MSAL
 
 
-// WARNING: Sandboxed application fairly limited in what it can actually sub-launch
-//          So external programm need to be placed to /Applications folder
-internal func runAzCopyCommand(cmd : String, args : [String]) -> (output: [String], error: [String], exitCode: Int32) {
-
-    let output : [String] = []
-    let error : [String] = []
-
-    let task = Process()
-    task.launchPath = cmd
-    task.arguments = args
-    
-    let outpipe = Pipe()
-    task.standardOutput = outpipe
-    //let errpipe = Pipe()
-    //task.standardError = errpipe
-
-    var terminationObserver : NSObjectProtocol!
-    terminationObserver = NotificationCenter.default.addObserver(forName: Process.didTerminateNotification,
-                                                  object: task, queue: nil) { notification -> Void in
-        NotificationCenter.default.removeObserver(terminationObserver!)
-    }
-    
-    
-    outpipe.fileHandleForReading.waitForDataInBackgroundAndNotify()
-    var outpipeObserver : NSObjectProtocol!
-    outpipeObserver = NotificationCenter.default.addObserver(forName: NSNotification.Name.NSFileHandleDataAvailable, object: outpipe.fileHandleForReading , queue: nil) {
-        notification in
-        let output = outpipe.fileHandleForReading.availableData
-        if (output.count > 0) {
-            let outputString = String(data: output, encoding: String.Encoding.utf8) ?? ""
-            
-            DispatchQueue.main.async(execute: {
-                print(outputString)
-                
-            })
-        }
-        outpipe.fileHandleForReading.waitForDataInBackgroundAndNotify()
-        
-    }
-    
-    outpipe.fileHandleForReading.readabilityHandler = { (fileHandle) -> Void in
-                 let availableData = fileHandle.availableData
-                 let newOutput = String.init(data: availableData, encoding: .utf8)
-                 print("\(newOutput!)")
-
-             }
-    
-    
-//    var errpipeObserver : NSObjectProtocol!
-//    errpipe.fileHandleForReading.waitForDataInBackgroundAndNotify()
-//
-//    errpipeObserver = NotificationCenter.default.addObserver(forName: NSNotification.Name.NSFileHandleDataAvailable, object: errpipe.fileHandleForReading , queue: nil) {
-//        notification in
-//            let output = outpipe.fileHandleForReading.availableData
-//            if (output.count > 0) {
-//                let errorString = String(data: output, encoding: String.Encoding.utf8) ?? ""
-//
-//                DispatchQueue.main.async(execute: {
-//                    print(errorString)
-//
-//                })
-//                //output = nil
-//            }
-//        errpipe.fileHandleForReading.waitForDataInBackgroundAndNotify()
-//    }
-//
-//    errpipe.fileHandleForReading.readabilityHandler = { (fileHandle) -> Void in
-//        autoreleasepool {
-//            let availableData = fileHandle.availableData
-//            let newOutput = String.init(data: availableData, encoding: .utf8)
-//            print("\(newOutput!)")
-//            // Display the new output appropriately in a NSTextView for example
-//            //availableData = nil
-//
-//        }
-//    }
-    
-    task.launch()
-    
-    task.waitUntilExit()
-    let status = task.terminationStatus
-    
-    outpipe.fileHandleForReading.readabilityHandler = nil
-    NotificationCenter.default.removeObserver(outpipeObserver!)
-    //NotificationCenter.default.removeObserver(errpipeObserver!)
-
-    return (output, error, status)
-}
-
-
-
 func fetchListOfShowsTask(cdsUserId: String, completion: @escaping (_ shows: [String:Any]) -> Void) {
 
-    // prepare json data
     let json: [String: String] = ["userId" : cdsUserId]
-
     let jsonData = try? JSONSerialization.data(withJSONObject: json, options: .prettyPrinted)
-
-    // create post request
     let url = URL(string: LoginViewController.kFetchShowsURL)!
+    
     var request = URLRequest(url: url)
     request.httpMethod = "POST"
-
-    // insert json data to the request
     request.setValue("application/json; charset=utf-8", forHTTPHeaderField: "Content-Type")
     request.httpBody = jsonData
+    
     let task = URLSession.shared.dataTask(with: request) { data, response, error in
-        guard let data = data, error == nil else {
-            print(error?.localizedDescription ?? "No data")
-            return
-        }
-        var shows : [String:Any] = [:]
         do {
-
+            guard let data = data, error == nil else {
+                throw "Failed to retrive list of shows!"
+            }
+            var shows : [String:Any] = [:]
+            
             let responseJSON = try JSONSerialization.jsonObject(with: data) as? [[String:Any]]
+            if responseJSON == nil {
+                throw "Failed to retrive list of shows!"
+            }
             for item in responseJSON! {
                 let media_AssetContainer = item["media_AssetContainer"] as? String
+                if media_AssetContainer == nil {
+                    continue
+                }
                 let asset = try JSONSerialization.jsonObject(with: Data(media_AssetContainer!.utf8), options: []) as? [String: Any]
                 let showName = asset!["media_name"] as! String
                 let showId = asset!["media_assetcontainerid"] as! String
@@ -133,63 +43,30 @@ func fetchListOfShowsTask(cdsUserId: String, completion: @escaping (_ shows: [St
                 let media_AssetFolderLayout = media_AssetTemplate["media_AssetFolderLayout"] as! [String : Any]
                 shows[showName] = ["showId":showId, "folderLayout":media_AssetFolderLayout["media_layout"]]
             }
-            completion(shows)
+            completion(["data": shows])
             
-        } catch let error as NSError {
-            print(error)
-            completion([:])
+        } catch let error  {
+            completion(["error": error])
         }
     }
-
     task.resume()
 }
 
-final class FileUploadOperation: AsyncOperation {
-
-    private let cmd: String
-    private let args: [String]
-
-    init(cmd: String, args: [String]) {
-        self.cmd = cmd
-        self.args = args
-    }
-
-    override func main() {
-        let (output, error, status) = runAzCopyCommand(cmd: self.cmd, args: self.args)
-        self.finish()
-    }
-
-    override func cancel() {
-        super.cancel()
-    }
-}
 
 
 class OutlineViewController: NSViewController,
                              NSTextFieldDelegate {
     // MARK: Constants
-    
+
     struct NameConstants {
-        // Default name for added folders and leafs.
         static let untitled = NSLocalizedString("untitled string", comment: "")
-        // Places shows title.
-        static let shows = NSLocalizedString("shows string", comment: "")
-        // Pictures group title.
-        static let pictures = NSLocalizedString("pictures string", comment: "")
+        static let kShowsStr = NSLocalizedString("shows string", comment: "")
+        static let kRetryStr = NSLocalizedString("retry string", comment: "")
+        
     }
         
     // The data source backing of the NSOutlineView.
     @IBOutlet weak var treeController: NSTreeController!
-    
-    @IBOutlet weak var outlineView: OutlineView! {
-        didSet {
-            // As soon as we have our outline view loaded, we populate its content tree controller.
-            //populateOutlineContents()
-        }
-    }
-    
-    private var treeControllerObserver: NSKeyValueObservation?
-    //private var uploadViewController: UploadWindowViewController!
     private var iconViewController: IconViewController!
     
 #if USE_AZURE_BLOBSTORAGE_API
@@ -222,47 +99,25 @@ class OutlineViewController: NSViewController,
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        /*
-        let defaults = UserDefaults.standard
-        let initialDisclosure = defaults.string(forKey: "initialDisclosure")
-        if initialDisclosure == nil {
-            outlineView.expandItem(treeController.arrangedObjects.children![0])
-            outlineView.expandItem(treeController.arrangedObjects.children![1])
-            defaults.set("initialDisclosure", forKey: "initialDisclosure")
-        }
-        */
+
         setupObservers()
     }
     
-    #if ENABLE_UPLOAD_WINDOW
-    @objc private func showUploadWindow(_ notif: Notification) {
-        
-        let uploadWindowController = storyboard!.instantiateController(withIdentifier: "UploadWindowController") as! NSWindowController
-        
-        if let uploadWindow = uploadWindowController.window {
-            //let application = NSApplication.shared
-            //application.runModal(for: downloadWindow)
-            let controller =  NSWindowController(window: uploadWindow)
-            uploadWindow.contentViewController = uploadViewController
-            controller.showWindow(self)
-        }
-    }
-    #endif
-    
-    private func fetchShowContentTask(sasURI : String, completion: @escaping (_ data: Data) -> Void) {
+    private func fetchShowContentTask(sasURI : String, completion: @escaping (_ data: [String:Any]) -> Void) {
         
         let url = URL(string: sasURI)!
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
-        
         let task = URLSession.shared.dataTask(with: request) { data, response, error in
-            guard let data = data, error == nil else {
-                print(error?.localizedDescription ?? "No data")
-                return
+            do {
+                guard let data = data, error == nil else {
+                    throw "Failed to retrieve show content!"
+                }
+                completion(["data" : data])
+            } catch let error  {
+                completion(["error": error])
             }
-            completion(data)
         }
-        
         task.resume()
     }
 
@@ -280,61 +135,113 @@ class OutlineViewController: NSViewController,
             addPathToTree(root: newRoot, fullPath: &fullPath)
         }
     }
-
+    
     static let showID = "1001"
     @objc private func onSelectedShow(_ notification: Notification) {
         
         let showName = notification.userInfo?["showName"] as! String
-        let fetchShowContentURI = notification.userInfo?["fetchShowContentURI"] as! String
+        let showId = notification.userInfo?["showId"] as! String
+        let cdsUserId = notification.userInfo?["cdsUserId"] as! String
         
-        self.fetchShowContentTask(sasURI: fetchShowContentURI) { (data) in
+        fetchShowContent(showName: showName, showId: showId, cdsUserId: cdsUserId)
+    }
+    
+    private func fetchShowContent(showName : String, showId : String, cdsUserId : String) {
+        
+        var fetchShowContentURI : String!
+        if let sasToken = AppDelegate.cacheSASTokens[showName] {
+            fetchShowContentURI = sasToken + "&restype=container&comp=list"
+        } else {
+            fetchSASTokenURLTask(cdsUserId: cdsUserId, showId: showId, synchronous: false) { (result) in
+                if let error = result["error"] as? String {
+                    uploadShowErrorAndNotify(error: error, cdsUserId: cdsUserId, showId: showId)
+                    return
+                }
+                
+                let sasToken = result["data"] as? String
+                fetchShowContentURI = sasToken! + "&restype=container&comp=list"
+                AppDelegate.cacheSASTokens[showName]=sasToken
+                
+                NotificationCenter.default.post(
+                    name: Notification.Name(WindowViewController.NotificationNames.IconSelectionChanged),
+                    object: nil,
+                    userInfo: ["showName" : showName, "showId" : showId, "cdsUserId" : cdsUserId])
+            }
+        }
+        
+        // pending task completion
+        if fetchShowContentURI == nil {
+            return
+        }
+        
+        self.fetchShowContentTask(sasURI: fetchShowContentURI) { (result) in
             
-            let parser = XMLParser(data: data)
+            if let error = result["error"] as? String {
+                fetchShowContentErrorAndNotify(error: error, showName: showName, showId: showId, cdsUserId: cdsUserId)
+                return
+            }
+            let parser = XMLParser(data: result["data"] as! Data)
             parser.delegate = self
             parser.parse()
             
-
             self.root = nil
+            
+            if self.results == nil {
+                fetchShowContentErrorAndNotify(error: "Failed to retrieve show content!", showName: showName, showId: showId, cdsUserId: cdsUserId)
+                return
+            }
             
             for item in self.results! as [[String : String]] {
                 let components = NSString(string: item["Name"]!).pathComponents
                 var reversedComponents : [String] = Array(components.reversed())
                 if self.root == nil {
-                    if reversedComponents.count == 1 {
-                        self.root = TreeElement(value: "")
-                    } else {
-                        self.root = TreeElement(value: reversedComponents.removeLast())
-                    }
+                    //if reversedComponents.count == 1 {
+                        self.root = TreeElement(value: showName)
+                    //} else {
+                    //    self.root = TreeElement(value: reversedComponents.removeLast())
+                    //}
                 }
                 self.addPathToTree(root: self.root, fullPath: &reversedComponents)
             }
-    
-            DispatchQueue.main.async {
+            
+            self.addGroupNode(showName, identifier: OutlineViewController.showID)
+            
+            if self.root != nil {
                 
-                NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.ShowOutlineViewController),
-                                                object: nil)
+                let start = DispatchTime.now() // <<<<<<<<<< Start time
+                self.addFileSystemObject(root: self.root, isFolder: self.root.hasChildren(), indexPath: IndexPath(indexes: [0, 0]))
+                let end = DispatchTime.now()   // <<<<<<<<<<   end time
+                let timeInterval_msec = Double(end.uptimeNanoseconds - start.uptimeNanoseconds) / 1_000_000
+                print ("------------ update OutlineView Tree UI: ", timeInterval_msec, " ms")
                 
-                self.addGroupNode(showName, identifier: OutlineViewController.showID)
-                if self.root != nil {
-                    self.addFileSystemObject(root: self.root, isFolder: self.root.hasChildren(), indexPath: IndexPath(indexes: [0, 0]))
-                } else {
+                DispatchQueue.main.async {
+                    NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.ShowOutlineViewController),
+                                                    object: nil)
+                }
+                
+            } else {
+                DispatchQueue.main.async {
                     NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.ShowProgressViewControllerOnlyText),
                                                     object: nil,
-                                                    userInfo: ["progressLabel" : "Show is empty!", "disableProgress" : true])
-                    
+                                                    userInfo: ["progressLabel" : "Show is empty!",
+                                                               "disableProgress" : true])
                 }
             }
         }
     }
     
-    // Called by drag and drop from the Finder.
     func addFileSystemObject(root: TreeElement, isFolder: Bool, indexPath: IndexPath) {
         if root.hasChildren() {
-                let node = OutlineViewController.fileSystemNode(from: root.value, isFolder: true)
-                treeController.insert(node, atArrangedObjectIndexPath: indexPath)
+            let node = OutlineViewController.fileSystemNode(from: root.value, isFolder: true)
+            DispatchQueue.main.async {
+                self.treeController.insert(node, atArrangedObjectIndexPath: indexPath)
+            }
+            
         } else {
             let node = OutlineViewController.leafNode(from: root.value)
-            treeController.insert(node, atArrangedObjectIndexPath: indexPath)
+            DispatchQueue.main.async {
+                self.treeController.insert(node, atArrangedObjectIndexPath: indexPath)
+            }
         }
         
         for child in root.children() {
@@ -346,60 +253,41 @@ class OutlineViewController: NSViewController,
     }
     
     
-
     private func addGroupNode(_ folderName: String, identifier: String) {
         let node = Node()
         node.type = .container
         node.title = folderName
         node.identifier = identifier
         node.is_group_node = true
-        
+   
         var insertionIndexPath: IndexPath
         treeController.content = nil
         contents.removeAll()
         insertionIndexPath = IndexPath(index: contents.count)
-        treeController.insert(node, atArrangedObjectIndexPath: insertionIndexPath)
+        DispatchQueue.main.async {
+            self.treeController.insert(node, atArrangedObjectIndexPath: insertionIndexPath)
+        }
     }
-
-  
-  
+    
+    
+    
     private func setupObservers() {
-        
-        #if ENABLE_UPLOAD_WINDOW
-        // Notification to show Upload Window.
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(showUploadWindow(_:)),
-            name: Notification.Name(WindowViewController.NotificationNames.showUploadWindow),
-            object: nil)
-        #endif
         
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(onSelectedShow(_:)),
             name: Notification.Name(WindowViewController.NotificationNames.IconSelectionChanged),
             object: nil)
-        
-        
-        #if ENABLE_UPLOAD_WINDOW
-        uploadViewController = storyboard!.instantiateController(withIdentifier: "UploadWindowViewController") as? UploadWindowViewController
-        #endif
-        
-        #if ENABLE_UPLOAD_WINDOW
-        var aa = treeController.arrangedObjects.children![0].representedObject
-        uploadViewController.nodeContent = aa as? Node
-        #endif
     }
     
     // MARK: MSALInteractiveDelegate
-
+    
     func didCompleteMSALRequest(withResult result: MSALResult) {
         LoginViewController.account = result.account
     }
-
+    
     
     deinit {
-        
         NotificationCenter.default.removeObserver(
             self,
             name: Notification.Name(WindowViewController.NotificationNames.IconSelectionChanged),

@@ -7,7 +7,16 @@
 
 import Cocoa
 
-extension OutlineViewController: NSOutlineViewDelegate {
+extension OutlineViewController: NSOutlineViewDelegate,NSOutlineViewDataSource {
+    
+    func outlineView(_ outlineView: NSOutlineView, numberOfChildrenOfItem item: Any?) -> Int {
+
+      if let node = item as? Node {
+        return node.children.count
+      }
+      
+      return contents.count
+    }
     
     // Is the outline view item a group node? (not a folder but a group with Hide/Show buttons).
     func outlineView(_ outlineView: NSOutlineView, isGroupItem item: Any) -> Bool {
@@ -41,7 +50,7 @@ extension OutlineViewController: NSOutlineViewDelegate {
     
     func outlineView(_ outlineView: NSOutlineView, viewFor tableColumn: NSTableColumn?, item: Any) -> NSView? {
         var view: NSTableCellView?
-        
+        //print("NSOutlineViewDelegate::outlineView  viewFor Thread.isMainThread ", Thread.isMainThread)
         guard let node = OutlineViewController.node(from: item) else { return view }
         
         if self.outlineView(outlineView, isGroupItem: item) {
@@ -68,6 +77,7 @@ extension OutlineViewController: NSOutlineViewDelegate {
     
     // An outline row view was just inserted.
     func outlineView(_ outlineView: NSOutlineView, didAdd rowView: NSTableRowView, forRow row: Int) {
+        
         // Are we adding a newly inserted row that needs a new name?
         if rowToAdd != -1 {
             // Force-edit the newly added row's name.

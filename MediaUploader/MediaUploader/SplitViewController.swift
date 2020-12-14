@@ -127,7 +127,12 @@ class SplitViewController: NSSplitViewController {
             progressViewController.progressIndicator.isHidden = false
             progressViewController.progressIndicator.startAnimation(self)
         }
-            
+        
+        if let buttonLabel = notification.userInfo?["enableButton"] as? String {
+            progressViewController.progressButton.title = buttonLabel
+            progressViewController.progressButton.isHidden = false
+            progressViewController.progressIndicator.isHidden = true
+        }
         embedChildViewController(progressViewController)
     }
     

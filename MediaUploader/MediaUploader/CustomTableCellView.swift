@@ -10,4 +10,5 @@ import Cocoa
 class CustomTableCellView: NSTableCellView {
 
     @IBOutlet weak var progress: NSProgressIndicator!
+    @IBOutlet weak var progressCompletionStatus: NSTextField!
 }

@@ -8,6 +8,7 @@
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="ProgressViewController" customModule="MediaUploader" customModuleProvider="target">
             <connections>
+                <outlet property="progressButton" destination="Ffl-g4-DtB" id="fYI-cN-ShB"/>
                 <outlet property="progressIndicator" destination="BEP-ex-BJI" id="K3h-qR-nwR"/>
                 <outlet property="progressLabel" destination="XsK-c8-r1z" id="l4G-gY-qcB"/>
                 <outlet property="sourceItemView" destination="Hz6-mo-xeY" id="9SK-Pv-S1r"/>
@@ -35,12 +36,24 @@
                         <constraint firstAttribute="width" secondItem="BEP-ex-BJI" secondAttribute="height" multiplier="1:1" id="bOn-8r-EPU"/>
                     </constraints>
                 </progressIndicator>
+                <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="Ffl-g4-DtB">
+                    <rect key="frame" x="200" y="10" width="81" height="32"/>
+                    <buttonCell key="cell" type="push" title="Button" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="1h2-h2-tnf">
+                        <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                        <font key="font" metaFont="system"/>
+                    </buttonCell>
+                    <connections>
+                        <action selector="buttonClicked:" target="-2" id="3A9-uN-ShB"/>
+                    </connections>
+                </button>
             </subviews>
             <constraints>
                 <constraint firstItem="XsK-c8-r1z" firstAttribute="centerX" secondItem="Hz6-mo-xeY" secondAttribute="centerX" id="31N-k2-nIz"/>
                 <constraint firstItem="BEP-ex-BJI" firstAttribute="top" secondItem="XsK-c8-r1z" secondAttribute="bottom" constant="10" id="3NG-nA-Zu4"/>
+                <constraint firstItem="Ffl-g4-DtB" firstAttribute="centerX" secondItem="Hz6-mo-xeY" secondAttribute="centerX" id="Am3-xp-ems"/>
                 <constraint firstItem="XsK-c8-r1z" firstAttribute="centerY" secondItem="Hz6-mo-xeY" secondAttribute="centerY" id="HXj-Fw-Afq"/>
                 <constraint firstItem="BEP-ex-BJI" firstAttribute="centerX" secondItem="Hz6-mo-xeY" secondAttribute="centerX" id="J6D-VE-g5c"/>
+                <constraint firstItem="Ffl-g4-DtB" firstAttribute="top" secondItem="BEP-ex-BJI" secondAttribute="top" constant="80" id="TFf-p7-2Ia"/>
             </constraints>
             <point key="canvasLocation" x="128" y="154"/>
         </customView>

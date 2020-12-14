@@ -2,10 +2,11 @@
   Localizable.strings
   MediaUploader
 
-  Created by codecs on 12.10.2020.
-  Copyright © 2020 Mykola Gerasymenko. All rights reserved.
+  Copyright © 2020 GlobalLogic. All rights reserved.
 */
 "shows string" = "Shows";
+
+"retry string" = "Retry";
 
 "untitled string" = "Untitled";
 

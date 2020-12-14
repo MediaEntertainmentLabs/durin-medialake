@@ -11,8 +11,8 @@ class WindowViewController: NSViewController {
 
     @IBOutlet weak var logoutButton: NSButton!
     @IBOutlet weak var username: NSTextField!
+    @IBOutlet weak var uploadWindowButton: NSButton!
     
-
     // reference to a window
     var window: NSWindow?
    
@@ -33,7 +33,7 @@ class WindowViewController: NSViewController {
         
         if let w = self.view.window{
             var frame = w.frame
-            frame.size = NSSize(width: 900, height: 600)
+            frame.size = NSSize(width: 1100, height: 800)
             w.setFrame(frame, display: true, animate: true)
             
         }
@@ -58,11 +58,19 @@ class WindowViewController: NSViewController {
         window?.performClose(nil) // nil because I'm not return a message
     }
 
-    #if ENABLE_UPLOAD_WINDOW
     @IBAction func showUploadProgressWindow(_ sender: AnyObject) {
-        NotificationCenter.default.post(name: Notification.Name(NotificationNames.updateUserNameLabel), object: nil)
+//        let newPosition: CGFloat = visible ? 100 : 0
+//           splitView.setPosition(newPosition, ofDividerAt: 0)
+//           splitView.layoutSubtreeIfNeeded()
+        
+        //uploadWindowButton.image = NSImage(named: NSImage.stopProgressFreestandingTemplateName)
+        uploadWindowButton.image?.isTemplate = true
+        uploadWindowButton.bezelStyle = .inline
+        uploadWindowButton.isBordered = false
+        uploadWindowButton.bezelColor = NSColor.blue
+        uploadWindowButton.highlight(true)
+        NotificationCenter.default.post(name: Notification.Name(NotificationNames.ToggleUploadProgressWindow), object: nil)
     }
-    #endif
     
     deinit {
         NotificationCenter.default.removeObserver(
@@ -83,7 +91,9 @@ class WindowViewController: NSViewController {
         
         static let DismissUploadSettingsDialog = "DismissUploadSettingsDialog"
         
-        static let UploadShow = "UploadMetadata"
+        static let OnStartUploadShow = "OnStartUploadShow"
+        
+        static let OnStartUploadData = "OnStartUploadData"
         
         static let IconSelectionChanged = "IconSelectionChanged"
         
@@ -94,6 +104,12 @@ class WindowViewController: NSViewController {
         static let ShowProgressViewControllerOnlyText = "ShowProgressViewControllerOnlyText"
         
         static let ShowOutlineViewController = "ShowOutlineContent"
+        
+        static let UpdateShowUploadProgress = "UpdateShowUploadProgress"
+        
+        static let ToggleUploadProgressWindow = "ToggleUploadProgressWindow"
+        
+        static let AddUploadTask = "AddUploadTask"
     }
 }
 

@@ -9,6 +9,7 @@
         <customObject id="-2" userLabel="File's Owner" customClass="CollectionViewItem" customModule="MediaUploader" customModuleProvider="target">
             <connections>
                 <outlet property="imageView" destination="l1u-QM-loF" id="Z14-LO-4cC"/>
+                <outlet property="progressIndicator" destination="WS7-sF-AfI" id="WFE-Ug-FjX"/>
                 <outlet property="textField" destination="54X-aF-Qas" id="6Qu-Vh-EwT"/>
                 <outlet property="view" destination="Hz6-mo-xeY" id="0bl-1N-x8E"/>
             </connections>
@@ -31,14 +32,20 @@
                         <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                     </textFieldCell>
                 </textField>
+                <progressIndicator hidden="YES" wantsLayer="YES" maxValue="100" doubleValue="50" style="bar" translatesAutoresizingMaskIntoConstraints="NO" id="WS7-sF-AfI">
+                    <rect key="frame" x="0.0" y="-6" width="480" height="20"/>
+                </progressIndicator>
             </subviews>
             <constraints>
+                <constraint firstItem="WS7-sF-AfI" firstAttribute="top" secondItem="54X-aF-Qas" secondAttribute="bottom" constant="1" id="8Xx-mt-WoO"/>
                 <constraint firstItem="54X-aF-Qas" firstAttribute="top" secondItem="l1u-QM-loF" secondAttribute="bottom" id="9FW-eC-hRU"/>
                 <constraint firstAttribute="bottom" secondItem="l1u-QM-loF" secondAttribute="bottom" constant="30" id="G3s-xG-4FT"/>
                 <constraint firstItem="l1u-QM-loF" firstAttribute="top" secondItem="Hz6-mo-xeY" secondAttribute="top" id="IA2-KH-QDg"/>
                 <constraint firstItem="l1u-QM-loF" firstAttribute="leading" secondItem="Hz6-mo-xeY" secondAttribute="leading" id="Iae-M7-U4o"/>
                 <constraint firstAttribute="trailing" secondItem="54X-aF-Qas" secondAttribute="trailing" id="T4C-9c-q56"/>
                 <constraint firstItem="54X-aF-Qas" firstAttribute="leading" secondItem="Hz6-mo-xeY" secondAttribute="leading" id="WqU-8l-6E3"/>
+                <constraint firstItem="WS7-sF-AfI" firstAttribute="leading" secondItem="Hz6-mo-xeY" secondAttribute="leading" id="bkm-Rc-ZBH"/>
+                <constraint firstAttribute="trailing" secondItem="WS7-sF-AfI" secondAttribute="trailing" id="pKK-DU-bzl"/>
                 <constraint firstAttribute="trailing" secondItem="l1u-QM-loF" secondAttribute="trailing" id="qq6-Ea-Ivz"/>
             </constraints>
             <point key="canvasLocation" x="139" y="154"/>
