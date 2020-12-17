@@ -42,7 +42,7 @@ final class FileUploadOperation: AsyncOperation {
         
         if status == 0 {
             if self.step == Step.kMetadataJsonUpload {
-                print ("------------  Upload of metadata.json completed successfully!")
+                print ("------------  Completed successfully: \(sasToken) ")
                 print ("------------  Cleanup of ", self.args[1])
                 do {
                     if FileManager.default.fileExists(atPath: self.args[1]) {
@@ -74,7 +74,7 @@ final class FileUploadOperation: AsyncOperation {
                 print(self.uploadRecord.completionStatusString)
                 self.uploadRecord.uploadProgress = 100.0
                 self.uploadRecord.completionStatusString = "CompletedWithErrors"
-                print ("------------  Upload of data completed failed!")
+                print ("------------  Upload of data FAILED!")
                 NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.UpdateShowUploadProgress),
                                                 object: nil)
             }

@@ -57,6 +57,21 @@ extension Node {
             icon = NSWorkspace.shared.icon(forFileType: iconType!)
         }
         
+        return icon
+    }
+    
+    var nodeIconResized: NSImage {
+        var icon = NSImage()
+        if let nodeURL = url {
+            // If the node has a URL, use it to obtain its icon.
+            icon = nodeURL.icon
+        } else {
+            // No URL for this node, so determine it's icon generically.
+            let osType = isDirectory ? kGenericFolderIcon : kGenericDocumentIcon
+            let iconType = NSFileTypeForHFSTypeCode(OSType(osType))
+            icon = NSWorkspace.shared.icon(forFileType: iconType!)
+        }
+        
         return resize(image: icon, w: 80, h: 80)
     }
     

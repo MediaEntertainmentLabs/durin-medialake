@@ -33,7 +33,7 @@ class ClickedCollectionView: NSCollectionView {
         let uploadMenuItemTitle = String(format: uploadItemFormat, node!.title)
         let menu = NSMenu()
         let item = NSMenuItem(title: uploadMenuItemTitle, action: #selector(upload(_:)), keyEquivalent: "")
-        item.representedObject = node?.title
+        item.representedObject = node
         menu.addItem(item)
         return menu
     }
@@ -41,6 +41,7 @@ class ClickedCollectionView: NSCollectionView {
     @objc func upload(_ item: NSMenuItem) {
         if(uploadSettingsViewController == nil) {
             uploadSettingsViewController = UploadSettingsViewController()
+            uploadSettingsViewController.showId = (item.representedObject as? Node)!.identifier // showId
             let storyboard = NSStoryboard(name: "Main", bundle: nil)
             let uploadSettingsWindowController = storyboard.instantiateController(withIdentifier: "UploadSettingsWindow") as? NSWindowController
             if let uploadSettingsWindow = uploadSettingsWindowController!.window {
@@ -51,15 +52,14 @@ class ClickedCollectionView: NSCollectionView {
                 uploadSettingsWindow.contentViewController = uploadSettingsViewController
                 controller.showWindow(self)
                 
-                // Notification to remove an item.
                 NotificationCenter.default.addObserver(
                     self,
                     selector: #selector(resetViewController(_:)),
                     name: Notification.Name(WindowViewController.NotificationNames.DismissUploadSettingsDialog),
                     object: nil)
             }
-            uploadSettingsViewController.showNameField.stringValue = (item.representedObject as? String)!
-            uploadSettingsViewController.shootDate.dateValue = Date()
+            uploadSettingsViewController.showNameField.stringValue = (item.representedObject as? Node)!.title
+            //uploadSettingsViewController.shootDate.dateValue = Date()
         }
     }
     
@@ -85,7 +85,7 @@ class CollectionViewItem: NSCollectionViewItem {
         didSet {
             guard isViewLoaded else { return }
             if let node = node {
-                imageView?.image = node.nodeIcon
+                imageView?.image = node.nodeIconResized
                 textField?.stringValue = node.title
             } else {
                 imageView?.image = nil

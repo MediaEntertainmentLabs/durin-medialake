@@ -15,6 +15,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         case kFailedFetchListShows
         case kFailedUploadShowSASToken
         case kFailedFetchShowContent
+        case kFailedFetchSeasonsAndEpisodes
     }
     
     var mainWindowController : NSWindowController!

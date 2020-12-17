@@ -93,6 +93,7 @@ class OutlineViewController: NSViewController,
     var currentValue: String?                  // the current value for one of the keys in the dictionary
     var root : TreeElement!
     
+    var cancelTask : Bool = false
 
     
     // MARK: View Controller Lifecycle
@@ -134,6 +135,10 @@ class OutlineViewController: NSViewController,
             root.add(newRoot)
             addPathToTree(root: newRoot, fullPath: &fullPath)
         }
+    }
+    
+    @objc private func onCancelPendingTasks(_ notification: Notification) {
+        self.cancelTask = true
     }
     
     static let showID = "1001"
@@ -203,15 +208,25 @@ class OutlineViewController: NSViewController,
                 }
                 self.addPathToTree(root: self.root, fullPath: &reversedComponents)
             }
-            
-            self.addGroupNode(showName, identifier: OutlineViewController.showID)
-            
+  
+                // TODO: add cancelation logic
+//            if self.cancelTask {
+//                DispatchQueue.main.async {
+//                    NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.ShowOutlineViewController),
+//                                                    object: nil)
+//                }
+//                return
+//            }
+            DispatchQueue.main.async {
+                self.addGroupNode(showName, identifier: OutlineViewController.showID)
+            }
             if self.root != nil {
                 
                 let start = DispatchTime.now() // <<<<<<<<<< Start time
                 self.addFileSystemObject(root: self.root, isFolder: self.root.hasChildren(), indexPath: IndexPath(indexes: [0, 0]))
                 let end = DispatchTime.now()   // <<<<<<<<<<   end time
                 let timeInterval_msec = Double(end.uptimeNanoseconds - start.uptimeNanoseconds) / 1_000_000
+                
                 print ("------------ update OutlineView Tree UI: ", timeInterval_msec, " ms")
                 
                 DispatchQueue.main.async {
@@ -234,12 +249,18 @@ class OutlineViewController: NSViewController,
         if root.hasChildren() {
             let node = OutlineViewController.fileSystemNode(from: root.value, isFolder: true)
             DispatchQueue.main.async {
+                if self.cancelTask {
+                    //return
+                }
                 self.treeController.insert(node, atArrangedObjectIndexPath: indexPath)
             }
             
         } else {
             let node = OutlineViewController.leafNode(from: root.value)
             DispatchQueue.main.async {
+                if self.cancelTask {
+                    //return
+                }
                 self.treeController.insert(node, atArrangedObjectIndexPath: indexPath)
             }
         }
@@ -264,9 +285,7 @@ class OutlineViewController: NSViewController,
         treeController.content = nil
         contents.removeAll()
         insertionIndexPath = IndexPath(index: contents.count)
-        DispatchQueue.main.async {
-            self.treeController.insert(node, atArrangedObjectIndexPath: insertionIndexPath)
-        }
+        self.treeController.insert(node, atArrangedObjectIndexPath: insertionIndexPath)
     }
     
     
@@ -277,6 +296,12 @@ class OutlineViewController: NSViewController,
             self,
             selector: #selector(onSelectedShow(_:)),
             name: Notification.Name(WindowViewController.NotificationNames.IconSelectionChanged),
+            object: nil)
+        
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(onCancelPendingTasks(_:)),
+            name: Notification.Name(WindowViewController.NotificationNames.CancelPendingURLTasks),
             object: nil)
     }
     
@@ -291,6 +316,11 @@ class OutlineViewController: NSViewController,
         NotificationCenter.default.removeObserver(
             self,
             name: Notification.Name(WindowViewController.NotificationNames.IconSelectionChanged),
+            object: nil)
+        
+        NotificationCenter.default.removeObserver(
+            self,
+            name: Notification.Name(WindowViewController.NotificationNames.CancelPendingURLTasks),
             object: nil)
     }
 }

@@ -33,7 +33,7 @@ class WindowViewController: NSViewController {
         
         if let w = self.view.window{
             var frame = w.frame
-            frame.size = NSSize(width: 1100, height: 800)
+            frame.size = NSSize(width: 1400, height: 1000)
             w.setFrame(frame, display: true, animate: true)
             
         }
@@ -110,6 +110,8 @@ class WindowViewController: NSViewController {
         static let ToggleUploadProgressWindow = "ToggleUploadProgressWindow"
         
         static let AddUploadTask = "AddUploadTask"
+        
+        static let CancelPendingURLTasks = "CancelPendingURLTasks"
     }
 }
 

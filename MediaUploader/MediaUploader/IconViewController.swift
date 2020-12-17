@@ -78,11 +78,9 @@ class IconViewController: NSViewController {
             selector: #selector(onStartUploadShow(_:)),
             name: Notification.Name(WindowViewController.NotificationNames.OnStartUploadShow),
             object: nil)
-        
     }
     
-    func showId(showName: String) -> String
-    {
+    func showId(showName: String) -> String {
         return (self.listShows[showName] as! [String:String])["showId"]!
     }
     
@@ -99,8 +97,7 @@ class IconViewController: NSViewController {
         fetchListShows(cdsUserId : cdsUserId)
     }
     
-    private func fetchListShows(cdsUserId: String)
-    {
+    private func fetchListShows(cdsUserId: String) {
         fetchListOfShowsTask(cdsUserId : cdsUserId) { (result) in
             
             DispatchQueue.main.async {
@@ -123,6 +120,7 @@ class IconViewController: NSViewController {
                 for show in self.listShows {
                     
                     let node = OutlineViewController.fileSystemNode(from: show.key, isFolder: true)
+                    node.identifier = self.showId(showName: show.key)
                     contentArray.append(node)
                     
                     /*
@@ -167,25 +165,30 @@ class IconViewController: NSViewController {
     @objc func onStartUploadShow(_ notification: NSNotification) throws {
         
         let showName = notification.userInfo?["showName"] as! String
-        let shootNumber = notification.userInfo?["shootNumber"] as! String
-        let shootDate = notification.userInfo?["shootDate"] as! String
+        let season = notification.userInfo?["season"] as! (String,String) // name:Id
+        let shootDay = notification.userInfo?["shootDay"] as! String
+        let blockOrEpisode = notification.userInfo?["blockOrEpisode"] as! (String,String) // name:Id
+        let isBlock = notification.userInfo?["isBlock"] as! Bool
+        let batch = notification.userInfo?["batch"] as! String
+        let unit = notification.userInfo?["unit"] as! String
+        let team = notification.userInfo?["team"] as! String
+        
         let info = notification.userInfo?["info"] as! String
-        let description = notification.userInfo?["description"] as! String
         let notificationEmail = notification.userInfo?["notificationEmail"] as! String
         let checksum = notification.userInfo?["checksum"] as! String
         let type = notification.userInfo?["type"] as! String
         let files = notification.userInfo?["files"] as! [[String:Any]]
         let srcDir = notification.userInfo?["srcDir"] as! String
         
-        var folderLayoutStr : String
-        let folderLayout = (self.listShows[showName] as! [String:String])["folderLayout"]
-        if folderLayout == "Date/Type" {
-            folderLayoutStr = shootDate + "/" + type + "/"
-        } else if folderLayout == "Type/Date" {
-            folderLayoutStr = type + "/" + shootDate + "/"
-        } else {
-            throw "Unsupported folderLayout!"
-        }
+        
+        // template for full path for upload:
+        //      [show name]/[season name]/[block name]/[shootday]/[batch]/[unit ]/Camera RAW/browsed folder
+        //
+        // folderLayoutStr -> [season name]/[block name]/[shootday]/[batch]/[unit ]/Camera RAW
+  
+        
+        let metadatafolderLayout = "\(season.0)/\(blockOrEpisode.0 as String)/\(shootDay)/\(batch)/\(unit)/"
+        let folderLayoutStr = metadatafolderLayout + "\(type)/"
         
         var jsonRecords : [Any] = []
         for item in files {
@@ -195,25 +198,33 @@ class IconViewController: NSViewController {
                 jsonRecords.append(dict)
             }
         }
+        let episodeId = isBlock ? "" : blockOrEpisode.1
+        let blockId = isBlock ? blockOrEpisode.1 : ""
+        
         let json : [String : Any] = [
             "showId": self.showId(showName: showName),
-            "shootNumber":shootNumber,
-            "shootDate":shootDate,
+            "seasonId":season.1,
+            "episodeId":episodeId,
+            "blockId":blockId,
+            "batch":batch,
+            "unit":unit,
+            "team":team,
+            "shootDay":shootDay,
             "info":info,
-            "description":description,
             "notificationEmail":notificationEmail,
             "checksum":checksum, // TODO: remove checksum from common part
-            "type":type,
             "files":jsonRecords
         ]
         let jsonData = try? JSONSerialization.data(withJSONObject: json, options: .prettyPrinted)
         var metadataPath : URL!
         let metadataJsonFilename = showName + "_metadata.json"
         
+        
         if let metadataJsonPath = FileManager.default.urls(for: FileManager.SearchPathDirectory.documentDirectory,
                                                             in: FileManager.SearchPathDomainMask.allDomainsMask).first {
           
             metadataPath = metadataJsonPath.appendingPathComponent(metadataJsonFilename)
+            print ("---------------------- ", metadataPath)
             do {
                 try jsonData!.write(to: metadataPath)
             } catch let error as NSError {
@@ -222,7 +233,6 @@ class IconViewController: NSViewController {
                 return
             }
         }
-        //self.pendingFiles[showName] = files
   
         var sasToken : String!
         
@@ -244,14 +254,10 @@ class IconViewController: NSViewController {
                                        sasToken: sasToken,
                                        srcDataPath: srcDir,
                                        srcPath: metadataPath.path,
-                                       dstPath:"metadata.json",
+                                       dstPath:metadatafolderLayout + "metadata.json",
                                        step: FileUploadOperation.Step.kMetadataJsonUpload
                                        )
                 }
-//                NotificationCenter.default.post(
-//                    name: Notification.Name(WindowViewController.NotificationNames.OnStartUploadMetadataJson),
-//                    object: nil,
-//                    userInfo: ["showName" : showName, "folderLayoutStr" : folderLayoutStr, "sasToken" : sasToken!])
         }
         
         if sasToken != nil {
@@ -261,7 +267,7 @@ class IconViewController: NSViewController {
                                    sasToken: sasToken,
                                    srcDataPath: srcDir,
                                    srcPath: metadataPath.path,
-                                   dstPath:"metadata.json",
+                                   dstPath:metadatafolderLayout + "metadata.json",
                                    step: FileUploadOperation.Step.kMetadataJsonUpload)
         }
     }
@@ -300,9 +306,8 @@ class IconViewController: NSViewController {
         }
     }
     
-    func uploadDir(showName: String, folderLayoutStr: String, sasToken: String, uploadRecord : UploadTableRecord)
-    {
-        print("------- upload DIR:", sasToken)
+    func uploadDir(showName: String, folderLayoutStr: String, sasToken: String, uploadRecord : UploadTableRecord) {
+        print("------------ upload DIR:", sasToken)
         let dstPath = "/" + folderLayoutStr
         let sasSplit = sasToken.components(separatedBy: "?")
         let sasTokenWithDestPath = sasSplit[0] + dstPath+"?" + sasSplit[1]
@@ -319,11 +324,7 @@ class IconViewController: NSViewController {
         self.uploadQueue.addOperations([uploadOperation], waitUntilFinished: false)
     }
     
-
-    
-    
-    func uploadFiles(files: [[String:Any]], showName: String, folderLayoutStr: String, sasToken: String)
-    {
+    func uploadFiles(files: [[String:Any]], showName: String, folderLayoutStr: String, sasToken: String) {
         do {
             for item in files {
                 for (filePath, rec) in item {

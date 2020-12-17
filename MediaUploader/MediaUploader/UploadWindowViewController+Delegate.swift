@@ -113,11 +113,15 @@ extension UploadWindowViewController: NSTableViewDelegate {
             }
         } else if tableColumn?.identifier == NSUserInterfaceItemIdentifier(rawValue: ColumnIdentifiers.StatusColumn) {
             if let cell = tableView.makeView(withIdentifier: tableColumn!.identifier, owner: self) as? NSTableCellView {
-                //cell.textField?.stringValue = item.completionStatusString
-                
+                cell.textField?.stringValue = item.completionStatusString
+               
                 if doubleEqual(item.uploadProgress, 100.0) {
                     // TODO : in case of success green
+                    //if item.completionStatusString == kSuComple
+                    cell.imageView?.isHidden = false
                     cell.imageView?.image = NSImage(named: NSImage.statusAvailableName)
+                } else {
+                    cell.imageView?.isHidden = true
                 }
                 return cell
             }

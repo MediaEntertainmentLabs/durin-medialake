@@ -26,6 +26,8 @@ class LoginViewController: NSViewController {
         
     static let kFetchSASTokenURL = "https://prod-06.southeastasia.logic.azure.com:443/workflows/00d8f3606ad740c681afd4ca2a4ce5a4/triggers/manual/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=Kq1sS8N67EEhfQOy5sNxSfHP8om7CxUDteQnsQ_W7tY"
     
+    static let fetchSeasonsAndEpisodesURL = "https://prod-21.southeastasia.logic.azure.com:443/workflows/4af7e45e70fb4a0da10eb7e7da282c12/triggers/manual/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=Vf3c6BHMdTgo08D5TnWjmU4hLoPhI0VTTHK-tgPVe44"
+    
     var accessToken = String()
     static var application : MSALPublicClientApplication?
     var webViewParamaters : MSALWebviewParameters?
@@ -442,7 +444,7 @@ class LoginViewController: NSViewController {
             
             NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.updateUserNameLabel),
                                             object: nil,
-                                            userInfo: ["azureUserName": LoginViewController.account?.username!])
+                                            userInfo: ["azureUserName": LoginViewController.account?.username! as Any])
             
             NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.LoginSuccessfull),
                                             object: nil,
