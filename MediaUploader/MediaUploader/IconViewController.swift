@@ -175,66 +175,42 @@ class IconViewController: NSViewController {
         
         let info = notification.userInfo?["info"] as! String
         let notificationEmail = notification.userInfo?["notificationEmail"] as! String
-        let checksum = notification.userInfo?["checksum"] as! String
-        let type = notification.userInfo?["type"] as! String
-        let files = notification.userInfo?["files"] as! [[String:Any]]
-        let srcDir = notification.userInfo?["srcDir"] as! String
+        let checksumAlgorithm = notification.userInfo?["checksum"] as! String
+        let files = notification.userInfo?["files"] as! [String:[[String:Any]]]
+        let srcDirs = notification.userInfo?["srcDir"] as! [String:String]
+        var pendingUploads = notification.userInfo?["pendingUploads"] as? [String:UploadTableRecord]
         
+        let keys = [UploadSettingsViewController.kCameraRAWFileType,
+                    UploadSettingsViewController.kAudioFileType,
+                    UploadSettingsViewController.kCDLFileType,
+                    UploadSettingsViewController.kLUTFileType]
         
         // template for full path for upload:
         //      [show name]/[season name]/[block name]/[shootday]/[batch]/[unit ]/Camera RAW/browsed folder
         //
-        // folderLayoutStr -> [season name]/[block name]/[shootday]/[batch]/[unit ]/Camera RAW
-  
-        
         let metadatafolderLayout = "\(season.0)/\(blockOrEpisode.0 as String)/\(shootDay)/\(batch)/\(unit)/"
-        let folderLayoutStr = metadatafolderLayout + "\(type)/"
+        let metadataJsonFilename = NSUUID().uuidString + "_metadata.json"
         
-        var jsonRecords : [Any] = []
-        for item in files {
-            for (_, rec) in item {
-                var dict = rec as! [String:Any]
-                dict["filePath"] = folderLayoutStr + (dict["filePath"]! as! String)
-                jsonRecords.append(dict)
-            }
-        }
-        let episodeId = isBlock ? "" : blockOrEpisode.1
-        let blockId = isBlock ? blockOrEpisode.1 : ""
-        
-        let json : [String : Any] = [
-            "showId": self.showId(showName: showName),
-            "seasonId":season.1,
-            "episodeId":episodeId,
-            "blockId":blockId,
-            "batch":batch,
-            "unit":unit,
-            "team":team,
-            "shootDay":shootDay,
-            "info":info,
-            "notificationEmail":notificationEmail,
-            "checksum":checksum, // TODO: remove checksum from common part
-            "files":jsonRecords
-        ]
-        let jsonData = try? JSONSerialization.data(withJSONObject: json, options: .prettyPrinted)
-        var metadataPath : URL!
-        let metadataJsonFilename = showName + "_metadata.json"
-        
-        
-        if let metadataJsonPath = FileManager.default.urls(for: FileManager.SearchPathDirectory.documentDirectory,
-                                                            in: FileManager.SearchPathDomainMask.allDomainsMask).first {
-          
-            metadataPath = metadataJsonPath.appendingPathComponent(metadataJsonFilename)
-            print ("---------------------- ", metadataPath)
-            do {
-                try jsonData!.write(to: metadataPath)
-            } catch let error as NSError {
-                print(error)
-                // TODO: show Alert
-                return
-            }
-        }
-  
+
         var sasToken : String!
+        
+        if (pendingUploads == nil) {
+            pendingUploads = [:]
+            for type in keys {
+                if files[type]?.count == 0 {
+                    continue
+                }
+                
+                // folderLayoutStr -> [season name]/[block name]/[shootday]/[batch]/[unit ]/[type]
+                let folderLayoutStr = metadatafolderLayout + "\(type)/"
+     
+                let uploadRecord = UploadTableRecord(showName: showName, srcPath: srcDirs[type]!, dstPath: folderLayoutStr)
+                pendingUploads![type] = uploadRecord
+                NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.AddUploadTask),
+                                                object: nil,
+                                                userInfo: ["uploadRecord" : uploadRecord])
+            }
+        }
         
         if let sas = AppDelegate.cacheSASTokens[showName] {
             // if SAS Token is already in cache just use it
@@ -249,79 +225,163 @@ class IconViewController: NSViewController {
                 sasToken = result["data"] as? String
                 AppDelegate.cacheSASTokens[showName]=sasToken
 
-                self.uploadMetadataJsonOperation(showName: showName,
-                                       folderLayoutStr : folderLayoutStr,
-                                       sasToken: sasToken,
-                                       srcDataPath: srcDir,
-                                       srcPath: metadataPath.path,
-                                       dstPath:metadatafolderLayout + "metadata.json",
-                                       step: FileUploadOperation.Step.kMetadataJsonUpload
-                                       )
-                }
+                NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.OnStartUploadShow),
+                                                object: nil,
+                                                userInfo: ["showName": showName,
+                                                           "season": season,
+                                                           "shootDay":shootDay,
+                                                           "blockOrEpisode":blockOrEpisode,
+                                                           "isBlock":isBlock,
+                                                           "batch":batch,
+                                                           "unit":unit,
+                                                           "team":team,
+                                                           "info":info,
+                                                           "checksum":"md5",
+                                                           "notificationEmail":notificationEmail,
+                                                           "files": files,
+                                                           "srcDir":srcDirs,
+                                                           "pendingUploads":pendingUploads as Any])
+            }
         }
         
-        if sasToken != nil {
-
-            uploadMetadataJsonOperation(showName: showName,
-                                   folderLayoutStr : folderLayoutStr,
-                                   sasToken: sasToken,
-                                   srcDataPath: srcDir,
-                                   srcPath: metadataPath.path,
-                                   dstPath:metadatafolderLayout + "metadata.json",
-                                   step: FileUploadOperation.Step.kMetadataJsonUpload)
+        // wait for token to aquire in background task
+        if sasToken == nil {
+            return
         }
+        
+        var jsonRecords : [Any] = []
+        var filesToUpload : [String:String] = [:]
+        var pendingDataTasks: [FileUploadOperation] = []
+        
+        for type in keys {
+            if files[type]?.count == 0 {
+                continue
+            }
+            
+    
+            // folderLayoutStr -> [season name]/[block name]/[shootday]/[batch]/[unit ]/[type]
+            let folderLayoutStr = metadatafolderLayout + "\(type)/"
+
+            // sasToken is unavailable here, will be filled in latter
+            let op = self.createUploadDirTask(showName: showName, folderLayoutStr: folderLayoutStr, sasToken: sasToken,  uploadRecord: pendingUploads![type]!)
+            pendingDataTasks.append(op)
+          
+            
+            for item in files[type]! {
+                for (key, rec) in item {
+                    let dict = rec as! [String:Any]
+                    filesToUpload[dict["filePath"] as! String] = key
+                    jsonRecords.append(rec)
+                }
+            }
+        }
+        
+        let episodeId = isBlock ? "" : blockOrEpisode.1
+        let blockId = isBlock ? blockOrEpisode.1 : ""
+        
+        let json : [String : Any] = [
+            "showId": self.showId(showName: showName),
+            "seasonId":season.1,
+            "episodeId":episodeId,
+            "blockId":blockId,
+            "batch":batch,
+            "unit":unit,
+            "team":team,
+            "shootDay":shootDay,
+            "info":info,
+            "notificationEmail":notificationEmail,
+            "checksum":checksumAlgorithm,
+            "files":jsonRecords
+        ]
+        let jsonData = try? JSONSerialization.data(withJSONObject: json, options: [.sortedKeys, .prettyPrinted])
+        var metadataPath : URL!
+        
+        
+        if let metadataJsonPath = FileManager.default.urls(for: FileManager.SearchPathDirectory.documentDirectory,
+                                                           in: FileManager.SearchPathDomainMask.allDomainsMask).first {
+            
+            metadataPath = metadataJsonPath.appendingPathComponent(metadataJsonFilename)
+            print ("---------------------- ", metadataPath as Any)
+            do {
+                try jsonData!.write(to: metadataPath)
+            } catch let error as NSError {
+                print(error)
+                // TODO: show Alert
+                return
+            }
+        }
+
+        self.uploadMetadataJsonOperation(showName: showName,
+                                         sasToken: sasToken,
+                                         dataFiles: filesToUpload,
+                                         metadataFilePath: metadataPath.path,
+                                         dstPath: metadatafolderLayout + "metadata.json",
+                                         dependens : pendingDataTasks)
     }
     
-    func uploadMetadataJsonOperation(showName: String, folderLayoutStr: String, sasToken: String, srcDataPath: String, srcPath: String, dstPath: String, step: FileUploadOperation.Step) {
+    
+    func uploadMetadataJsonOperation(showName: String,
+                                     sasToken: String,
+                                     dataFiles: [String:String],
+                                     metadataFilePath: String,
+                                     dstPath: String,
+                                     dependens : [FileUploadOperation]) {
         
         let sasSplit = sasToken.components(separatedBy: "?")
         let sasTokenWithDestPath = sasSplit[0] + "/" + dstPath + "?" + sasSplit[1]
         
-        let uploadRecord = UploadTableRecord(showName: showName, srcPath: srcDataPath, dstPath: folderLayoutStr)
+        // calculate checksum per each file being upload
+        let calcChecksumOperation = CalculateChecksumOperation(srcFiles: dataFiles, metadataFilePath : metadataFilePath)
         
-        DispatchQueue.main.async {
-            let uploadOperation = FileUploadOperation(showName: showName,
-                                                      folderLayoutStr: folderLayoutStr,
-                                                      sasToken: sasToken,
-                                                      step: step,
-                                                      uploadRecord : uploadRecord,
-                                                      cmd: LoginViewController.kAzCopyCmdPath,
-                                                      args: ["copy", srcPath, sasTokenWithDestPath])
+        self.uploadQueue.addOperations([calcChecksumOperation], waitUntilFinished: false)
+        
+        calcChecksumOperation.completionBlock = {
+            if calcChecksumOperation.isCancelled {
+                return
+            }
             
-            uploadOperation.completionBlock = {
-                if uploadOperation.isCancelled {
-                    return
+            DispatchQueue.main.async {
+                let uploadOperation = FileUploadOperation(showName: showName,
+                                                          showId: self.showId(showName: showName),
+                                                          cdsUserId: self.cdsUserId,
+                                                          sasToken: sasToken,
+                                                          step: FileUploadOperation.Step.kMetadataJsonUpload,
+                                                          uploadRecord : nil,
+                                                          dependens : dependens,
+                                                          cmd: LoginViewController.kAzCopyCmdPath,
+                                                          args: ["copy", metadataFilePath, sasTokenWithDestPath])
+                
+                uploadOperation.completionBlock = {
+                    if uploadOperation.isCancelled {
+                        return
+                    }
+                    self.uploadQueue.addOperations(uploadOperation.dependens , waitUntilFinished: false)
                 }
                 
-                DispatchQueue.main.async {
-                    self.uploadDir(showName: showName, folderLayoutStr: folderLayoutStr, sasToken: sasToken,  uploadRecord: uploadOperation.uploadRecord)
-                }
+                self.uploadQueue.addOperations([uploadOperation], waitUntilFinished: false)
             }
-        
-            self.uploadQueue.addOperations([uploadOperation], waitUntilFinished: false)
-            
-            NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.AddUploadTask),
-                                            object: nil,
-                                            userInfo: ["uploadRecord" : uploadRecord])
         }
     }
     
-    func uploadDir(showName: String, folderLayoutStr: String, sasToken: String, uploadRecord : UploadTableRecord) {
-        print("------------ upload DIR:", sasToken)
+    func createUploadDirTask(showName: String, folderLayoutStr: String, sasToken: String?, uploadRecord : UploadTableRecord) -> FileUploadOperation {
+        print("------------ upload DIR:", sasToken!)
         let dstPath = "/" + folderLayoutStr
-        let sasSplit = sasToken.components(separatedBy: "?")
+        let sasSplit = sasToken!.components(separatedBy: "?")
         let sasTokenWithDestPath = sasSplit[0] + dstPath+"?" + sasSplit[1]
         
         
         let uploadOperation = FileUploadOperation(showName: showName,
-                                                  folderLayoutStr: folderLayoutStr,
-                                                  sasToken: sasToken,
+                                                  showId: self.showId(showName: showName),
+                                                  cdsUserId: self.cdsUserId,
+                                                  sasToken: sasToken!,
                                                   step: FileUploadOperation.Step.kDataUpload,
                                                   uploadRecord : uploadRecord,
+                                                  dependens: [],
                                                   cmd: LoginViewController.kAzCopyCmdPath,
                                                   args: ["copy", uploadRecord.srcPath, sasTokenWithDestPath, "--recursive"])
         
-        self.uploadQueue.addOperations([uploadOperation], waitUntilFinished: false)
+        //self.uploadQueue.addOperations([uploadOperation], waitUntilFinished: false)
+        return uploadOperation
     }
     
     func uploadFiles(files: [[String:Any]], showName: String, folderLayoutStr: String, sasToken: String) {
@@ -386,10 +446,12 @@ class IconViewController: NSViewController {
                     #endif
                     let uploadRecord = UploadTableRecord(showName: showName, srcPath: filePath, dstPath: filenameToUpload)
                     let uploadOperation = FileUploadOperation(showName: showName,
-                                                              folderLayoutStr: folderLayoutStr,
+                                                              showId: self.showId(showName: showName),
+                                                              cdsUserId: self.cdsUserId,
                                                               sasToken: sasToken,
                                                               step: FileUploadOperation.Step.kDataUpload,
                                                               uploadRecord : uploadRecord,
+                                                              dependens: [],
                                                               cmd: LoginViewController.kAzCopyCmdPath,
                                                               args: ["copy", filePath, sasTokenWithDestPath])
                     self.uploadQueue.addOperations([uploadOperation], waitUntilFinished: false)

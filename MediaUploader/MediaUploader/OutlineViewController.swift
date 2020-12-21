@@ -77,6 +77,9 @@ class OutlineViewController: NSViewController,
     @objc dynamic var contents: [AnyObject] = []
     
     var sasToken : String!
+    var currentShowName:  String!
+    var currentShowId: String!
+    var cdsUserId: String!
     
     var savedSelection: [IndexPath] = []
     
@@ -86,8 +89,8 @@ class OutlineViewController: NSViewController,
     let recordKey = "Blob"
     let dictionaryKeys = Set<String>(["Name", "Content-Length"])
 
+    
     // a few variables to hold the results as we parse the XML
-
     var results: [[String: String]]?           // the whole array of dictionaries
     var currentDictionary: [String: String]? // the current dictionary
     var currentValue: String?                  // the current value for one of the keys in the dictionary
@@ -144,12 +147,29 @@ class OutlineViewController: NSViewController,
     static let showID = "1001"
     @objc private func onSelectedShow(_ notification: Notification) {
         
-        let showName = notification.userInfo?["showName"] as! String
-        let showId = notification.userInfo?["showId"] as! String
-        let cdsUserId = notification.userInfo?["cdsUserId"] as! String
+        self.currentShowName = notification.userInfo?["showName"] as? String
+        self.currentShowId = notification.userInfo?["showId"] as? String
+        self.cdsUserId = notification.userInfo?["cdsUserId"] as? String
         
-        fetchShowContent(showName: showName, showId: showId, cdsUserId: cdsUserId)
+        fetchShowContent(showName: self.currentShowName, showId: self.currentShowId, cdsUserId: self.cdsUserId)
     }
+    
+    @IBAction func refreshShowContent(_ sender: Any) {
+        if self.currentShowName == nil {
+            return
+        }
+        // update show content
+        NotificationCenter.default.post(
+            name: Notification.Name(WindowViewController.NotificationNames.ShowProgressViewController),
+            object: nil,
+            userInfo: ["progressLabel" : "Fetching show content..."])
+        
+        NotificationCenter.default.post(
+            name: Notification.Name(WindowViewController.NotificationNames.IconSelectionChanged),
+            object: nil,
+            userInfo: ["showName" : self.currentShowName!, "showId": self.currentShowId!, "cdsUserId" : self.cdsUserId!])
+    }
+    
     
     private func fetchShowContent(showName : String, showId : String, cdsUserId : String) {
         

@@ -7,6 +7,7 @@
 
 import Cocoa
 
+
 final class FileUploadOperation: AsyncOperation {
 
     enum Step {
@@ -15,21 +16,25 @@ final class FileUploadOperation: AsyncOperation {
     }
     
     private let showName: String
-    private let folderLayoutStr: String
-    private let sasToken: String
-    let uploadRecord : UploadTableRecord
+    private let showId: String
+    private let cdsUserId: String
+    
+    var sasToken: String
+    var uploadRecord : UploadTableRecord?
     var completionStatus : Int
 
-    
     private let cmd: String
     private let args: [String]
     private let step: FileUploadOperation.Step
+    var dependens : [FileUploadOperation]!
     
-    init(showName: String, folderLayoutStr: String, sasToken: String, step: FileUploadOperation.Step, uploadRecord : UploadTableRecord, cmd: String, args: [String]) {
+    init(showName: String, showId: String, cdsUserId: String, sasToken: String, step: FileUploadOperation.Step, uploadRecord : UploadTableRecord?, dependens : [FileUploadOperation], cmd: String, args: [String]) {
         self.showName = showName
-        self.folderLayoutStr = folderLayoutStr
+        self.showId = showId
+        self.cdsUserId = cdsUserId
         self.sasToken = sasToken
         self.uploadRecord = uploadRecord
+        self.dependens = dependens
         self.completionStatus = 0
         
         self.step = step
@@ -57,24 +62,42 @@ final class FileUploadOperation: AsyncOperation {
                 
             } else if self.step == Step.kDataUpload {
                 DispatchQueue.main.async {
-                    self.uploadRecord.uploadProgress = 100.0
-                    self.uploadRecord.completionStatusString = "Completed"
+                    self.uploadRecord!.uploadProgress = 100.0
+                    self.uploadRecord!.completionStatusString = "Completed"
                     print ("------------  Upload of data completed successfully!")
                     NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.UpdateShowUploadProgress),
                                                     object: nil,
                                                     userInfo: ["showName" : self.showName,
-                                                               "progress" : self.uploadRecord.uploadProgress])
+                                                               "progress" : self.uploadRecord!.uploadProgress])
+                    // update show content
+//                    NotificationCenter.default.post(
+//                        name: Notification.Name(WindowViewController.NotificationNames.ShowProgressViewController),
+//                        object: nil,
+//                        userInfo: ["progressLabel" : "Fetching show content..."])
+//
+//                    NotificationCenter.default.post(
+//                        name: Notification.Name(WindowViewController.NotificationNames.IconSelectionChanged),
+//                        object: nil,
+//                        userInfo: ["showName" : self.showName, "showId": self.showId, "cdsUserId" : self.cdsUserId])
+                    
                 }
-                
-
-                // TODO: make progress green
             }
         } else {
             DispatchQueue.main.async {
-                print(self.uploadRecord.completionStatusString)
-                self.uploadRecord.uploadProgress = 100.0
-                self.uploadRecord.completionStatusString = "CompletedWithErrors"
-                print ("------------  Upload of data FAILED!")
+                if self.step == Step.kMetadataJsonUpload {
+                    for dep in self.dependens {
+                        print(dep.uploadRecord!.completionStatusString)
+                        dep.uploadRecord!.uploadProgress = 100.0
+                        dep.uploadRecord!.completionStatusString = "CompletedWithErrors"
+                        print ("------------  Upload of data FAILED!")
+                    }
+                } else if self.step == Step.kDataUpload {
+                    print(self.uploadRecord!.completionStatusString)
+                    self.uploadRecord!.uploadProgress = 100.0
+                    self.uploadRecord!.completionStatusString = "CompletedWithErrors"
+                    print ("------------  Upload of metadata.json FAILED!")
+
+                }
                 NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.UpdateShowUploadProgress),
                                                 object: nil)
             }
@@ -154,7 +177,9 @@ final class FileUploadOperation: AsyncOperation {
             if !resultString.isEmpty {
                 if resultString != "Completed" {
                     error.append("Failed AzCopy Upload!")
-                    self.uploadRecord.completionStatusString = resultString
+                    if self.step == Step.kMetadataJsonUpload {
+                        self.uploadRecord!.completionStatusString = resultString
+                    }
                     self.completionStatus = -1
                     return
                 }
@@ -162,8 +187,8 @@ final class FileUploadOperation: AsyncOperation {
    
             // advance progress only for actually upload data stage
             if !result.isEmpty && self.step == FileUploadOperation.Step.kDataUpload {
-                self.uploadRecord.uploadProgress = ceil(Double(result[0][0])! + 0.5)
-                print("------------ progress : ", self.showName, " ", self.uploadRecord.uploadProgress, " >> ", result[0])
+                self.uploadRecord!.uploadProgress = ceil(Double(result[0][0])! + 0.5)
+                print("------------ progress : ", self.showName, " ", self.uploadRecord!.uploadProgress, " >> ", result[0])
             }
             
             DispatchQueue.main.async {

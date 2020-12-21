@@ -25,6 +25,7 @@
 		C95F6C1F2583748B0008D8A0 /* UploadWindowViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C95F6C1D2583748B0008D8A0 /* UploadWindowViewController.swift */; };
 		C95F6C202583748B0008D8A0 /* UploadWindowViewController+Delegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C95F6C1E2583748B0008D8A0 /* UploadWindowViewController+Delegate.swift */; };
 		C95F6C22258388650008D8A0 /* HorizontalSplitViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C95F6C21258388650008D8A0 /* HorizontalSplitViewController.swift */; };
+		C961739C25910B5800F037EB /* CalculateChecksumOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = C961739B25910B5800F037EB /* CalculateChecksumOperation.swift */; };
 		C962D1A3258788420012F684 /* OutlineViewController+Expansion.swift in Sources */ = {isa = PBXBuildFile; fileRef = C962D1A2258788420012F684 /* OutlineViewController+Expansion.swift */; };
 		C962D1A5258AA3A40012F684 /* PopoverViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C962D1A4258AA3A40012F684 /* PopoverViewController.swift */; };
 		C97621CF25682C3500C48E15 /* IconViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C97621CE25682C3500C48E15 /* IconViewController.swift */; };
@@ -87,6 +88,7 @@
 		C95F6C1D2583748B0008D8A0 /* UploadWindowViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UploadWindowViewController.swift; sourceTree = "<group>"; };
 		C95F6C1E2583748B0008D8A0 /* UploadWindowViewController+Delegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "UploadWindowViewController+Delegate.swift"; sourceTree = "<group>"; };
 		C95F6C21258388650008D8A0 /* HorizontalSplitViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HorizontalSplitViewController.swift; sourceTree = "<group>"; };
+		C961739B25910B5800F037EB /* CalculateChecksumOperation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalculateChecksumOperation.swift; sourceTree = "<group>"; };
 		C962D1A2258788420012F684 /* OutlineViewController+Expansion.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "OutlineViewController+Expansion.swift"; sourceTree = "<group>"; };
 		C962D1A4258AA3A40012F684 /* PopoverViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = PopoverViewController.swift; path = MediaUploader/PopoverViewController.swift; sourceTree = SOURCE_ROOT; };
 		C97621CE25682C3500C48E15 /* IconViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = IconViewController.swift; sourceTree = "<group>"; };
@@ -182,7 +184,6 @@
 				731C9884252EE911008E8A75 /* OutlineViewController+Restoration.swift */,
 				C962D1A2258788420012F684 /* OutlineViewController+Expansion.swift */,
 				731C9850252DE9DC008E8A75 /* Assets.xcassets */,
-				C95F6C1B2582B6EE0008D8A0 /* FileUploadOperation.swift */,
 				C962D1A4258AA3A40012F684 /* PopoverViewController.swift */,
 				C97621DB256C1C4400C48E15 /* UploadSettingsViewController.swift */,
 				C95F6C1D2583748B0008D8A0 /* UploadWindowViewController.swift */,
@@ -216,7 +217,9 @@
 			isa = PBXGroup;
 			children = (
 				C95E74E6257ACEB80073410F /* AsyncOperation.swift */,
+				C961739B25910B5800F037EB /* CalculateChecksumOperation.swift */,
 				C95F6C192580B8B20008D8A0 /* ErrorHandling.swift */,
+				C95F6C1B2582B6EE0008D8A0 /* FileUploadOperation.swift */,
 				731C987E252E4FF3008E8A75 /* Node.swift */,
 				C9807E68257F923A00488E46 /* TreeElement.swift */,
 				C9807E64257E8FD400488E46 /* ProgressViewController.swift */,
@@ -449,6 +452,7 @@
 				731C9885252EE911008E8A75 /* OutlineViewController+Restoration.swift in Sources */,
 				C987BB35253CC93E00A440A7 /* CustomTableCellView.swift in Sources */,
 				C95E74E7257ACEB80073410F /* AsyncOperation.swift in Sources */,
+				C961739C25910B5800F037EB /* CalculateChecksumOperation.swift in Sources */,
 				C987BB37255BC97B00A440A7 /* LoginViewController.swift in Sources */,
 				C987BB292534CA9500A440A7 /* OutlineViewController+Delegate.swift in Sources */,
 				C9807E66257E8FD400488E46 /* ProgressViewController.swift in Sources */,

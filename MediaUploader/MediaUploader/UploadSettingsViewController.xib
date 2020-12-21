@@ -8,16 +8,19 @@
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="UploadSettingsViewController" customModule="MediaUploader" customModuleProvider="target">
             <connections>
+                <outlet property="CDLPathField" destination="K5k-hf-Y2Z" id="ZKz-ic-wxo"/>
+                <outlet property="LUTPathField" destination="gQA-Ps-S6s" id="WaF-B8-loI"/>
+                <outlet property="audioPathField" destination="HN9-sV-hTu" id="pJe-oH-l8b"/>
                 <outlet property="batchPopup" destination="2bX-SP-uOK" id="dFt-F4-PmZ"/>
                 <outlet property="blocksCombo" destination="JCQ-gC-YWP" id="u0l-GV-vOx"/>
                 <outlet property="blocksComboLabel" destination="91a-3J-doT" id="CGQ-Jy-gTM"/>
                 <outlet property="byBlockRadio" destination="cWY-BQ-sOb" id="xDN-mY-22d"/>
                 <outlet property="byEpisodeRadio" destination="P8G-DZ-esU" id="4Uz-IR-u5V"/>
+                <outlet property="cameraRAWPathField" destination="SXU-E0-Y0I" id="VLf-w6-ItX"/>
                 <outlet property="emailField" destination="leY-ZZ-OjU" id="bFS-XJ-9ae"/>
                 <outlet property="episodesCombo" destination="6L9-aV-Tn1" id="6Dv-ss-Ows"/>
                 <outlet property="episodesComboLabel" destination="IGO-YA-whF" id="B8P-TS-RMa"/>
                 <outlet property="filePicker" destination="Kc1-KY-Bap" id="JRF-QC-Lrh"/>
-                <outlet property="folderPathField" destination="SXU-E0-Y0I" id="VLf-w6-ItX"/>
                 <outlet property="infoField" destination="tHf-cq-O5I" id="2hP-Ke-v9f"/>
                 <outlet property="progressFetch" destination="cNg-vX-dEX" id="uGb-hj-Mbq"/>
                 <outlet property="seasonsCombo" destination="b2A-cj-Dku" id="SUN-fB-OfO"/>
@@ -316,6 +319,9 @@
                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                         <font key="font" metaFont="system"/>
                     </buttonCell>
+                    <connections>
+                        <action selector="onClickAudioBrowseButton:" target="-2" id="5Nm-yP-Kzh"/>
+                    </connections>
                 </button>
                 <textField verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="K5k-hf-Y2Z">
                     <rect key="frame" x="140" y="171" width="300" height="21"/>
@@ -331,6 +337,9 @@
                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                         <font key="font" metaFont="system"/>
                     </buttonCell>
+                    <connections>
+                        <action selector="onClickCDLBrowseButton:" target="-2" id="2RY-l3-MKV"/>
+                    </connections>
                 </button>
                 <textField verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="gQA-Ps-S6s">
                     <rect key="frame" x="140" y="135" width="300" height="21"/>
@@ -346,6 +355,9 @@
                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                         <font key="font" metaFont="system"/>
                     </buttonCell>
+                    <connections>
+                        <action selector="onClickLUTBrowseButton:" target="-2" id="OOH-iy-M92"/>
+                    </connections>
                 </button>
                 <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="Enb-Vu-aYe">
                     <rect key="frame" x="94" y="209" width="43" height="16"/>

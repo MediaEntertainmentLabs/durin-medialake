@@ -18,7 +18,11 @@ class UploadSettingsViewController: NSViewController {
     @IBOutlet weak var uploadButton: NSButton!
     
     @IBOutlet weak var progressFetch: NSProgressIndicator!
-    @IBOutlet weak var folderPathField: NSTextField!
+    
+    @IBOutlet weak var cameraRAWPathField: NSTextField!
+    @IBOutlet weak var audioPathField: NSTextField!
+    @IBOutlet weak var CDLPathField: NSTextField!
+    @IBOutlet weak var LUTPathField: NSTextField!
     
     @IBOutlet weak var byEpisodeRadio: NSButton!
     @IBOutlet weak var byBlockRadio: NSButton!
@@ -37,7 +41,10 @@ class UploadSettingsViewController: NSViewController {
     @IBOutlet weak var unitPopup: NSPopUpButton!
     @IBOutlet weak var batchPopup: NSPopUpButton!
     
-    var files: [[String:Any]] = []
+    var cameraRAWFiles: [[String:Any]] = []
+    var audioFiles: [[String:Any]] = []
+    var CDLFiles: [[String:Any]] = []
+    var LUTFiles: [[String:Any]] = []
     
     // season_name : (season_id, [(episode_name,episode_id)], [(block_name,block_id)])
     typealias SeasonsType = [String:(String, [(String,String)],[(String,String)])]
@@ -47,6 +54,12 @@ class UploadSettingsViewController: NSViewController {
     
     // reference to a window
     var window: NSWindow?
+    
+    
+    static let kCameraRAWFileType = "Camera RAW"
+    static let kAudioFileType = "Audio"
+    static let kLUTFileType = "LUTS"
+    static let kCDLFileType = "CDL"
     
     fileprivate let teamItems = ["Camera", "Sound","Scripts","Others"]
    
@@ -158,7 +171,9 @@ class UploadSettingsViewController: NSViewController {
         }
     }
     
-    @IBAction func chooseShowFolder(_ sender: Any) {
+
+    func filePickerDialog(fileType: String, completion: @escaping (_ result: (String,[[String:Any]])) -> Void) {
+        
         let dialog = NSOpenPanel();
         
         dialog.title                   = "Choose single directory | Our Code World";
@@ -173,13 +188,12 @@ class UploadSettingsViewController: NSViewController {
             if (result == nil) {
                 return
             }
+            var outputFiles: [[String:Any]] = []
             
-            folderPathField.stringValue = result!.path
-            
-            let pathURL = NSURL(fileURLWithPath: folderPathField.stringValue, isDirectory: true)
+            let pathURL = NSURL(fileURLWithPath: result!.path, isDirectory: true)
             var filePaths : [String : UInt64] = [:]
             
-            let enumerator = FileManager.default.enumerator(atPath: folderPathField.stringValue)
+            let enumerator = FileManager.default.enumerator(atPath: result!.path)
             while let element = enumerator?.nextObject() as? String {
                 let filename = URL(fileURLWithPath: element).lastPathComponent
                 if filename == ".DS_Store" {
@@ -222,16 +236,65 @@ class UploadSettingsViewController: NSViewController {
                 if parsed.hasPrefix("/") {
                     parsed = String(parsed.dropFirst())
                 }
-                let item = ["name": filename,
-                            "filePath": parsed.isEmpty ? filename : parsed + "/" + filename,
+                let filePath = parsed.isEmpty ? filename : parsed + "/" + filename
+                let item : [String : Any] = ["name": filename,
+                            "filePath": fileType + "/" + filePath,
                             "filesize":scanItem.value,
-                            "checksum":"test2"] as [String : Any]
-                files.append([scanItem.key : item])
+                            "checksum":fileType + "/" + filePath, /* will be replaced latter by real checksum value */
+                            "type":fileType]
+                outputFiles.append([scanItem.key : item])
             }
             
+            completion((result!.path,outputFiles))
+        
         } else {
-            // User clicked on "Cancel"
+            completion(("",[[:]])) // User clicked on "Cancel"
             return
+        }
+    }
+    
+    @IBAction func chooseShowFolder(_ sender: Any) {
+        
+        filePickerDialog(fileType: UploadSettingsViewController.kCameraRAWFileType) { (path,files) in
+            if path.isEmpty {
+                return
+            }
+            
+            self.cameraRAWPathField.stringValue = path
+            self.cameraRAWFiles = files
+        }
+    }
+    
+    @IBAction func onClickAudioBrowseButton(_ sender: Any) {
+        filePickerDialog(fileType: UploadSettingsViewController.kAudioFileType) { (path,files) in
+            if path.isEmpty {
+                return
+            }
+            
+            self.audioPathField.stringValue = path
+            self.audioFiles = files
+        }
+    }
+    
+    @IBAction func onClickCDLBrowseButton(_ sender: Any) {
+        filePickerDialog(fileType: UploadSettingsViewController.kCDLFileType) { (path,files) in
+            if path.isEmpty {
+                return
+            }
+            
+            self.CDLPathField.stringValue = path
+            self.CDLFiles = files
+        }
+    }
+    
+    @IBAction func onClickLUTBrowseButton(_ sender: Any) {
+        filePickerDialog(fileType: UploadSettingsViewController.kLUTFileType) { (path,files) in
+            if path.isEmpty {
+                return
+            }
+            
+            self.LUTPathField.stringValue = path
+            self.LUTFiles = files
         }
     }
     
@@ -277,8 +340,8 @@ class UploadSettingsViewController: NSViewController {
             blockOrEpisode = getEpisode(seasonName: season, episopeName: episode)
         }
         
-        if folderPathField.stringValue.isEmpty {
-            showPopoverMessage(positioningView: folderPathField, msg: "Please specify path to media")
+        if cameraRAWPathField.stringValue.isEmpty {
+            showPopoverMessage(positioningView: cameraRAWPathField, msg: "Please specify path to media")
             return
         }
         
@@ -297,13 +360,17 @@ class UploadSettingsViewController: NSViewController {
                                                    "batch":batch!,
                                                    "unit":unit!,
                                                    "team":team!,
-                                                   "type":"Camera RAW",
                                                    "info":infoField.stringValue,
                                                    "checksum":"md5",
-                                                   //"description":descriptionField.stringValue,
                                                    "notificationEmail":emailField.stringValue,
-                                                   "files":files,
-                                                   "srcDir":folderPathField.stringValue
+                                                   "files": [UploadSettingsViewController.kCameraRAWFileType : cameraRAWFiles,
+                                                             UploadSettingsViewController.kAudioFileType : audioFiles,
+                                                             UploadSettingsViewController.kCDLFileType : CDLFiles,
+                                                             UploadSettingsViewController.kLUTFileType : LUTFiles],
+                                                   "srcDir":[UploadSettingsViewController.kCameraRAWFileType : cameraRAWPathField.stringValue,
+                                                             UploadSettingsViewController.kAudioFileType : audioPathField.stringValue,
+                                                             UploadSettingsViewController.kCDLFileType : CDLPathField.stringValue,
+                                                             UploadSettingsViewController.kLUTFileType : LUTPathField.stringValue],
                                                    ])
         window?.performClose(nil) // nil because I'm not return a message
     }
@@ -376,18 +443,14 @@ class UploadSettingsViewController: NSViewController {
                 }
                 
                 // "by default" insert first ket from dict
-                var firstKey : String = ""
                 self.seasons = result["data"] as! SeasonsType
                 
-                for (key, values) in self.seasons {
-                    firstKey = key
+                for (key, _) in self.seasons {
                     self.seasonsCombo.addItem(withObjectValue: key)
                     self.seasonsCombo.isEnabled = true
                     self.uploadButton.isEnabled = true
                 }
                 self.seasonsCombo.selectItem(at: 0)
-                
-                //self.populateComoboxes(seasonName : firstKey)
             }
         }
     }
