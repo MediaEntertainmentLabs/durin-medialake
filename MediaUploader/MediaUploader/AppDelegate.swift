@@ -23,11 +23,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     
     static var lastError : ErrorStatus = ErrorStatus.kNoError
     static var retryContext : [String:Any] = [:]
-    static var cacheSASTokens : [String:String] = [:]
-    
+    static var cacheSASTokens : [String:SASToken] = [:]
+  
     static let appDelegate = NSApplication.shared.delegate as! AppDelegate
     
     func applicationDidFinishLaunching(_ aNotification: Notification) {
+        
+ 
         
         // The MSAL Logger should be set as early as possible in the app launch sequence, before any MSAL
         // requests are made.

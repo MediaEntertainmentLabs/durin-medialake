@@ -32,9 +32,11 @@ class ClickedCollectionView: NSCollectionView {
         let uploadItemFormat = NSLocalizedString("context upload string", comment: "")
         let uploadMenuItemTitle = String(format: uploadItemFormat, node!.title)
         let menu = NSMenu()
+        menu.autoenablesItems = false
         let item = NSMenuItem(title: uploadMenuItemTitle, action: #selector(upload(_:)), keyEquivalent: "")
         item.representedObject = node
         menu.addItem(item)
+        item.isEnabled = node!.is_upload_allowed
         return menu
     }
     
@@ -58,8 +60,8 @@ class ClickedCollectionView: NSCollectionView {
                     name: Notification.Name(WindowViewController.NotificationNames.DismissUploadSettingsDialog),
                     object: nil)
             }
+            
             uploadSettingsViewController.showNameField.stringValue = (item.representedObject as? Node)!.title
-            //uploadSettingsViewController.shootDate.dateValue = Date()
         }
     }
     

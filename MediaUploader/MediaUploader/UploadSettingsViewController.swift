@@ -116,10 +116,6 @@ class UploadSettingsViewController: NSViewController {
                                         object: nil)
     }
     
-    func comboBoxWillDismiss(notification: NSNotification) {
-        print("Woohoo, it changed")
-    }
-    
     override func viewDidAppear() {
         // After a window is displayed, get the handle to the new window.
         window = self.view.window!
@@ -176,11 +172,11 @@ class UploadSettingsViewController: NSViewController {
         
         let dialog = NSOpenPanel();
         
-        dialog.title                   = "Choose single directory | Our Code World";
-        dialog.showsResizeIndicator    = true;
-        dialog.showsHiddenFiles        = false;
-        dialog.canChooseFiles = false;
-        dialog.canChooseDirectories = true;
+        dialog.title                   = "Choose single directory | Our Code World"
+        dialog.showsResizeIndicator    = true
+        dialog.showsHiddenFiles        = false
+        dialog.canChooseFiles          = false
+        dialog.canChooseDirectories    = true
         
         if (dialog.runModal() ==  NSApplication.ModalResponse.OK) {
             let result = dialog.url
@@ -314,10 +310,6 @@ class UploadSettingsViewController: NSViewController {
         
         // [show name]/[season name]/[block name]/[shootday]/[batch]/[unit ]/Camera RAW/browsed folder
         let season = self.seasonsCombo.selectedCell()!.stringValue as String
-        let team = self.teamPopup.titleOfSelectedItem
-        let unit = self.unitPopup.titleOfSelectedItem
-        let batch = self.batchPopup.titleOfSelectedItem
-        
         let block = self.blocksCombo.selectedCell()!.stringValue as String
         let episode = self.episodesCombo.selectedCell()!.stringValue as String
         
@@ -350,19 +342,35 @@ class UploadSettingsViewController: NSViewController {
             return
         }
         
+        if !emailField.stringValue.isEmpty && !isValidEmail(emailField.stringValue){
+            showPopoverMessage(positioningView: emailField, msg: "Wrong email format!")
+            return
+        }
+        
+        let episodeId = isBlock ? "" : blockOrEpisode.1
+        let blockId = isBlock ? blockOrEpisode.1 : ""
+        
+        let json_main : [String:String] = [
+            "showId": self.showId,
+            "seasonId":getSeasonId(seasonName: season),
+            "episodeId":episodeId,
+            "blockId":blockId,
+            "batch":batchPopup.titleOfSelectedItem!,
+            "unit":unitPopup.titleOfSelectedItem!,
+            "team":teamPopup.titleOfSelectedItem!,
+            "shootDay":shootDayField.stringValue,
+            "info":infoField.stringValue,
+            "notificationEmail":emailField.stringValue,
+            "checksum":"md5",
+        ]
+        
         NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.OnStartUploadShow),
                                         object: nil,
-                                        userInfo: ["showName": self.showNameField.stringValue,
+                                        userInfo: ["json_main":json_main,
+                                                   "showName": self.showNameField.stringValue,
                                                    "season": (season, getSeasonId(seasonName: season)),
-                                                   "shootDay":shootDayField.stringValue,
-                                                   "blockOrEpisode":blockOrEpisode as Any,
+                                                   "blockOrEpisode":blockOrEpisode!,
                                                    "isBlock":isBlock,
-                                                   "batch":batch!,
-                                                   "unit":unit!,
-                                                   "team":team!,
-                                                   "info":infoField.stringValue,
-                                                   "checksum":"md5",
-                                                   "notificationEmail":emailField.stringValue,
                                                    "files": [UploadSettingsViewController.kCameraRAWFileType : cameraRAWFiles,
                                                              UploadSettingsViewController.kAudioFileType : audioFiles,
                                                              UploadSettingsViewController.kCDLFileType : CDLFiles,
@@ -443,7 +451,7 @@ class UploadSettingsViewController: NSViewController {
                 }
                 
                 // "by default" insert first ket from dict
-                self.seasons = result["data"] as! SeasonsType
+                self.seasons = result["data"] as? SeasonsType
                 
                 for (key, _) in self.seasons {
                     self.seasonsCombo.addItem(withObjectValue: key)
@@ -494,61 +502,8 @@ class UploadSettingsViewController: NSViewController {
     }
 }
 
-
-private func fetchSeandsAndEpisodesTask(showId: String, completion: @escaping (_ shows: [String:Any]) -> Void) {
-
-    let json: [String: String] = ["containerId" : showId]
-    let jsonData = try? JSONSerialization.data(withJSONObject: json, options: .prettyPrinted)
-    let url = URL(string: LoginViewController.fetchSeasonsAndEpisodesURL)!
-    
-    var request = URLRequest(url: url)
-    request.httpMethod = "POST"
-    request.setValue("application/json; charset=utf-8", forHTTPHeaderField: "Content-Type")
-    request.httpBody = jsonData
-    
-    let task = URLSession.shared.dataTask(with: request) { data, response, error in
-        do {
-            guard let data = data, error == nil else {
-                throw "Failed to retrive list of shows!"
-            }
-            
-            // season_name -> (list_episode_name, list_block_name)
-            var result = UploadSettingsViewController.SeasonsType()
-            
-            let responseJSON = try JSONSerialization.jsonObject(with: data) as! [String:Any]
-
-            let seasons = responseJSON["season"] as? [[String:Any]]
-            if seasons == nil {
-                throw "Failed to retrive list of seasons!"
-            }
-            for season in seasons! {
-                var episodes = [(String,String)]()
-                for episode in season["episode"] as! [[String:String]]  {
-                    if let name = episode["name"] {
-                        episodes.append((name,episode["id"]! as String))
-                    }
-                }
-                var blocks = [(String,String)]()
-                for block in season["block"] as! [[String:String]]  {
-                    if let name = block["name"] {
-                        blocks.append((name,block["id"]! as String))
-                    }
-                }
-            
-                result[season["name"] as! String] = (season["id"] as! String, episodes, blocks)
-            }
-            completion(["data": result])
-            
-        } catch let error  {
-            completion(["error": error])
-        }
-    }
-    task.resume()
-}
-
 extension NSComboBox {
-    func selectedStringValue() -> String?
-    {
+    func selectedStringValue() -> String? {
         return self.itemObjectValue(at: self.indexOfSelectedItem) as? String
     }
     
@@ -571,10 +526,11 @@ extension UploadSettingsViewController: NSComboBoxDelegate {
 
 /*
 extension UploadSettingsViewController: NSControlTextEditingDelegate {
-    override func controlTextDidChange(_ obj: Notification) {
+    func controlTextDidChange(_ notification: Notification) {
         if let textField = notification.object as? NSTextField {
             print(textField.stringValue)
             //do what you need here
         }
     }
-}*/
+}
+*/

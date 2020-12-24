@@ -21,6 +21,7 @@ class Node: NSObject, Codable {
     var identifier: String = ""
     var url: URL?
     var is_group_node : Bool = false
+    var is_upload_allowed : Bool = false
     @objc dynamic var children = [Node]()
 }
 

@@ -2,31 +2,55 @@
 //  ErrorHandling.swift
 //  MediaUploader
 //
-//  Created by codecs on 09.12.2020.
-//  Copyright © 2020 Mykola Gerasymenko. All rights reserved.
+//  Copyright © 2020 GlobalLogic. All rights reserved.
 //
 
 import Cocoa
 
-func uploadShowErrorAndNotify(error : Error, cdsUserId : String, showId : String) {
+func uploadShowErrorAndNotify(error : Error, params : [String:String], operation : FileUploadOperation?) {
     
-    AppDelegate.retryContext["cdsUserId"] = cdsUserId
-    AppDelegate.retryContext["showId"] = showId
+    postUploadFailureTask(params: params) { (result) in
+        if !result {
+            _ = dialogOKCancel(question: "Warning", text: "Unable to send error report!")
+        }
+    }
     
     AppDelegate.lastError = AppDelegate.ErrorStatus.kFailedUploadShowSASToken
-    DispatchQueue.main.async {
-        NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.ShowProgressViewControllerOnlyText),
+    
+    if operation != nil {
+        NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.OnUploadFailed),
                                         object: nil,
-                                        userInfo: ["progressLabel" : error,
-                                                   "disableProgress" : true,
-                                                   "enableButton" : OutlineViewController.NameConstants.kRetryStr])
+                                        userInfo: ["failedOperation" : operation])
     }
 }
 
-func fetchShowContentErrorAndNotify(error : Error, showName: String, showId : String, cdsUserId : String) {
+func uploadShowFetchSASTokenErrorAndNotify(error: Error, recoveryContext: [String : Any]) {
+    print (" ------------ Failed to fetch SAS Token during show upload, error: ", error)
+    
+    // TODO: implement recovery logic
+    let params = recoveryContext["json_main"] as! [String : String]
+    let rows = recoveryContext["pendingUploads"] as! [String: UploadTableRow]
+    for row in rows {
+        row.value.completionStatusString = "Failed"
+        row.value.uploadProgress = 100.0
+    }
+    
+    DispatchQueue.main.async {
+        NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.UpdateShowUploadProgress),
+                                        object: nil)
+    }
+    
+    postUploadFailureTask(params: params) { (result) in
+        if !result {
+            _ = dialogOKCancel(question: "Warning", text: "Unable to send error report!")
+        }
+    }
+}
+
+func fetchShowContentErrorAndNotify(error : Error, showName: String, showId : String) {
     AppDelegate.retryContext["showName"] = showName
     AppDelegate.retryContext["showId"] = showId
-    AppDelegate.retryContext["cdsUserId"] = cdsUserId
+    AppDelegate.retryContext["cdsUserId"] = LoginViewController.cdsUserId!
 
     AppDelegate.lastError = AppDelegate.ErrorStatus.kFailedFetchShowContent
     DispatchQueue.main.async {

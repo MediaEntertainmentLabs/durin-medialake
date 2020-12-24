@@ -12,7 +12,6 @@ extension UploadWindowViewController: NSTableViewDataSource {
   func numberOfRows(in tableView: NSTableView) -> Int {
     return uploadTasks.count
   }
-
 }
 
 final class CustomTableHeaderCell : NSTableHeaderCell {
@@ -94,7 +93,6 @@ extension UploadWindowViewController: NSTableViewDelegate {
         
         if tableColumn?.identifier == NSUserInterfaceItemIdentifier(rawValue: ColumnIdentifiers.ProgressBar)  {
             if let cell: CustomTableCellView = tableView.makeView(withIdentifier: tableColumn!.identifier, owner: self) as? CustomTableCellView {
-                //cell.progress.set isHidden
                 cell.progress.doubleValue = item.uploadProgress
                 cell.progressCompletionStatus.isHidden = true
 
@@ -102,12 +100,9 @@ extension UploadWindowViewController: NSTableViewDelegate {
                     cell.progress.controlTint = .graphiteControlTint
                     //cell.subviews.remove(at:0)
                     cell.progress.isHidden = true
-                    //cell.progressCompletionStatus.stringValue = item.completionStatusString
-                    //cell.progressCompletionStatus.isHidden = false
                 } else {
                     cell.progress.controlTint = .blueControlTint
                     cell.progress.isHidden = false
-                    //cell.progressCompletionStatus.isHidden = true
                 }
                 return cell
             }
@@ -116,10 +111,12 @@ extension UploadWindowViewController: NSTableViewDelegate {
                 cell.textField?.stringValue = item.completionStatusString
                
                 if doubleEqual(item.uploadProgress, 100.0) {
-                    // TODO : in case of success green
-                    //if item.completionStatusString == kSuComple
                     cell.imageView?.isHidden = false
-                    cell.imageView?.image = NSImage(named: NSImage.statusAvailableName)
+                    if item.completionStatusString == "Completed" {
+                        cell.imageView?.image = NSImage(named: NSImage.statusAvailableName)
+                    } else {
+                        cell.imageView?.image = NSImage(named: NSImage.statusUnavailableName)
+                    }
                 } else {
                     cell.imageView?.isHidden = true
                 }

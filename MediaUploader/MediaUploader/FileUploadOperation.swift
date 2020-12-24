@@ -10,26 +10,27 @@ import Cocoa
 
 final class FileUploadOperation: AsyncOperation {
 
-    enum Step {
+    enum UploadType {
         case kMetadataJsonUpload
         case kDataUpload
     }
     
-    private let showName: String
     private let showId: String
     private let cdsUserId: String
+    private let sasToken: String
     
-    var sasToken: String
-    var uploadRecord : UploadTableRecord?
+    var uploadRecord : UploadTableRow?
     var completionStatus : Int
 
-    private let cmd: String
     private let args: [String]
-    private let step: FileUploadOperation.Step
+    private let step: FileUploadOperation.UploadType
+    
+    // upload being performed in two steps:
+    // firstly we upload metadata.json -> dependens contains data tasks
+    // second is actually data -> dependens is empty
     var dependens : [FileUploadOperation]!
     
-    init(showName: String, showId: String, cdsUserId: String, sasToken: String, step: FileUploadOperation.Step, uploadRecord : UploadTableRecord?, dependens : [FileUploadOperation], cmd: String, args: [String]) {
-        self.showName = showName
+    init(showId: String, cdsUserId: String, sasToken: String, step: FileUploadOperation.UploadType, uploadRecord : UploadTableRow?, dependens : [FileUploadOperation], args: [String]) {
         self.showId = showId
         self.cdsUserId = cdsUserId
         self.sasToken = sasToken
@@ -38,42 +39,33 @@ final class FileUploadOperation: AsyncOperation {
         self.completionStatus = 0
         
         self.step = step
-        self.cmd = cmd
         self.args = args
     }
 
     override func main() {
-        let (_, error, status) = runAzCopyCommand(cmd: self.cmd, args: self.args)
+        let (_, error, status) = runAzCopyCommand(cmd: LoginViewController.azcopyPath.path, args: self.args)
         
         if status == 0 {
-            if self.step == Step.kMetadataJsonUpload {
+            if self.step == UploadType.kMetadataJsonUpload {
                 print ("------------  Completed successfully: \(sasToken) ")
                 print ("------------  Cleanup of ", self.args[1])
-                do {
-                    if FileManager.default.fileExists(atPath: self.args[1]) {
-                        try FileManager.default.removeItem(atPath: self.args[1])
-                    } else {
-                        print("File does not exist")
-                    }
-                    
-                } catch let error as NSError {
-                    print("An error took place: \(error)")
-                }
+                removeConfig(path: self.args[1])
                 
-            } else if self.step == Step.kDataUpload {
+
+            } else if self.step == UploadType.kDataUpload {
                 DispatchQueue.main.async {
                     self.uploadRecord!.uploadProgress = 100.0
                     self.uploadRecord!.completionStatusString = "Completed"
                     print ("------------  Upload of data completed successfully!")
                     NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.UpdateShowUploadProgress),
                                                     object: nil,
-                                                    userInfo: ["showName" : self.showName,
+                                                    userInfo: ["showName" : self.uploadRecord!.showName,
                                                                "progress" : self.uploadRecord!.uploadProgress])
                     // update show content
 //                    NotificationCenter.default.post(
 //                        name: Notification.Name(WindowViewController.NotificationNames.ShowProgressViewController),
 //                        object: nil,
-//                        userInfo: ["progressLabel" : "Fetching show content..."])
+//                        userInfo: ["progressLabel" : kFetchingShowContentStr])
 //
 //                    NotificationCenter.default.post(
 //                        name: Notification.Name(WindowViewController.NotificationNames.IconSelectionChanged),
@@ -84,20 +76,21 @@ final class FileUploadOperation: AsyncOperation {
             }
         } else {
             DispatchQueue.main.async {
-                if self.step == Step.kMetadataJsonUpload {
+                if self.step == UploadType.kMetadataJsonUpload {
                     for dep in self.dependens {
                         print(dep.uploadRecord!.completionStatusString)
                         dep.uploadRecord!.uploadProgress = 100.0
-                        dep.uploadRecord!.completionStatusString = "CompletedWithErrors"
-                        print ("------------  Upload of data FAILED!")
+                        print ("------------  Upload failed, error: ", error)
+                        
+                        uploadShowErrorAndNotify(error: OutlineViewController.NameConstants.kUploadShowFailedStr, params: dep.uploadRecord!.uploadParams, operation: self)
                     }
-                } else if self.step == Step.kDataUpload {
+                } else if self.step == UploadType.kDataUpload {
                     print(self.uploadRecord!.completionStatusString)
                     self.uploadRecord!.uploadProgress = 100.0
-                    self.uploadRecord!.completionStatusString = "CompletedWithErrors"
-                    print ("------------  Upload of metadata.json FAILED!")
-
+                    print ("------------  Upload failed, error: ", error)
+                    uploadShowErrorAndNotify(error: OutlineViewController.NameConstants.kUploadShowFailedStr, params: self.uploadRecord!.uploadParams, operation: self)
                 }
+ 
                 NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.UpdateShowUploadProgress),
                                                 object: nil)
             }
@@ -112,10 +105,10 @@ final class FileUploadOperation: AsyncOperation {
     
     // WARNING: Sandboxed application fairly limited in what it can actually sub-launch
     //          So external programm need to be placed to /Applications folder
-    internal func runAzCopyCommand(cmd : String, args : [String]) -> (output: [String], error: [String], exitCode: Int32) {
+    internal func runAzCopyCommand(cmd : String, args : [String]) -> (output: [String], error: String, exitCode: Int32) {
 
         let output : [String] = []
-        var error : [String] = []
+        var error : String = ""
 
         let task = Process()
         task.launchPath = cmd
@@ -142,6 +135,12 @@ final class FileUploadOperation: AsyncOperation {
                 let outputString = String(data: output, encoding: String.Encoding.utf8) ?? ""
                 
                 print(outputString)
+                let (status, error_output) = self.parseResult(inputString: outputString)
+                if status != 0 {
+                    self.completionStatus = status
+                    error = error_output
+                    return
+                }
             }
             outpipe.fileHandleForReading.waitForDataInBackgroundAndNotify()
             
@@ -173,22 +172,17 @@ final class FileUploadOperation: AsyncOperation {
                 }
             }
             
-            let resultString = getCompletionStatusString(inputString: newOutput!)
-            if !resultString.isEmpty {
-                if resultString != "Completed" {
-                    error.append("Failed AzCopy Upload!")
-                    if self.step == Step.kMetadataJsonUpload {
-                        self.uploadRecord!.completionStatusString = resultString
-                    }
-                    self.completionStatus = -1
-                    return
-                }
+            let (status, error_output) = self.parseResult(inputString: newOutput!)
+            if status != 0 {
+                self.completionStatus = status
+                error = error_output
+                return
             }
-   
+            
             // advance progress only for actually upload data stage
-            if !result.isEmpty && self.step == FileUploadOperation.Step.kDataUpload {
+            if !result.isEmpty && self.step == FileUploadOperation.UploadType.kDataUpload {
                 self.uploadRecord!.uploadProgress = ceil(Double(result[0][0])! + 0.5)
-                print("------------ progress : ", self.showName, " ", self.uploadRecord!.uploadProgress, " >> ", result[0])
+                print("------------ progress : ", self.uploadRecord!.showName, " ", self.uploadRecord!.uploadProgress, " >> ", result[0])
             }
             
             DispatchQueue.main.async {
@@ -233,13 +227,32 @@ final class FileUploadOperation: AsyncOperation {
             status = Int32(self.completionStatus)
         }
         
-        if status != 0 {
-            error.append("Failed AzCopy Upload!")
-        }
-        
         return (output, error, status)
     }
+    
+    func parseResult(inputString: String) -> (Int,String) {
+        var error: String = ""
+        let resultString = getCompletionStatusString(inputString: inputString)
+        if !resultString.isEmpty {
+            
+            if resultString != "Completed" {
+                if self.step == UploadType.kMetadataJsonUpload {
+                    for dep in self.dependens {
+                        dep.uploadRecord!.completionStatusString = resultString
+                    }
+                    error = "Failed AzCopy metadata.json Upload!"
+                } else {
+                    self.uploadRecord!.completionStatusString = resultString
+                    error = "Failed AzCopy data Upload!"
+                }
+                
+                return (-1, error)
+            }
+        }
+        return (0, error)
+    }
 }
+
 
 
 func getCompletionStatusString(inputString : String) -> String {

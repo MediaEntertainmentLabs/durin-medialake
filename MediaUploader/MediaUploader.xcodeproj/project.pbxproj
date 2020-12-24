@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 51;
+	objectVersion = 54;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -26,6 +26,11 @@
 		C95F6C202583748B0008D8A0 /* UploadWindowViewController+Delegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C95F6C1E2583748B0008D8A0 /* UploadWindowViewController+Delegate.swift */; };
 		C95F6C22258388650008D8A0 /* HorizontalSplitViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C95F6C21258388650008D8A0 /* HorizontalSplitViewController.swift */; };
 		C961739C25910B5800F037EB /* CalculateChecksumOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = C961739B25910B5800F037EB /* CalculateChecksumOperation.swift */; };
+		C96173A025911CAE00F037EB /* MediaUploader.plist in Resources */ = {isa = PBXBuildFile; fileRef = C961739F25911CAE00F037EB /* MediaUploader.plist */; };
+		C96173A22591276900F037EB /* Distribution.xml in Resources */ = {isa = PBXBuildFile; fileRef = C96173A12591276900F037EB /* Distribution.xml */; };
+		C96173A425933C2A00F037EB /* URLRequests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C96173A325933C2A00F037EB /* URLRequests.swift */; };
+		C96173A72593AFA600F037EB /* azcopy in Resources */ = {isa = PBXBuildFile; fileRef = C96173A62593AFA600F037EB /* azcopy */; };
+		C96173A92593B4EF00F037EB /* SASToken.swift in Sources */ = {isa = PBXBuildFile; fileRef = C96173A82593B4EF00F037EB /* SASToken.swift */; };
 		C962D1A3258788420012F684 /* OutlineViewController+Expansion.swift in Sources */ = {isa = PBXBuildFile; fileRef = C962D1A2258788420012F684 /* OutlineViewController+Expansion.swift */; };
 		C962D1A5258AA3A40012F684 /* PopoverViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C962D1A4258AA3A40012F684 /* PopoverViewController.swift */; };
 		C97621CF25682C3500C48E15 /* IconViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C97621CE25682C3500C48E15 /* IconViewController.swift */; };
@@ -36,7 +41,8 @@
 		C97621DE256C1C4400C48E15 /* UploadSettingsViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = C97621DC256C1C4400C48E15 /* UploadSettingsViewController.xib */; };
 		C9807E66257E8FD400488E46 /* ProgressViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9807E64257E8FD400488E46 /* ProgressViewController.swift */; };
 		C9807E67257E8FD400488E46 /* ProgressViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = C9807E65257E8FD400488E46 /* ProgressViewController.xib */; };
-		C9807E69257F923A00488E46 /* TreeElement.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9807E68257F923A00488E46 /* TreeElement.swift */; };
+		C9807E69257F923A00488E46 /* Utils.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9807E68257F923A00488E46 /* Utils.swift */; };
+		C984960425948C3E00A1FED5 /* StartupPopupViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C984960325948C3E00A1FED5 /* StartupPopupViewController.swift */; };
 		C987BB292534CA9500A440A7 /* OutlineViewController+Delegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C987BB282534CA9500A440A7 /* OutlineViewController+Delegate.swift */; };
 		C987BB2B2534CF5400A440A7 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = C987BB2A2534CF5400A440A7 /* Localizable.strings */; };
 		C987BB35253CC93E00A440A7 /* CustomTableCellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C987BB34253CC93E00A440A7 /* CustomTableCellView.swift */; };
@@ -89,6 +95,11 @@
 		C95F6C1E2583748B0008D8A0 /* UploadWindowViewController+Delegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "UploadWindowViewController+Delegate.swift"; sourceTree = "<group>"; };
 		C95F6C21258388650008D8A0 /* HorizontalSplitViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HorizontalSplitViewController.swift; sourceTree = "<group>"; };
 		C961739B25910B5800F037EB /* CalculateChecksumOperation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalculateChecksumOperation.swift; sourceTree = "<group>"; };
+		C961739F25911CAE00F037EB /* MediaUploader.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = MediaUploader.plist; sourceTree = "<group>"; };
+		C96173A12591276900F037EB /* Distribution.xml */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = Distribution.xml; sourceTree = "<group>"; };
+		C96173A325933C2A00F037EB /* URLRequests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLRequests.swift; sourceTree = "<group>"; };
+		C96173A62593AFA600F037EB /* azcopy */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = azcopy; sourceTree = "<group>"; };
+		C96173A82593B4EF00F037EB /* SASToken.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SASToken.swift; sourceTree = "<group>"; };
 		C962D1A2258788420012F684 /* OutlineViewController+Expansion.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "OutlineViewController+Expansion.swift"; sourceTree = "<group>"; };
 		C962D1A4258AA3A40012F684 /* PopoverViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = PopoverViewController.swift; path = MediaUploader/PopoverViewController.swift; sourceTree = SOURCE_ROOT; };
 		C97621CE25682C3500C48E15 /* IconViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = IconViewController.swift; sourceTree = "<group>"; };
@@ -102,7 +113,8 @@
 		C97795B3256EC66700BEE3CE /* AzureStorageBlob.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AzureStorageBlob.framework; path = ThirdPartyFrameworks/AzureStorageBlob.framework; sourceTree = "<group>"; };
 		C9807E64257E8FD400488E46 /* ProgressViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressViewController.swift; sourceTree = "<group>"; };
 		C9807E65257E8FD400488E46 /* ProgressViewController.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = ProgressViewController.xib; sourceTree = "<group>"; };
-		C9807E68257F923A00488E46 /* TreeElement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TreeElement.swift; sourceTree = "<group>"; };
+		C9807E68257F923A00488E46 /* Utils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utils.swift; sourceTree = "<group>"; };
+		C984960325948C3E00A1FED5 /* StartupPopupViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StartupPopupViewController.swift; sourceTree = "<group>"; };
 		C987BB282534CA9500A440A7 /* OutlineViewController+Delegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "OutlineViewController+Delegate.swift"; sourceTree = "<group>"; };
 		C987BB2A2534CF5400A440A7 /* Localizable.strings */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; path = Localizable.strings; sourceTree = "<group>"; };
 		C987BB34253CC93E00A440A7 /* CustomTableCellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomTableCellView.swift; sourceTree = "<group>"; };
@@ -149,6 +161,7 @@
 			isa = PBXGroup;
 			children = (
 				731C984B252DE9DB008E8A75 /* MediaUploader */,
+				C961739E25911C7500F037EB /* Package */,
 				C97621D6256BA93700C48E15 /* Resources */,
 				731C985E252DE9DD008E8A75 /* MediaUploaderTests */,
 				731C9869252DE9DD008E8A75 /* MediaUploaderUITests */,
@@ -184,11 +197,13 @@
 				731C9884252EE911008E8A75 /* OutlineViewController+Restoration.swift */,
 				C962D1A2258788420012F684 /* OutlineViewController+Expansion.swift */,
 				731C9850252DE9DC008E8A75 /* Assets.xcassets */,
+				C9807E64257E8FD400488E46 /* ProgressViewController.swift */,
 				C962D1A4258AA3A40012F684 /* PopoverViewController.swift */,
 				C97621DB256C1C4400C48E15 /* UploadSettingsViewController.swift */,
 				C95F6C1D2583748B0008D8A0 /* UploadWindowViewController.swift */,
 				C95F6C1E2583748B0008D8A0 /* UploadWindowViewController+Delegate.swift */,
 				731C9886252EEAE0008E8A75 /* SplitViewController.swift */,
+				C984960325948C3E00A1FED5 /* StartupPopupViewController.swift */,
 				731C9888252EF427008E8A75 /* WindowController.swift */,
 				731C984E252DE9DB008E8A75 /* WindowViewController.swift */,
 			);
@@ -213,6 +228,15 @@
 			path = MediaUploaderUITests;
 			sourceTree = "<group>";
 		};
+		C961739E25911C7500F037EB /* Package */ = {
+			isa = PBXGroup;
+			children = (
+				C96173A12591276900F037EB /* Distribution.xml */,
+				C961739F25911CAE00F037EB /* MediaUploader.plist */,
+			);
+			path = Package;
+			sourceTree = "<group>";
+		};
 		C962D1A6258AA7000012F684 /* Utils */ = {
 			isa = PBXGroup;
 			children = (
@@ -221,8 +245,9 @@
 				C95F6C192580B8B20008D8A0 /* ErrorHandling.swift */,
 				C95F6C1B2582B6EE0008D8A0 /* FileUploadOperation.swift */,
 				731C987E252E4FF3008E8A75 /* Node.swift */,
-				C9807E68257F923A00488E46 /* TreeElement.swift */,
-				C9807E64257E8FD400488E46 /* ProgressViewController.swift */,
+				C9807E68257F923A00488E46 /* Utils.swift */,
+				C96173A325933C2A00F037EB /* URLRequests.swift */,
+				C96173A82593B4EF00F037EB /* SASToken.swift */,
 			);
 			name = Utils;
 			sourceTree = "<group>";
@@ -230,6 +255,7 @@
 		C97621D6256BA93700C48E15 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				C96173A62593AFA600F037EB /* azcopy */,
 				731C9852252DE9DC008E8A75 /* Main.storyboard */,
 				C97621D3256BA90900C48E15 /* CollectionViewItem.xib */,
 				C97621DC256C1C4400C48E15 /* UploadSettingsViewController.xib */,
@@ -264,6 +290,7 @@
 				731C9846252DE9DB008E8A75 /* Frameworks */,
 				731C9847252DE9DB008E8A75 /* Resources */,
 				D528E389F313EE1A441AE18C /* [CP] Embed Pods Frameworks */,
+				C961739D25911AD100F037EB /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -358,7 +385,10 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C96173A72593AFA600F037EB /* azcopy in Resources */,
 				C9807E67257E8FD400488E46 /* ProgressViewController.xib in Resources */,
+				C96173A025911CAE00F037EB /* MediaUploader.plist in Resources */,
+				C96173A22591276900F037EB /* Distribution.xml in Resources */,
 				731C9851252DE9DC008E8A75 /* Assets.xcassets in Resources */,
 				C97621D5256BA90900C48E15 /* CollectionViewItem.xib in Resources */,
 				C97621DE256C1C4400C48E15 /* UploadSettingsViewController.xib in Resources */,
@@ -407,6 +437,24 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
+		C961739D25911AD100F037EB /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 8;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+			shellPath = /bin/sh;
+			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\n\nVERSION=$(defaults read \"${BUILT_PRODUCTS_DIR}/${FULL_PRODUCT_NAME}/Contents/Info.plist\" CFBundleVersion)\n\nPACKAGE_NAME=`echo \"$PRODUCT_NAME\" | sed \"s/ /_/g\"`\nTMP1_ARCHIVE=\"${BUILT_PRODUCTS_DIR}/$PACKAGE_NAME-tmp1.pkg\"\nTMP2_ARCHIVE=\"${BUILT_PRODUCTS_DIR}/$PACKAGE_NAME-tmp2\"\nTMP3_ARCHIVE=\"${BUILT_PRODUCTS_DIR}/$PACKAGE_NAME-tmp3.pkg\"\nARCHIVE_FILENAME=\"${BUILT_PRODUCTS_DIR}/${PACKAGE_NAME}.pkg\"\n\nchmod -R 755 ${INSTALL_ROOT}\n\npkgbuild --root \"${INSTALL_ROOT}\" \\\n    --identifier \"durin.MediaUploader\" \\\n    --version \"$VERSION\" \\\n    --install-location \"/\" \\\n    \"${BUILT_PRODUCTS_DIR}/${PRODUCT_NAME}.pkg\"\n    \nproductbuild --distribution \"./Package/Distribution.xml\"  \\\n    --package-path \"${BUILT_PRODUCTS_DIR}\" \\\n    --resources \"./\" \\\n    \"${TMP1_ARCHIVE}\"\n";
+		};
 		D528E389F313EE1A441AE18C /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -432,8 +480,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				C97621DD256C1C4400C48E15 /* UploadSettingsViewController.swift in Sources */,
+				C96173A92593B4EF00F037EB /* SASToken.swift in Sources */,
 				731C9889252EF427008E8A75 /* WindowController.swift in Sources */,
-				C9807E69257F923A00488E46 /* TreeElement.swift in Sources */,
+				C9807E69257F923A00488E46 /* Utils.swift in Sources */,
+				C96173A425933C2A00F037EB /* URLRequests.swift in Sources */,
 				731C9881252E5216008E8A75 /* OutlineViewController+Helpers.swift in Sources */,
 				731C984F252DE9DB008E8A75 /* WindowViewController.swift in Sources */,
 				731C9879252E4D1A008E8A75 /* OutlineViewController.swift in Sources */,
@@ -443,6 +493,7 @@
 				C95F6C202583748B0008D8A0 /* UploadWindowViewController+Delegate.swift in Sources */,
 				C95F6C1A2580B8B20008D8A0 /* ErrorHandling.swift in Sources */,
 				C97621CF25682C3500C48E15 /* IconViewController.swift in Sources */,
+				C984960425948C3E00A1FED5 /* StartupPopupViewController.swift in Sources */,
 				731C9887252EEAE0008E8A75 /* SplitViewController.swift in Sources */,
 				C95F6C1C2582B6EE0008D8A0 /* FileUploadOperation.swift in Sources */,
 				C962D1A3258788420012F684 /* OutlineViewController+Expansion.swift in Sources */,

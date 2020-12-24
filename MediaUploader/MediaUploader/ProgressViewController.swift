@@ -15,13 +15,19 @@ class ProgressViewController: NSViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        fetchingListOfShows()
+        
+        progressButton.isHidden = true
+        progressLabel.isHidden = true
+        progressIndicator.isHidden = true
     }
     
     @IBAction func buttonClicked(_ sender: NSButton) {
         
         if AppDelegate.lastError == AppDelegate.ErrorStatus.kFailedFetchListShows {
             if let cdsUserId = AppDelegate.retryContext["cdsUserId"] {
+                
+                updateUI(label: OutlineViewController.NameConstants.kFetchListOfShowsStr)
+                
                 NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.LoginSuccessfull),
                                                 object: nil,
                                                 userInfo: ["cdsUserId": cdsUserId])
@@ -30,6 +36,8 @@ class ProgressViewController: NSViewController {
             if let showName = AppDelegate.retryContext["showName"],
                let showId = AppDelegate.retryContext["showId"],
                let cdsUserId = AppDelegate.retryContext["cdsUserId"] {
+                
+                updateUI(label: OutlineViewController.NameConstants.kFetchShowContentStr)
                 
                 NotificationCenter.default.post(
                     name: Notification.Name(WindowViewController.NotificationNames.IconSelectionChanged),
@@ -48,9 +56,9 @@ class ProgressViewController: NSViewController {
         }
     }
     
-    private func fetchingListOfShows() {
+    private func updateUI(label: String) {
         progressButton.isHidden = true
-        progressLabel.stringValue = "Fetching list of shows..."
+        progressLabel.stringValue = label
         progressIndicator.isHidden = false
         progressIndicator.startAnimation(self)
     }

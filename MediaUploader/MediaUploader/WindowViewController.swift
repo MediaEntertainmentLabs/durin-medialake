@@ -13,14 +13,11 @@ class WindowViewController: NSViewController {
     @IBOutlet weak var username: NSTextField!
     @IBOutlet weak var uploadWindowButton: NSButton!
     
-    // reference to a window
     var window: NSWindow?
    
     override func viewDidAppear() {
         // After a window is displayed, get the handle to the new window.
         window = self.view.window!
-           
-
         AppDelegate.appDelegate.mainWindowController = window!.windowController
     }
     
@@ -58,12 +55,19 @@ class WindowViewController: NSViewController {
         window?.performClose(nil) // nil because I'm not return a message
     }
 
+    @IBAction func clearConfig(_ sender: AnyObject) {
+        var configURLPath : URL!
+        if let localConfigPath = FileManager.default.urls(for: .applicationSupportDirectory, in: .allDomainsMask).first {
+            configURLPath = localConfigPath.appendingPathComponent("config.json")
+            do {
+                try FileManager.default.removeItem(atPath: configURLPath.path)
+            } catch _ {
+                
+            }
+        }
+    }
+    
     @IBAction func showUploadProgressWindow(_ sender: AnyObject) {
-//        let newPosition: CGFloat = visible ? 100 : 0
-//           splitView.setPosition(newPosition, ofDividerAt: 0)
-//           splitView.layoutSubtreeIfNeeded()
-        
-        //uploadWindowButton.image = NSImage(named: NSImage.stopProgressFreestandingTemplateName)
         uploadWindowButton.image?.isTemplate = true
         uploadWindowButton.bezelStyle = .inline
         uploadWindowButton.isBordered = false
@@ -93,7 +97,7 @@ class WindowViewController: NSViewController {
         
         static let OnStartUploadShow = "OnStartUploadShow"
         
-        static let OnStartUploadData = "OnStartUploadData"
+        static let OnUploadFailed = "OnStartUploadFailed"
         
         static let IconSelectionChanged = "IconSelectionChanged"
         

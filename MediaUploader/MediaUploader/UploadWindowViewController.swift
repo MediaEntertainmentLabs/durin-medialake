@@ -8,20 +8,25 @@
 import Cocoa
 
 
-class UploadTableRecord : NSObject {
+class UploadTableRow : NSObject {
     
-    var showName: String
-    var srcPath: String
-    var dstPath: String
+    let showName: String
+    let srcPath: String
+    let dstPath: String
     var uploadProgress: Double
     var completionStatusString: String
     
-    init(showName: String, srcPath: String, dstPath: String) {
+    // metadata
+    let uploadParams: [String:String] // we need to keep JSON params to send error report in case of failure occured
+    
+    init(showName: String, uploadParams: [String:String], srcPath: String, dstPath: String) {
         self.showName = showName
         self.srcPath = srcPath
         self.dstPath = dstPath
         self.uploadProgress = 0.0
         self.completionStatusString = "In progress"
+        
+        self.uploadParams = uploadParams
         
         super.init()
     }
@@ -37,18 +42,13 @@ class UploadWindowViewController: NSViewController {
     
     @IBOutlet var uploadContent: NSArrayController!
     
-    @objc dynamic var uploadTasks = [UploadTableRecord]()
+    @objc dynamic var uploadTasks = [UploadTableRow]()
     
     
     @IBOutlet weak var tableView: NSTableView! {
         didSet {
             // As soon as we have our outline view loaded, we populate its content tree controller.
-            populateTableContents()
         }
-    }
-
-    func populateTableContents()
-    {
     }
 
     override func viewDidLoad() {
@@ -98,7 +98,7 @@ class UploadWindowViewController: NSViewController {
     }
     
     @objc private func onAddUploadTask(_ notification: Notification) {
-        let uploadTableRecord  = notification.userInfo?["uploadRecord"] as! UploadTableRecord
+        let uploadTableRecord  = notification.userInfo?["uploadRecord"] as! UploadTableRow
         DispatchQueue.main.async {
             self.uploadContent.addObject(uploadTableRecord)
         }

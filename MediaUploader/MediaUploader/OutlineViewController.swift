@@ -9,49 +9,6 @@ import Cocoa
 import MSAL
 
 
-func fetchListOfShowsTask(cdsUserId: String, completion: @escaping (_ shows: [String:Any]) -> Void) {
-
-    let json: [String: String] = ["userId" : cdsUserId]
-    let jsonData = try? JSONSerialization.data(withJSONObject: json, options: .prettyPrinted)
-    let url = URL(string: LoginViewController.kFetchShowsURL)!
-    
-    var request = URLRequest(url: url)
-    request.httpMethod = "POST"
-    request.setValue("application/json; charset=utf-8", forHTTPHeaderField: "Content-Type")
-    request.httpBody = jsonData
-    
-    let task = URLSession.shared.dataTask(with: request) { data, response, error in
-        do {
-            guard let data = data, error == nil else {
-                throw "Failed to retrive list of shows!"
-            }
-            var shows : [String:Any] = [:]
-            
-            let responseJSON = try JSONSerialization.jsonObject(with: data) as? [[String:Any]]
-            if responseJSON == nil {
-                throw "Failed to retrive list of shows!"
-            }
-            for item in responseJSON! {
-                let media_AssetContainer = item["media_AssetContainer"] as? String
-                if media_AssetContainer == nil {
-                    continue
-                }
-                let asset = try JSONSerialization.jsonObject(with: Data(media_AssetContainer!.utf8), options: []) as? [String: Any]
-                let showName = asset!["media_name"] as! String
-                let showId = asset!["media_assetcontainerid"] as! String
-                let media_AssetTemplate = asset!["media_AssetTemplate"] as! [String : Any]
-                let media_AssetFolderLayout = media_AssetTemplate["media_AssetFolderLayout"] as! [String : Any]
-                shows[showName] = ["showId":showId, "folderLayout":media_AssetFolderLayout["media_layout"]]
-            }
-            completion(["data": shows])
-            
-        } catch let error  {
-            completion(["error": error])
-        }
-    }
-    task.resume()
-}
-
 
 
 class OutlineViewController: NSViewController,
@@ -63,6 +20,12 @@ class OutlineViewController: NSViewController,
         static let kShowsStr = NSLocalizedString("shows string", comment: "")
         static let kRetryStr = NSLocalizedString("retry string", comment: "")
         
+        static let kFetchShowContentStr = NSLocalizedString("fetch show string", comment: "")
+        static let kFetchListOfShowsStr = NSLocalizedString("fetch list shows string", comment: "")
+        static let kFetchListOfShowsFailedStr = NSLocalizedString("fetch list shows fail string", comment: "")
+        static let kFetchShowContentFailedStr = NSLocalizedString("fetch show content fail string", comment: "")
+        static let kFetchListOfSeasonsFailedStr = NSLocalizedString("fetch seasons fail string", comment: "")
+        static let kUploadShowFailedStr = NSLocalizedString("upload show fail string", comment: "")
     }
         
     // The data source backing of the NSOutlineView.
@@ -76,7 +39,7 @@ class OutlineViewController: NSViewController,
     // Outline view content top-level content (backed by NSTreeController).
     @objc dynamic var contents: [AnyObject] = []
     
-    var sasToken : String!
+    //var sasToken : String!
     var currentShowName:  String!
     var currentShowId: String!
     var cdsUserId: String!
@@ -98,31 +61,24 @@ class OutlineViewController: NSViewController,
     
     var cancelTask : Bool = false
 
+    var expireTimer : Timer!
     
     // MARK: View Controller Lifecycle
     
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        setupObservers()
-    }
-    
-    private func fetchShowContentTask(sasURI : String, completion: @escaping (_ data: [String:Any]) -> Void) {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(onSelectedShow(_:)),
+            name: Notification.Name(WindowViewController.NotificationNames.IconSelectionChanged),
+            object: nil)
         
-        let url = URL(string: sasURI)!
-        var request = URLRequest(url: url)
-        request.httpMethod = "GET"
-        let task = URLSession.shared.dataTask(with: request) { data, response, error in
-            do {
-                guard let data = data, error == nil else {
-                    throw "Failed to retrieve show content!"
-                }
-                completion(["data" : data])
-            } catch let error  {
-                completion(["error": error])
-            }
-        }
-        task.resume()
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(onCancelPendingTasks(_:)),
+            name: Notification.Name(WindowViewController.NotificationNames.CancelPendingURLTasks),
+            object: nil)
     }
 
     func addPathToTree(root: TreeElement, fullPath: inout [String])
@@ -151,7 +107,7 @@ class OutlineViewController: NSViewController,
         self.currentShowId = notification.userInfo?["showId"] as? String
         self.cdsUserId = notification.userInfo?["cdsUserId"] as? String
         
-        fetchShowContent(showName: self.currentShowName, showId: self.currentShowId, cdsUserId: self.cdsUserId)
+        fetchShowContent(showName: self.currentShowName, showId: self.currentShowId)
     }
     
     @IBAction func refreshShowContent(_ sender: Any) {
@@ -162,7 +118,7 @@ class OutlineViewController: NSViewController,
         NotificationCenter.default.post(
             name: Notification.Name(WindowViewController.NotificationNames.ShowProgressViewController),
             object: nil,
-            userInfo: ["progressLabel" : "Fetching show content..."])
+            userInfo: ["progressLabel" : OutlineViewController.NameConstants.kFetchShowContentStr])
         
         NotificationCenter.default.post(
             name: Notification.Name(WindowViewController.NotificationNames.IconSelectionChanged),
@@ -171,26 +127,26 @@ class OutlineViewController: NSViewController,
     }
     
     
-    private func fetchShowContent(showName : String, showId : String, cdsUserId : String) {
+    private func fetchShowContent(showName : String, showId : String) {
         
         var fetchShowContentURI : String!
-        if let sasToken = AppDelegate.cacheSASTokens[showName] {
-            fetchShowContentURI = sasToken + "&restype=container&comp=list"
+        if let sasToken = AppDelegate.cacheSASTokens[showName]?.value() {
+                fetchShowContentURI = sasToken + "&restype=container&comp=list"
         } else {
-            fetchSASTokenURLTask(cdsUserId: cdsUserId, showId: showId, synchronous: false) { (result) in
+            fetchSASTokenURLTask(showId: showId, synchronous: false) { (result) in
                 if let error = result["error"] as? String {
-                    uploadShowErrorAndNotify(error: error, cdsUserId: cdsUserId, showId: showId)
+                    fetchShowContentErrorAndNotify(error: error, showName: showName, showId: showId)
                     return
                 }
                 
                 let sasToken = result["data"] as? String
                 fetchShowContentURI = sasToken! + "&restype=container&comp=list"
-                AppDelegate.cacheSASTokens[showName]=sasToken
+                AppDelegate.cacheSASTokens[showName]=SASToken(showId : showId, sasToken: sasToken!)
                 
                 NotificationCenter.default.post(
                     name: Notification.Name(WindowViewController.NotificationNames.IconSelectionChanged),
                     object: nil,
-                    userInfo: ["showName" : showName, "showId" : showId, "cdsUserId" : cdsUserId])
+                    userInfo: ["showName" : showName, "showId" : showId, "cdsUserId" : LoginViewController.cdsUserId!])
             }
         }
         
@@ -199,10 +155,10 @@ class OutlineViewController: NSViewController,
             return
         }
         
-        self.fetchShowContentTask(sasURI: fetchShowContentURI) { (result) in
+        fetchShowContentTask(sasURI: fetchShowContentURI) { (result) in
             
             if let error = result["error"] as? String {
-                fetchShowContentErrorAndNotify(error: error, showName: showName, showId: showId, cdsUserId: cdsUserId)
+                fetchShowContentErrorAndNotify(error: error, showName: showName, showId: showId)
                 return
             }
             let parser = XMLParser(data: result["data"] as! Data)
@@ -212,7 +168,7 @@ class OutlineViewController: NSViewController,
             self.root = nil
             
             if self.results == nil {
-                fetchShowContentErrorAndNotify(error: "Failed to retrieve show content!", showName: showName, showId: showId, cdsUserId: cdsUserId)
+                fetchShowContentErrorAndNotify(error: "Failed to retrieve show content!", showName: showName, showId: showId)
                 return
             }
             
@@ -308,22 +264,6 @@ class OutlineViewController: NSViewController,
         self.treeController.insert(node, atArrangedObjectIndexPath: insertionIndexPath)
     }
     
-    
-    
-    private func setupObservers() {
-        
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(onSelectedShow(_:)),
-            name: Notification.Name(WindowViewController.NotificationNames.IconSelectionChanged),
-            object: nil)
-        
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(onCancelPendingTasks(_:)),
-            name: Notification.Name(WindowViewController.NotificationNames.CancelPendingURLTasks),
-            object: nil)
-    }
     
     // MARK: MSALInteractiveDelegate
     

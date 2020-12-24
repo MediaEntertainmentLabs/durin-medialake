@@ -10,7 +10,7 @@ import MSAL
 
 class LoginViewController: NSViewController {
 
-    static let kAzCopyCmdPath = "/Applications/azcopy"
+    //static let kAzCopyCmdPath = "/Applications/azcopy"
     static let kAzCopyCmdDownloadURL = "https://aka.ms/downloadazcopy-v10-mac";
     static let kTenantID = "ba33002e-1a15-44ee-84c4-e72374a3a16e"
     static let kClientID = "ce1a6a1d-bc2e-4a01-8fee-32dcf0929346"
@@ -20,19 +20,43 @@ class LoginViewController: NSViewController {
     
     //"https://storage.azure.com/.default"
     let kScopes: [String] = ["user.read"]
-    static let cdsUserId: String = "fd895b30-1016-eb11-a812-000d3a530323" // TODO: fetch from portal
-    
-    static let kFetchShowsURL = "https://prod-05.southeastasia.logic.azure.com:443/workflows/82c912da1f4b4908a29ab639b1682882/triggers/manual/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=_noguWAh7ijeQAc1Znk7pcnlhfWnk8gGS3ZIqEeEoP8"
-        
-    static let kFetchSASTokenURL = "https://prod-06.southeastasia.logic.azure.com:443/workflows/00d8f3606ad740c681afd4ca2a4ce5a4/triggers/manual/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=Kq1sS8N67EEhfQOy5sNxSfHP8om7CxUDteQnsQ_W7tY"
-    
-    static let fetchSeasonsAndEpisodesURL = "https://prod-21.southeastasia.logic.azure.com:443/workflows/4af7e45e70fb4a0da10eb7e7da282c12/triggers/manual/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=Vf3c6BHMdTgo08D5TnWjmU4hLoPhI0VTTHK-tgPVe44"
+ 
+    static var azcopyPath = Bundle.main.bundleURL.appendingPathComponent("Contents")
+                                                 .appendingPathComponent("Resources")
+                                                 .appendingPathComponent("azcopy")
     
     var accessToken = String()
     static var application : MSALPublicClientApplication?
     var webViewParamaters : MSALWebviewParameters?
     static var account: MSALAccount?
-    var azureUserId = String()
+    static var _azureUserId : String?
+    static var cdsUserId: String? //= "fd895b30-1016-eb11-a812-000d3a530323" // TODO: fetch from portal
+   
+    static var apiUrls: [String:String] = [:]
+    
+    static var getShowForUserURI : String? {
+        return LoginViewController.apiUrls["Logic-GetShowForUser"]
+    }
+    
+    static var assetUploadFailureURI : String? {
+        return LoginViewController.apiUrls["Logic-AssetUploadFailure"]
+    }
+    
+    static var generateSASTokenURI : String? {
+        return LoginViewController.apiUrls["Logic-GenerateSASToken"]
+    }
+    
+    static var getAssetsAndFilesURI : String? {
+        return LoginViewController.apiUrls["Logic-GetAssetsAndFiles"]
+    }
+    
+    static var getSeasonDetailsForShowURI : String? {
+        return LoginViewController.apiUrls["Logic-GetSeasonDetailsForShow"]
+    }
+    
+    static var sendEmailURI : String? {
+        return LoginViewController.apiUrls["Logic-SendEmail"]
+    }
     
     typealias AccountCompletion = (MSALAccount?) -> Void
 
@@ -53,7 +77,7 @@ class LoginViewController: NSViewController {
     override func viewDidAppear() {
         // After a window is displayed, get the handle to the new window.
         window = self.view.window!
-        self.loginProgress.isHidden = true
+        self.hideProgress()
         
         AppDelegate.appDelegate.loginWindowController = window!.windowController
     }
@@ -117,8 +141,20 @@ class LoginViewController: NSViewController {
         let msalConfiguration = MSALPublicClientApplicationConfig(clientId: LoginViewController.kClientID,
                                                                   redirectUri: LoginViewController.kRedirectUri,
                                                                   authority: authority)
+        
+        if let bundleIdentifier = Bundle.main.bundleIdentifier {
+            msalConfiguration.cacheConfig.keychainSharingGroup = bundleIdentifier
+        }
+        
         LoginViewController.application = try MSALPublicClientApplication(configuration: msalConfiguration)
         self.self.webViewParamaters = MSALWebviewParameters()
+    }
+    
+    static var azureUserId: String? {
+        if let userId = _azureUserId {
+            return userId
+        }
+        return nil
     }
     
     static var currentAccount: MSALAccount? {
@@ -154,6 +190,9 @@ class LoginViewController: NSViewController {
             
             if let error = error {
                 self.updateLogging(text: "Couldn't query current account with error: \(error)")
+                if let completion = completion {
+                    completion(nil)
+                }
                 return
             }
             
@@ -186,8 +225,7 @@ class LoginViewController: NSViewController {
         
         if (LoginViewController.account != nil)
         {
-            self.loginProgress.isHidden = false
-            self.loginProgress.startAnimation(self)
+            self.showProgress()
             self.acquireTokenSilently(LoginViewController.account)
         }
         
@@ -233,7 +271,7 @@ class LoginViewController: NSViewController {
         
         self.loadCurrentAccount { (account) in
             
-            guard let currentAccount = account else {
+            guard account != nil else {
                 
                 // We check to see if we have a current logged in account.
                 // If we don't, then we need to sign someone in.
@@ -266,10 +304,9 @@ class LoginViewController: NSViewController {
                 
                 if let error = error {
                     self.updateLogging(text: "Couldn't sign out account with error: \(error)")
-                    return
+                } else {
+                    self.updateLogging(text: "Sign out completed successfully")
                 }
-                
-                self.updateLogging(text: "Sign out completed successfully")
                 self.accessToken = ""
                 self.updateCurrentAccount(acc: nil)
                 self.window?.makeKeyAndOrderFront(self)
@@ -290,6 +327,8 @@ class LoginViewController: NSViewController {
         let parameters = MSALInteractiveTokenParameters(scopes: kScopes, webviewParameters: webViewParameters)
         parameters.promptType = .selectAccount
         
+        self.showProgress()
+        
         applicationContext.acquireToken(with: parameters) { (result, error) in
             
             if let error = error {
@@ -307,23 +346,37 @@ class LoginViewController: NSViewController {
             self.accessToken = result.accessToken
             self.updateLogging(text: "Access token is \(self.accessToken)")
             
-            LoginViewController.account = result.account
-            
-            if (LoginViewController.account != nil)
-            {
-                self.loginProgress.isHidden = false
-                self.loginProgress.startAnimation(self)
-            }
-            
-            self.loginButton.title = result.account != nil ? "Sign Out" : "Sign In";
-            
             self.getContentWithToken() { isValid in
-                print(isValid)
-                // do something with the returned Bool
-                DispatchQueue.main.async {
-                    self.onLoginSuccessfull(self)
+                
+                self.hideProgress()
+                
+                if isValid {
+                    LoginViewController.account = result.account
+                  
+                    DispatchQueue.main.async {
+                        self.onLoginSuccessfull(self)
+                    }
+                }else {
+                    LoginViewController.account = nil
+                    // TODO: token is invalid print message
                 }
             }
+        }
+    }
+    
+    func hideProgress() {
+        DispatchQueue.main.async {
+            self.loginProgress.isHidden = true
+            self.loginProgress.stopAnimation(self)
+            self.loginButton.isEnabled = true
+        }
+    }
+    
+    func showProgress() {
+        DispatchQueue.main.async {
+            self.loginProgress.isHidden = false
+            self.loginProgress.startAnimation(self)
+            self.loginButton.isEnabled = false
         }
     }
     
@@ -417,7 +470,7 @@ class LoginViewController: NSViewController {
                 return
             }
             
-            guard let jsonResult = try? JSONSerialization.jsonObject(with: data!, options: []) as? [String: Any] else {
+            guard (try? JSONSerialization.jsonObject(with: data!, options: []) as? [String: Any]) != nil else {
                 
                 self.updateLogging(text: "Couldn't deserialize result JSON")
                 completion(false)
@@ -442,13 +495,14 @@ class LoginViewController: NSViewController {
             controller.showWindow(self)
             window?.performClose(nil) // nil because I'm not return a message
             
+            LoginViewController._azureUserId = LoginViewController.account?.identifier!.components(separatedBy: ".")[0]
+                
             NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.updateUserNameLabel),
                                             object: nil,
                                             userInfo: ["azureUserName": LoginViewController.account?.username! as Any])
             
             NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.LoginSuccessfull),
-                                            object: nil,
-                                            userInfo: ["cdsUserId": LoginViewController.cdsUserId])
+                                            object: nil)
         }
     }
     

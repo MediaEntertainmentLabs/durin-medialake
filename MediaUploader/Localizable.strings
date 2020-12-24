@@ -19,3 +19,11 @@
 "context upload string" = "Upload \"%@\"";
 
 
+"fetch show string" = "Fetching show content...";
+"fetch list shows string" = "Fetching list of shows...";
+
+"fetch list shows fail string" = "Failed to fetch list of shows!";
+"fetch show content fail string" = "Failed to fetch show content!";
+"fetch seasons fail string" = "Failed to fetch seasons!";
+"upload show fail string" = "Failed to upload show!";
+

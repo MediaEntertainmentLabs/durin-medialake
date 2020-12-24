@@ -32,6 +32,11 @@ class SplitViewController: NSSplitViewController {
     override func viewDidAppear() {
         super.viewDidAppear()
         
+        // maximize window on startup
+        if (!self.view.window!.isZoomed)  {
+            self.view.window!.zoom(self)
+        }
+        
         if outlineViewController == nil {
             outlineViewController = storyboard!.instantiateController(withIdentifier: "OutlineViewController") as? OutlineViewController
             outlineViewController.view.translatesAutoresizingMaskIntoConstraints = false
@@ -132,6 +137,8 @@ class SplitViewController: NSSplitViewController {
             progressViewController.progressButton.title = buttonLabel
             progressViewController.progressButton.isHidden = false
             progressViewController.progressIndicator.isHidden = true
+        } else {
+            progressViewController.progressButton.isHidden = true
         }
         embedChildViewController(progressViewController)
     }

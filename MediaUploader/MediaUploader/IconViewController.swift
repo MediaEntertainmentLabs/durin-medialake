@@ -6,41 +6,6 @@
 //
 import Cocoa
 
-
-final class FetchSASTokenOperation: AsyncOperation {
-
-    private let showName: String
-    private let cdsUserId: String
-    private let showId: String
-    
-    init(showName: String, cdsUserId: String, showId : String) {
-        self.showName = showName
-        self.cdsUserId =  cdsUserId
-        self.showId = showId
-    }
-
-    override func main() {
-        fetchSASTokenURLTask(cdsUserId : self.cdsUserId, showId : self.showId, synchronous: true) { (result) in
-            if (result["error"] as? String) != nil {
-                // if error occured while fetching SAS Token in background just ignore this
-                return
-            }
-            
-            DispatchQueue.main.async {
-                let sasToken = result["data"] as! String
-                NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.NewSASToken),
-                                                object: nil,
-                                                userInfo: ["showName" : self.showName, "sasToken" : sasToken])
-            }
-        }
-        self.finish()
-    }
-
-    override func cancel() {
-        super.cancel()
-    }
-}
-
 class IconViewController: NSViewController {
     
     @objc private dynamic var icons: [Node] = []
@@ -48,12 +13,8 @@ class IconViewController: NSViewController {
     
     private var fetchSASTokenQueue = OperationQueue()
     private var uploadQueue = OperationQueue()
-
     private var listShows : [String:Any] = [:]
-    var cdsUserId : String!
-    
-    //var pendingFiles : [String: [[String:Any]]] = [:]
-    //var pendingUploadDir : [String : String] = [:]
+    private var failedOperations = Set<FileUploadOperation>()
     
     
     override func viewDidLoad() {
@@ -75,34 +36,84 @@ class IconViewController: NSViewController {
         
         NotificationCenter.default.addObserver(
             self,
+            selector: #selector(onUploadFailed(_:)),
+            name: Notification.Name(WindowViewController.NotificationNames.OnUploadFailed),
+            object: nil)
+        
+        NotificationCenter.default.addObserver(
+            self,
             selector: #selector(onStartUploadShow(_:)),
             name: Notification.Name(WindowViewController.NotificationNames.OnStartUploadShow),
             object: nil)
     }
     
     func showId(showName: String) -> String {
-        return (self.listShows[showName] as! [String:String])["showId"]!
+        return (self.listShows[showName] as! [String:Any])["showId"]! as! String
     }
     
     @objc private func onNewSASTokenReceived(_ notification: Notification) {
         
         let showName  = notification.userInfo?["showName"] as! String
         let sasToken  = notification.userInfo?["sasToken"] as! String
-        AppDelegate.cacheSASTokens[showName]=sasToken
+        AppDelegate.cacheSASTokens[showName]=SASToken(showId: self.showId(showName: showName), sasToken: sasToken)
     }
     
     @objc private func onLoginSuccessfull(_ notification: NSNotification) {
 
-        cdsUserId  = (notification.userInfo?["cdsUserId"] as! String)
-        fetchListShows(cdsUserId : cdsUserId)
+        LoginViewController.cdsUserId = LoginViewController.azureUserId!
+        
+        if let apiURL = readConfig(key: "apiURL") {
+            self.fetchApiURLs(apiURL: apiURL)
+        }
+        else {
+            print("------------- error read config!")
+            
+            let storyboard = NSStoryboard(name: "Main", bundle: nil)
+            let vc = storyboard.instantiateController(withIdentifier: "StartupPopupView") as? NSViewController
+            self.presentAsSheet(vc!)
+         }
     }
     
-    private func fetchListShows(cdsUserId: String) {
-        fetchListOfShowsTask(cdsUserId : cdsUserId) { (result) in
+    private func fetchApiURLs(apiURL : String) {
+        print (" --------------- fetchApiURLs: ", apiURL)
+        
+        NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.ShowProgressViewControllerOnlyText),
+                                        object: nil,
+                                        userInfo: ["progressLabel" : OutlineViewController.NameConstants.kFetchListOfShowsStr])
+        
+        fetchListAPI_URLs(userApiURLs : apiURL) { (result) in
             
             DispatchQueue.main.async {
                 if let error = result["error"] as? String {
-                    AppDelegate.retryContext["cdsUserId"] = cdsUserId
+                    AppDelegate.retryContext["cdsUserId"] = LoginViewController.cdsUserId
+                    AppDelegate.lastError = AppDelegate.ErrorStatus.kFailedFetchListShows
+                    NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.ShowProgressViewControllerOnlyText),
+                                                    object: nil,
+                                                    userInfo: ["progressLabel" : error,
+                                                               "disableProgress" : true,
+                                                               "enableButton" : OutlineViewController.NameConstants.kRetryStr])
+                    return
+                }
+                for item in result["data"] as! [[String : String]] {
+                    for (key,value) in item {
+                        LoginViewController.apiUrls[key] = value
+                    }
+                }
+                
+                self.fetchListShows()
+            }
+        }
+    }
+    
+    
+    private func fetchListShows() {
+        print (" --------------- fetchListShows ")
+        
+        fetchListOfShowsTask() { (result) in
+            
+            DispatchQueue.main.async {
+                if let error = result["error"] as? String {
+                    AppDelegate.retryContext["cdsUserId"] = LoginViewController.cdsUserId
                     AppDelegate.lastError = AppDelegate.ErrorStatus.kFailedFetchListShows
                     NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.ShowProgressViewControllerOnlyText),
                                                     object: nil,
@@ -113,14 +124,15 @@ class IconViewController: NSViewController {
                 }
                 self.listShows = result["data"] as! [String : Any]
                 
-                NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.ShowOutlineViewController),
-                                                object: nil)
+                NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.ShowOutlineViewController), object: nil)
                     
                 var contentArray : [Node] = []
                 for show in self.listShows {
                     
                     let node = OutlineViewController.fileSystemNode(from: show.key, isFolder: true)
-                    node.identifier = self.showId(showName: show.key)
+                    let value = show.value as! [String:Any]
+                    node.identifier = value["showId"] as! String
+                    node.is_upload_allowed = value["allowed"] as! Bool
                     contentArray.append(node)
                     
                     /*
@@ -135,8 +147,8 @@ class IconViewController: NSViewController {
                     self.updateIcons(contentArray)
                 }
                 
-                if FileManager.default.fileExists(atPath: LoginViewController.kAzCopyCmdPath) == false {
-                    _ = dialogOKCancel(question: "Warning", text: "AzCopy is not found by path \(LoginViewController.kAzCopyCmdPath).\r\nDownload here\r\n \(LoginViewController.kAzCopyCmdDownloadURL) and copy binary 'azcopy' to /Applications folder.")
+                if FileManager.default.fileExists(atPath: LoginViewController.azcopyPath.path) == false {
+                    _ = dialogOKCancel(question: "Warning", text: "AzCopy is not found by path \(LoginViewController.azcopyPath.path).")
                 }
             }
         }
@@ -160,25 +172,50 @@ class IconViewController: NSViewController {
         icons = data
         collectionView.reloadData()
     }
-    
+
+    @objc func onUploadFailed(_ notification: NSNotification) throws {
+        let op = notification.userInfo?["failedOperation"] as! FileUploadOperation
+        failedOperations.insert(op)
+        
+        // TODO: implement recovery logic
+        
+        // There are 3 cases:
+        // 1. Fetch SAS Token failed -> No FileUploadOperation being created
+        // 2. FileUploadOperation of metadata.json failed
+        // 3. FileUploadOperation for data subtasks failed.
+        
+        // Solution 1 (fast) - All failed FileUploadOperations accumulate into single queue.
+        //                     Click on button schedule to retry all items from failedOperations queue one by one.
+        
+        // Solution 2 - Per each row recovery:
+        // case 1: restart upload from the very beginning.
+        //         Prerequisites: all input data SHALL be saved to recovery_context object.
+        //                        Shall be conncetion between UI row in table and recovery_context object.
+        //         Actions: restart onStartUploadShow
+        // case 2: restart metadata.json root task, which after completion trigger all its subtasks to run,
+        //         so restart possible only for metadata.json and bunch of its subtasks as a whole.
+        //         Prerequisites: SHALL be connection between each subtask and root metadata.json task.
+        //                        SHALL be connection between UI row in table and each subtask.
+        //         Actions: set state = -1.
+        // case 3: restart possible for single subtask for individual UI row in table.
+        //         Prerequisites: SHALL be connection between UI row in table and each subtask.
+        //         Actions: set state = -2.
+    }
     
     @objc func onStartUploadShow(_ notification: NSNotification) throws {
         
+        let json_main = notification.userInfo?["json_main"] as! [String:String]
+        let shootDay = json_main["shootDay"]!
+        let batch = json_main["batch"]!
+        let unit = json_main["unit"]!
+     
         let showName = notification.userInfo?["showName"] as! String
         let season = notification.userInfo?["season"] as! (String,String) // name:Id
-        let shootDay = notification.userInfo?["shootDay"] as! String
         let blockOrEpisode = notification.userInfo?["blockOrEpisode"] as! (String,String) // name:Id
         let isBlock = notification.userInfo?["isBlock"] as! Bool
-        let batch = notification.userInfo?["batch"] as! String
-        let unit = notification.userInfo?["unit"] as! String
-        let team = notification.userInfo?["team"] as! String
-        
-        let info = notification.userInfo?["info"] as! String
-        let notificationEmail = notification.userInfo?["notificationEmail"] as! String
-        let checksumAlgorithm = notification.userInfo?["checksum"] as! String
         let files = notification.userInfo?["files"] as! [String:[[String:Any]]]
         let srcDirs = notification.userInfo?["srcDir"] as! [String:String]
-        var pendingUploads = notification.userInfo?["pendingUploads"] as? [String:UploadTableRecord]
+        var pendingUploads = notification.userInfo?["pendingUploads"] as? [String:UploadTableRow]
         
         let keys = [UploadSettingsViewController.kCameraRAWFileType,
                     UploadSettingsViewController.kAudioFileType,
@@ -203,8 +240,9 @@ class IconViewController: NSViewController {
                 
                 // folderLayoutStr -> [season name]/[block name]/[shootday]/[batch]/[unit ]/[type]
                 let folderLayoutStr = metadatafolderLayout + "\(type)/"
-     
-                let uploadRecord = UploadTableRecord(showName: showName, srcPath: srcDirs[type]!, dstPath: folderLayoutStr)
+                
+                // create UI rows in table before all upload tasks will be created
+                let uploadRecord = UploadTableRow(showName: showName, uploadParams: json_main, srcPath: srcDirs[type]!, dstPath: folderLayoutStr)
                 pendingUploads![type] = uploadRecord
                 NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.AddUploadTask),
                                                 object: nil,
@@ -212,35 +250,39 @@ class IconViewController: NSViewController {
             }
         }
         
-        if let sas = AppDelegate.cacheSASTokens[showName] {
+        if let sas = AppDelegate.cacheSASTokens[showName]?.value() {
             // if SAS Token is already in cache just use it
-            sasToken = sas;
+            sasToken = sas
         } else {
-            fetchSASTokenURLTask(cdsUserId : cdsUserId, showId : self.showId(showName: showName), synchronous: false) { (result) in
+            fetchSASTokenURLTask(showId : self.showId(showName: showName), synchronous: false) { (result) in
+                
                 if let error = result["error"] as? String {
-                    uploadShowErrorAndNotify(error: error, cdsUserId: self.cdsUserId, showId: self.showId(showName: showName))
+                    let recoveryContext : [String : Any] = ["json_main": json_main,
+                                                           "showName": showName,
+                                                           "season": season,
+                                                           "blockOrEpisode": blockOrEpisode,
+                                                           "isBlock": isBlock,
+                                                           "files": files,
+                                                           "srcDir": srcDirs,
+                                                           "pendingUploads": pendingUploads!]
+                    
+                    uploadShowFetchSASTokenErrorAndNotify(error: error, recoveryContext: recoveryContext)
                     return
                 }
                 
                 sasToken = result["data"] as? String
-                AppDelegate.cacheSASTokens[showName]=sasToken
-
+                AppDelegate.cacheSASTokens[showName]=SASToken(showId : self.showId(showName: showName), sasToken: sasToken)
+                
                 NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.OnStartUploadShow),
                                                 object: nil,
-                                                userInfo: ["showName": showName,
+                                                userInfo: ["json_main": json_main,
+                                                           "showName": showName,
                                                            "season": season,
-                                                           "shootDay":shootDay,
-                                                           "blockOrEpisode":blockOrEpisode,
-                                                           "isBlock":isBlock,
-                                                           "batch":batch,
-                                                           "unit":unit,
-                                                           "team":team,
-                                                           "info":info,
-                                                           "checksum":"md5",
-                                                           "notificationEmail":notificationEmail,
+                                                           "blockOrEpisode": blockOrEpisode,
+                                                           "isBlock": isBlock,
                                                            "files": files,
-                                                           "srcDir":srcDirs,
-                                                           "pendingUploads":pendingUploads as Any])
+                                                           "srcDir": srcDirs,
+                                                           "pendingUploads": pendingUploads!])
             }
         }
         
@@ -251,20 +293,20 @@ class IconViewController: NSViewController {
         
         var jsonRecords : [Any] = []
         var filesToUpload : [String:String] = [:]
-        var pendingDataTasks: [FileUploadOperation] = []
+        var dataSubTasks: [FileUploadOperation] = []
         
         for type in keys {
             if files[type]?.count == 0 {
                 continue
             }
             
-    
             // folderLayoutStr -> [season name]/[block name]/[shootday]/[batch]/[unit ]/[type]
             let folderLayoutStr = metadatafolderLayout + "\(type)/"
 
+            // metadata.json upload task is root task, all data tasks are subtasks
             // sasToken is unavailable here, will be filled in latter
-            let op = self.createUploadDirTask(showName: showName, folderLayoutStr: folderLayoutStr, sasToken: sasToken,  uploadRecord: pendingUploads![type]!)
-            pendingDataTasks.append(op)
+            let op = self.createUploadDirTask(showName: showName, folderLayoutStr: folderLayoutStr, sasToken: sasToken, uploadRecord: pendingUploads![type]!)
+            dataSubTasks.append(op)
           
             
             for item in files[type]! {
@@ -276,32 +318,15 @@ class IconViewController: NSViewController {
             }
         }
         
-        let episodeId = isBlock ? "" : blockOrEpisode.1
-        let blockId = isBlock ? blockOrEpisode.1 : ""
+        var json : [String:Any] = json_main
+        json["files"] = jsonRecords
         
-        let json : [String : Any] = [
-            "showId": self.showId(showName: showName),
-            "seasonId":season.1,
-            "episodeId":episodeId,
-            "blockId":blockId,
-            "batch":batch,
-            "unit":unit,
-            "team":team,
-            "shootDay":shootDay,
-            "info":info,
-            "notificationEmail":notificationEmail,
-            "checksum":checksumAlgorithm,
-            "files":jsonRecords
-        ]
         let jsonData = try? JSONSerialization.data(withJSONObject: json, options: [.sortedKeys, .prettyPrinted])
         var metadataPath : URL!
-        
-        
-        if let metadataJsonPath = FileManager.default.urls(for: FileManager.SearchPathDirectory.documentDirectory,
-                                                           in: FileManager.SearchPathDomainMask.allDomainsMask).first {
+        if let metadataJsonPath = FileManager.default.urls(for: .applicationSupportDirectory, in: .allDomainsMask).first {
             
             metadataPath = metadataJsonPath.appendingPathComponent(metadataJsonFilename)
-            print ("---------------------- ", metadataPath as Any)
+            print ("---------------------- metadataPath: ", metadataPath!)
             do {
                 try jsonData!.write(to: metadataPath)
             } catch let error as NSError {
@@ -316,7 +341,7 @@ class IconViewController: NSViewController {
                                          dataFiles: filesToUpload,
                                          metadataFilePath: metadataPath.path,
                                          dstPath: metadatafolderLayout + "metadata.json",
-                                         dependens : pendingDataTasks)
+                                         dependens : dataSubTasks)
     }
     
     
@@ -341,21 +366,21 @@ class IconViewController: NSViewController {
             }
             
             DispatchQueue.main.async {
-                let uploadOperation = FileUploadOperation(showName: showName,
-                                                          showId: self.showId(showName: showName),
-                                                          cdsUserId: self.cdsUserId,
+                let uploadOperation = FileUploadOperation(showId: self.showId(showName: showName),
+                                                          cdsUserId: LoginViewController.cdsUserId!,
                                                           sasToken: sasToken,
-                                                          step: FileUploadOperation.Step.kMetadataJsonUpload,
+                                                          step: FileUploadOperation.UploadType.kMetadataJsonUpload,
                                                           uploadRecord : nil,
                                                           dependens : dependens,
-                                                          cmd: LoginViewController.kAzCopyCmdPath,
                                                           args: ["copy", metadataFilePath, sasTokenWithDestPath])
-                
                 uploadOperation.completionBlock = {
                     if uploadOperation.isCancelled {
                         return
                     }
-                    self.uploadQueue.addOperations(uploadOperation.dependens , waitUntilFinished: false)
+                    
+                    if (uploadOperation.completionStatus == 0) {
+                        self.uploadQueue.addOperations(uploadOperation.dependens , waitUntilFinished: false)
+                    }
                 }
                 
                 self.uploadQueue.addOperations([uploadOperation], waitUntilFinished: false)
@@ -363,105 +388,24 @@ class IconViewController: NSViewController {
         }
     }
     
-    func createUploadDirTask(showName: String, folderLayoutStr: String, sasToken: String?, uploadRecord : UploadTableRecord) -> FileUploadOperation {
+    func createUploadDirTask(showName: String, folderLayoutStr: String, sasToken: String?, uploadRecord : UploadTableRow) -> FileUploadOperation {
         print("------------ upload DIR:", sasToken!)
+        
         let dstPath = "/" + folderLayoutStr
         let sasSplit = sasToken!.components(separatedBy: "?")
         let sasTokenWithDestPath = sasSplit[0] + dstPath+"?" + sasSplit[1]
         
         
-        let uploadOperation = FileUploadOperation(showName: showName,
-                                                  showId: self.showId(showName: showName),
-                                                  cdsUserId: self.cdsUserId,
+        let uploadOperation = FileUploadOperation(showId: self.showId(showName: showName),
+                                                  cdsUserId: LoginViewController.cdsUserId!,
                                                   sasToken: sasToken!,
-                                                  step: FileUploadOperation.Step.kDataUpload,
+                                                  step: FileUploadOperation.UploadType.kDataUpload,
                                                   uploadRecord : uploadRecord,
                                                   dependens: [],
-                                                  cmd: LoginViewController.kAzCopyCmdPath,
-                                                  args: ["copy", uploadRecord.srcPath, sasTokenWithDestPath, "--recursive"])
-        
-        //self.uploadQueue.addOperations([uploadOperation], waitUntilFinished: false)
+                                                  args: ["copy", uploadRecord.srcPath, sasTokenWithDestPath, "--recursive", "--put-md5"])
         return uploadOperation
     }
     
-    func uploadFiles(files: [[String:Any]], showName: String, folderLayoutStr: String, sasToken: String) {
-        do {
-            for item in files {
-                for (filePath, rec) in item {
-                    
-         
-                    let filenameToUpload = folderLayoutStr + (rec as! [String:String])["filePath"]!
-                    
-                    let sasSplit = sasToken.components(separatedBy: "?")
-                    let sasTokenWithDestPath = sasSplit[0] + "/" + filenameToUpload + "?" + sasSplit[1]
-                    
-                    print("------- upload SAS:", sasTokenWithDestPath)
-                    
-                    #if USE_AZURE_BLOBSTORAGE_API
-                    let credential = MSALCredential(tenant: LoginViewController.kTenantID,
-                                                    clientId: LoginViewController.kClientID,
-                                                    authority: URL(string: LoginViewController.kAuthority)!,
-                                                    redirectUri: LoginViewController.kRedirectUri,
-                                                    account: LoginViewController.currentAccount)
-                    
-                    //let sasUri = "https://xxxx.blob.core.windows.net/container/path/to/blob?xxxx"
-                    ///let sasCredential = StorageSASCredential(staticCredential: sasTokenWithDestPath)
-                    //self.blobClient = try StorageBlobClient(endpoint: (URL(string: sasSplit[0])?.deletingLastPathComponent())!, credential: sasCredential)
-                    
-                    let options = StorageBlobClientOptions(
-                        logger: ClientLoggers.none,
-                        transportOptions: TransportOptions(timeout: 5.0),
-                        restorationId: "MediaUploader"
-                    )
-                    
-                    let properties = BlobProperties(
-                        contentType: "application/json; charset=utf-8"
-                    )
-                    
-                    let pathWithFilename = URL(fileURLWithPath: filePath)
-                    let sourceUrl = LocalURL(fromAbsoluteUrl: pathWithFilename)
-                    
-                    //let containerName = "durinmediastorage"
-                    let containerName = showName
-                    
-                    self.blobClient = try StorageBlobClient(endpoint: (URL(string: sasSplit[0])?.deletingLastPathComponent())!)
-                    self.blobClient!.delegate = self
-                    self.blobClient?.uploads.removeAll()
-                    
-                    let blobName = filenameToUpload + "?" + sasSplit[1]
-                    // don't start a transfer if one has already started
-                    guard self.blobClient!.uploads.firstWith(blobName: blobName) == nil else { return }
-                    
-                    //                    for item in files {
-                    //                        for (filePath, rec) in item {
-                    //                            let containerName = folderLayoutStr + type
-                    //                            try self.blobClient!.upload(
-                    //                                    file: sourceUrl,
-                    //                                    toContainer: containerName,
-                    //                                    asBlob: blobName,
-                    //                                    properties: properties)
-                    //
-                    //                        }
-                    //                    }
-                    #endif
-                    let uploadRecord = UploadTableRecord(showName: showName, srcPath: filePath, dstPath: filenameToUpload)
-                    let uploadOperation = FileUploadOperation(showName: showName,
-                                                              showId: self.showId(showName: showName),
-                                                              cdsUserId: self.cdsUserId,
-                                                              sasToken: sasToken,
-                                                              step: FileUploadOperation.Step.kDataUpload,
-                                                              uploadRecord : uploadRecord,
-                                                              dependens: [],
-                                                              cmd: LoginViewController.kAzCopyCmdPath,
-                                                              args: ["copy", filePath, sasTokenWithDestPath])
-                    self.uploadQueue.addOperations([uploadOperation], waitUntilFinished: false)
-                }
-            }
-        } catch let error {
-            uploadShowErrorAndNotify(error: error, cdsUserId: self.cdsUserId, showId: self.showId(showName: showName))
-        }
-    }
-   
     deinit {
         
         NotificationCenter.default.removeObserver(
@@ -479,6 +423,10 @@ class IconViewController: NSViewController {
             name: Notification.Name(WindowViewController.NotificationNames.OnStartUploadShow),
             object: nil)
         
+        NotificationCenter.default.removeObserver(
+            self,
+            name: Notification.Name(WindowViewController.NotificationNames.OnUploadFailed),
+            object: nil)
     }
 }
 
@@ -501,14 +449,7 @@ extension IconViewController : NSCollectionViewDataSource {
         
         let data = icons[indexPath.item]
         collectionViewItem.node = data
-        
-        //let imageFile = imageDirectoryLoader.imageFileForIndexPath(indexPath)
-        //collectionViewItem.imageFile = imageFile
-        /*
-        for node in icons {
-            collectionViewItem.node = node
-        }
-         */
+
         return item
     }
 }
@@ -527,12 +468,12 @@ extension IconViewController : NSCollectionViewDelegate {
         NotificationCenter.default.post(
             name: Notification.Name(WindowViewController.NotificationNames.ShowProgressViewController),
             object: nil,
-            userInfo: ["progressLabel" : "Fetching show content..."])
+            userInfo: ["progressLabel" : OutlineViewController.NameConstants.kFetchShowContentStr])
         
         NotificationCenter.default.post(
             name: Notification.Name(WindowViewController.NotificationNames.IconSelectionChanged),
             object: nil,
-            userInfo: ["showName" : showName, "showId" : showId, "cdsUserId" : self.cdsUserId!])
+            userInfo: ["showName" : showName, "showId" : showId])
     }
     
     internal func collectionView(_ collectionView: NSCollectionView, didDeselectItemsAt indexPaths: Set<IndexPath>) {

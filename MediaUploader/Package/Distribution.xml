@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<installer-gui-script minSpecVersion="1">
+    <options customize="never" allow-external-scripts="no"/>
+    <options rootVolumeOnly="true"/>
+    <choices-outline>
+            <line choice="$(PRODUCT_BUNDLE_IDENTIFIER)"/>
+    </choices-outline>
+    <choice id="$(PRODUCT_BUNDLE_IDENTIFIER)" title="Install tamaggo ibi" visible="false">
+        <pkg-ref id="$(PRODUCT_BUNDLE_IDENTIFIER)"/>
+    </choice>
+    <pkg-ref id="$(PRODUCT_BUNDLE_IDENTIFIER)" version="1.0.0" onConclusion="none">MediaUploader.pkg</pkg-ref>
+</installer-gui-script>
