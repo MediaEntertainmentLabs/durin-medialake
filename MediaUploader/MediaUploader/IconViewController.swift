@@ -250,6 +250,15 @@ class IconViewController: NSViewController {
             }
         }
         
+        let recoveryContext : [String : Any] = ["json_main": json_main,
+                                               "showName": showName,
+                                               "season": season,
+                                               "blockOrEpisode": blockOrEpisode,
+                                               "isBlock": isBlock,
+                                               "files": files,
+                                               "srcDir": srcDirs,
+                                               "pendingUploads": pendingUploads!]
+        
         if let sas = AppDelegate.cacheSASTokens[showName]?.value() {
             // if SAS Token is already in cache just use it
             sasToken = sas
@@ -257,16 +266,7 @@ class IconViewController: NSViewController {
             fetchSASTokenURLTask(showId : self.showId(showName: showName), synchronous: false) { (result) in
                 
                 if let error = result["error"] as? String {
-                    let recoveryContext : [String : Any] = ["json_main": json_main,
-                                                           "showName": showName,
-                                                           "season": season,
-                                                           "blockOrEpisode": blockOrEpisode,
-                                                           "isBlock": isBlock,
-                                                           "files": files,
-                                                           "srcDir": srcDirs,
-                                                           "pendingUploads": pendingUploads!]
-                    
-                    uploadShowFetchSASTokenErrorAndNotify(error: error, recoveryContext: recoveryContext)
+                    uploadShowFetchSASTokenErrorAndNotify(error: OutlineViewController.NameConstants.kUploadShowFailedStr, recoveryContext: recoveryContext)
                     return
                 }
                 
@@ -341,7 +341,8 @@ class IconViewController: NSViewController {
                                          dataFiles: filesToUpload,
                                          metadataFilePath: metadataPath.path,
                                          dstPath: metadatafolderLayout + "metadata.json",
-                                         dependens : dataSubTasks)
+                                         dependens : dataSubTasks,
+                                         recoveryContext : recoveryContext)
     }
     
     
@@ -350,7 +351,8 @@ class IconViewController: NSViewController {
                                      dataFiles: [String:String],
                                      metadataFilePath: String,
                                      dstPath: String,
-                                     dependens : [FileUploadOperation]) {
+                                     dependens : [FileUploadOperation],
+                                     recoveryContext : [String : Any]) {
         
         let sasSplit = sasToken.components(separatedBy: "?")
         let sasTokenWithDestPath = sasSplit[0] + "/" + dstPath + "?" + sasSplit[1]
@@ -364,7 +366,10 @@ class IconViewController: NSViewController {
             if calcChecksumOperation.isCancelled {
                 return
             }
-            
+            if calcChecksumOperation.status != 0 {
+                uploadShowFetchSASTokenErrorAndNotify(error: OutlineViewController.NameConstants.kUploadShowFailedStr, recoveryContext: recoveryContext)
+                return
+            }
             DispatchQueue.main.async {
                 let uploadOperation = FileUploadOperation(showId: self.showId(showName: showName),
                                                           cdsUserId: LoginViewController.cdsUserId!,
@@ -378,9 +383,13 @@ class IconViewController: NSViewController {
                         return
                     }
                     
-                    if (uploadOperation.completionStatus == 0) {
-                        self.uploadQueue.addOperations(uploadOperation.dependens , waitUntilFinished: false)
+                    if (uploadOperation.completionStatus != 0) {
+                        uploadShowFetchSASTokenErrorAndNotify(error: OutlineViewController.NameConstants.kUploadShowFailedStr, recoveryContext: recoveryContext)
+                        return
                     }
+                    
+                    self.uploadQueue.addOperations(uploadOperation.dependens , waitUntilFinished: false)
+                    
                 }
                 
                 self.uploadQueue.addOperations([uploadOperation], waitUntilFinished: false)

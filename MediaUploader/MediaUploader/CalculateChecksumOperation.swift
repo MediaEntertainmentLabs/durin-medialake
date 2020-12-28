@@ -12,7 +12,8 @@ final class CalculateChecksumOperation: AsyncOperation {
 
     private let srcFiles: [String:String]
     private let metadataFilePath : String
-        
+    var status = 0
+    
     init(srcFiles: [String:String], metadataFilePath : String) {
         self.srcFiles = srcFiles
         self.metadataFilePath = metadataFilePath
@@ -21,8 +22,8 @@ final class CalculateChecksumOperation: AsyncOperation {
     override func main() {
         var md5_dict : [String:String] = [:]
         for (file,realPath) in srcFiles {
-            //let filename = URL(string: file)?.lastPathComponent
-            let md5 = md5File(url: URL(string: realPath)!)
+            guard let url = URL(fileURLWithPath: realPath) as URL? else { status = -1; self.finish(); return }
+            let md5 = md5File(url: url)
             if md5 == nil {
                 continue
             }
