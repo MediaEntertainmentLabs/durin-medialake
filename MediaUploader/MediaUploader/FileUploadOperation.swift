@@ -8,40 +8,68 @@
 import Cocoa
 
 
-final class FileUploadOperation: AsyncOperation {
+final class FileUploadOperation: AsyncOperation , NSCopying {
 
     enum UploadType {
         case kMetadataJsonUpload
         case kDataUpload
+        case kPendingRetry
     }
     
     private let showId: String
     private let cdsUserId: String
     private let sasToken: String
     
-    var uploadRecord : UploadTableRow?
+    var tableRowRef : UploadTableRow?
     var completionStatus : Int
 
     private let args: [String]
-    private let step: FileUploadOperation.UploadType
+    var step: FileUploadOperation.UploadType
     
     // upload being performed in two steps:
-    // firstly we upload metadata.json -> dependens contains data tasks
-    // second is actually data -> dependens is empty
+    // firstly we upload metadata.json(parent task), in this case dependens contains data tasks
+    // second is we upload actually data -> dependens is empty
+    weak var parent : FileUploadOperation?
     var dependens : [FileUploadOperation]!
+    var retry : Bool = false // indicates is this retry attempt or not
     
-    init(showId: String, cdsUserId: String, sasToken: String, step: FileUploadOperation.UploadType, uploadRecord : UploadTableRow?, dependens : [FileUploadOperation], args: [String]) {
+    init(showId: String, cdsUserId: String, sasToken: String, step: FileUploadOperation.UploadType, tableRowRef: UploadTableRow?, dependens : [FileUploadOperation], args: [String]) {
         self.showId = showId
         self.cdsUserId = cdsUserId
         self.sasToken = sasToken
-        self.uploadRecord = uploadRecord
-        self.dependens = dependens
+        self.tableRowRef = tableRowRef
         self.completionStatus = 0
+        
+        self.parent = nil
+        self.dependens = dependens
         
         self.step = step
         self.args = args
+        
+        super.init()
+        
+        self.tableRowRef?.taskRef = self
+        
+        for dep in dependens {
+            dep.parent = self
+        }
     }
 
+    deinit {
+        print (" ------- deinit FileUploadOperation, self: ", self)
+    }
+    
+    func copy(with zone: NSZone? = nil) -> Any {
+        let copy = FileUploadOperation(showId: showId,
+                                      cdsUserId: cdsUserId,
+                                      sasToken: sasToken,
+                                      step: step,
+                                      tableRowRef: tableRowRef,
+                                      dependens: dependens,
+                                      args: args)
+            return copy
+        }
+    
     override func main() {
         let (_, error, status) = runAzCopyCommand(cmd: LoginViewController.azcopyPath.path, args: self.args)
         
@@ -54,13 +82,13 @@ final class FileUploadOperation: AsyncOperation {
 
             } else if self.step == UploadType.kDataUpload {
                 DispatchQueue.main.async {
-                    self.uploadRecord!.uploadProgress = 100.0
-                    self.uploadRecord!.completionStatusString = "Completed"
+                    self.tableRowRef!.uploadProgress = 100.0
+                    self.tableRowRef!.completionStatusString = "Completed"
                     print ("------------  Upload of data completed successfully!")
                     NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.UpdateShowUploadProgress),
                                                     object: nil,
-                                                    userInfo: ["showName" : self.uploadRecord!.showName,
-                                                               "progress" : self.uploadRecord!.uploadProgress])
+                                                    userInfo: ["showName" : self.tableRowRef!.showName,
+                                                               "progress" : self.tableRowRef!.uploadProgress])
                     // update show content
 //                    NotificationCenter.default.post(
 //                        name: Notification.Name(WindowViewController.NotificationNames.ShowProgressViewController),
@@ -78,17 +106,18 @@ final class FileUploadOperation: AsyncOperation {
             DispatchQueue.main.async {
                 if self.step == UploadType.kMetadataJsonUpload {
                     for dep in self.dependens {
-                        print(dep.uploadRecord!.completionStatusString)
-                        dep.uploadRecord!.uploadProgress = 100.0
+                        dep.retry = false
+                        print(dep.tableRowRef!.completionStatusString)
+                        dep.tableRowRef!.uploadProgress = 100.0
                         print ("------------  Upload failed, error: ", error)
                         
-                        uploadShowErrorAndNotify(error: OutlineViewController.NameConstants.kUploadShowFailedStr, params: dep.uploadRecord!.uploadParams, operation: self)
+                        uploadShowErrorAndNotify(error: OutlineViewController.NameConstants.kUploadShowFailedStr, params: dep.tableRowRef!.uploadParams, operation: self)
                     }
                 } else if self.step == UploadType.kDataUpload {
-                    print(self.uploadRecord!.completionStatusString)
-                    self.uploadRecord!.uploadProgress = 100.0
+                    print(self.tableRowRef!.completionStatusString)
+                    self.tableRowRef!.uploadProgress = 100.0
                     print ("------------  Upload failed, error: ", error)
-                    uploadShowErrorAndNotify(error: OutlineViewController.NameConstants.kUploadShowFailedStr, params: self.uploadRecord!.uploadParams, operation: self)
+                    uploadShowErrorAndNotify(error: OutlineViewController.NameConstants.kUploadShowFailedStr, params: self.tableRowRef!.uploadParams, operation: self)
                 }
  
                 NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.UpdateShowUploadProgress),
@@ -181,8 +210,8 @@ final class FileUploadOperation: AsyncOperation {
             
             // advance progress only for actually upload data stage
             if !result.isEmpty && self.step == FileUploadOperation.UploadType.kDataUpload {
-                self.uploadRecord!.uploadProgress = ceil(Double(result[0][0])! + 0.5)
-                print("------------ progress : ", self.uploadRecord!.showName, " ", self.uploadRecord!.uploadProgress, " >> ", result[0])
+                self.tableRowRef!.uploadProgress = ceil(Double(result[0][0])! + 0.5)
+                print("------------ progress : ", self.tableRowRef!.showName, " ", self.tableRowRef!.uploadProgress, " >> ", result[0])
             }
             
             DispatchQueue.main.async {
@@ -232,17 +261,18 @@ final class FileUploadOperation: AsyncOperation {
     
     func parseResult(inputString: String) -> (Int,String) {
         var error: String = ""
-        let resultString = getCompletionStatusString(inputString: inputString)
+        var resultString = getCompletionStatusString(inputString: inputString)
         if !resultString.isEmpty {
             
-            if resultString != "Completed" {
+            if resultString != "Completed_NOT" {
+                resultString = "Failed"
                 if self.step == UploadType.kMetadataJsonUpload {
                     for dep in self.dependens {
-                        dep.uploadRecord!.completionStatusString = resultString
+                        dep.tableRowRef!.completionStatusString = resultString
                     }
                     error = "Failed AzCopy metadata.json Upload!"
                 } else {
-                    self.uploadRecord!.completionStatusString = resultString
+                    self.tableRowRef!.completionStatusString = resultString
                     error = "Failed AzCopy data Upload!"
                 }
                 

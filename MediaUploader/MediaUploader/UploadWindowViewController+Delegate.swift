@@ -131,6 +131,7 @@ extension UploadWindowViewController: NSTableViewDelegate {
         return nil
     }
     
+    
     func doubleEqual(_ a: Double, _ b: Double) -> Bool {
         return fabs(a - b) < Double.ulpOfOne
     }

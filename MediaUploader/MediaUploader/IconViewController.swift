@@ -45,6 +45,14 @@ class IconViewController: NSViewController {
             selector: #selector(onStartUploadShow(_:)),
             name: Notification.Name(WindowViewController.NotificationNames.OnStartUploadShow),
             object: nil)
+        
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(onRestartTask(_:)),
+            name: Notification.Name(WindowViewController.NotificationNames.RestartTask),
+            object: nil)
+        
+        
     }
     
     func showId(showName: String) -> String {
@@ -173,6 +181,12 @@ class IconViewController: NSViewController {
         collectionView.reloadData()
     }
 
+    @objc func onRestartTask(_ notification: NSNotification) throws {
+        let op = notification.userInfo?["task"] as! FileUploadOperation
+        self.uploadQueue.addOperation(op)
+        
+    }
+    
     @objc func onUploadFailed(_ notification: NSNotification) throws {
         let op = notification.userInfo?["failedOperation"] as! FileUploadOperation
         failedOperations.insert(op)
@@ -366,26 +380,52 @@ class IconViewController: NSViewController {
             }
             
             DispatchQueue.main.async {
-                let uploadOperation = FileUploadOperation(showId: self.showId(showName: showName),
-                                                          cdsUserId: LoginViewController.cdsUserId!,
-                                                          sasToken: sasToken,
-                                                          step: FileUploadOperation.UploadType.kMetadataJsonUpload,
-                                                          uploadRecord : nil,
-                                                          dependens : dependens,
-                                                          args: ["copy", metadataFilePath, sasTokenWithDestPath])
-                uploadOperation.completionBlock = {
-                    if uploadOperation.isCancelled {
+                let metadataUploadOperation = FileUploadOperation(showId: self.showId(showName: showName),
+                                                                  cdsUserId: LoginViewController.cdsUserId!,
+                                                                  sasToken: sasToken,
+                                                                  step: FileUploadOperation.UploadType.kMetadataJsonUpload,
+                                                                  tableRowRef : nil,
+                                                                  dependens : dependens,
+                                                                  args: ["copy", metadataFilePath, sasTokenWithDestPath])
+                metadataUploadOperation.completionBlock = {
+                    if metadataUploadOperation.isCancelled {
                         return
                     }
-                    
-                    if (uploadOperation.completionStatus == 0) {
-                        self.uploadQueue.addOperations(uploadOperation.dependens , waitUntilFinished: false)
+
+                    if (metadataUploadOperation.completionStatus == 0) {
+                        // if it's not retry do ordinary upload
+                        if !self.checkRetryOperation(metadataUploadOperation: metadataUploadOperation) {
+                            self.uploadQueue.addOperations(metadataUploadOperation.dependens, waitUntilFinished: false)
+                        }
+                     
                     }
                 }
                 
-                self.uploadQueue.addOperations([uploadOperation], waitUntilFinished: false)
+                self.uploadQueue.addOperations([metadataUploadOperation], waitUntilFinished: false)
             }
         }
+    }
+    
+    func checkRetryOperation(metadataUploadOperation : FileUploadOperation ) -> Bool {
+ 
+        var isRetry : Bool = false
+        for dep in metadataUploadOperation.dependens {
+            // parent task completed successfully so remove reference
+            dep.parent = nil
+            if !isRetry {
+                isRetry = dep.retry
+            }
+        }
+        
+        if isRetry {
+            for dep in metadataUploadOperation.dependens {
+                if dep.retry {
+                    self.uploadQueue.addOperation(dep)
+                }
+            }
+            return true
+        }
+        return false
     }
     
     func createUploadDirTask(showName: String, folderLayoutStr: String, sasToken: String?, uploadRecord : UploadTableRow) -> FileUploadOperation {
@@ -400,7 +440,7 @@ class IconViewController: NSViewController {
                                                   cdsUserId: LoginViewController.cdsUserId!,
                                                   sasToken: sasToken!,
                                                   step: FileUploadOperation.UploadType.kDataUpload,
-                                                  uploadRecord : uploadRecord,
+                                                  tableRowRef : uploadRecord,
                                                   dependens: [],
                                                   args: ["copy", uploadRecord.srcPath, sasTokenWithDestPath, "--recursive", "--put-md5"])
         return uploadOperation
@@ -426,6 +466,11 @@ class IconViewController: NSViewController {
         NotificationCenter.default.removeObserver(
             self,
             name: Notification.Name(WindowViewController.NotificationNames.OnUploadFailed),
+            object: nil)
+        
+        NotificationCenter.default.removeObserver(
+            self,
+            name: Notification.Name(WindowViewController.NotificationNames.RestartTask),
             object: nil)
     }
 }

@@ -10,6 +10,9 @@ import Cocoa
 
 class UploadTableRow : NSObject {
     
+    // there is cycle reference between async operation and UI row element
+    var taskRef: FileUploadOperation?
+    
     let showName: String
     let srcPath: String
     let dstPath: String
@@ -29,6 +32,42 @@ class UploadTableRow : NSObject {
         self.uploadParams = uploadParams
         
         super.init()
+    }
+    
+    func restoreTask() {
+        if let taskRef = taskRef {
+            if let parent = taskRef.parent {
+                // if retry operation has already started just return
+                for dep in parent.dependens {
+                    if dep.retry {
+                        taskRef.retry = true
+                        return
+                    }
+                }
+                taskRef.retry = true
+                
+                let newParent = parent.copy() as! FileUploadOperation
+                
+                for dep in newParent.dependens {
+                    dep.parent = newParent
+                }
+                //newParent.dependens.removeAll()
+                //newParent.dependens.append(taskRef)
+
+                // restart parent task
+                NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.RestartTask),
+                                                object: nil,
+                                                userInfo: ["task" : newParent])
+                
+            } else {
+                // restart data task
+                let newTaskRef = taskRef.copy() as! FileUploadOperation
+                
+                NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.RestartTask),
+                                                object: nil,
+                                                userInfo: ["task" : newTaskRef])
+            }
+        }
     }
 }
 
@@ -56,6 +95,11 @@ class UploadWindowViewController: NSViewController {
         
         self.tableView.delegate = self
         self.tableView.dataSource = self
+        
+        let menu = NSMenu()
+        menu.addItem(NSMenuItem(title: "Retry", action: #selector(tableViewRetryItemClicked(_:)), keyEquivalent: ""))
+        //menu.addItem(NSMenuItem(title: "Delete", action: #selector(tableViewDeleteItemClicked(_:)), keyEquivalent: ""))
+        self.tableView.menu = menu
         
         var column_index : Int = 0
         tableView.tableColumns.forEach { (column) in
@@ -91,6 +135,15 @@ class UploadWindowViewController: NSViewController {
         
     }
 
+    @objc private func tableViewRetryItemClicked(_ sender: AnyObject) {
+
+        guard tableView.clickedRow >= 0 else { return }
+
+        let item = uploadTasks[tableView.clickedRow]
+        item.restoreTask()
+        //showDetailsViewController(with: item)
+    }
+    
     override var representedObject: Any? {
         didSet {
         // Update the view, if already loaded.
