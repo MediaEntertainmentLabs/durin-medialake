@@ -155,12 +155,14 @@ class UploadSettingsViewController: NSViewController {
         
         if byEpisodeRadio.state == NSControl.StateValue.on {
             episodesCombo.isHidden = false
+            episodesCombo.isEnabled = episodesCombo.numberOfItems > 0
             episodesComboLabel .isHidden = false
             blocksCombo.isHidden = true
             blocksComboLabel.isHidden = true
             
         } else if byBlockRadio.state == NSControl.StateValue.on {
             blocksCombo.isHidden = false
+            blocksCombo.isEnabled = blocksCombo.numberOfItems > 0
             blocksComboLabel.isHidden = false
             episodesCombo.isHidden = true
             episodesComboLabel .isHidden = true
@@ -331,8 +333,11 @@ class UploadSettingsViewController: NSViewController {
             }
             blockOrEpisode = getEpisode(seasonName: season, episopeName: episode)
         }
-        
-        if cameraRAWPathField.stringValue.isEmpty {
+ 
+        if cameraRAWPathField.stringValue.isEmpty &&
+           audioPathField.stringValue.isEmpty &&
+           CDLPathField.stringValue.isEmpty &&
+           LUTPathField.stringValue.isEmpty {
             showPopoverMessage(positioningView: cameraRAWPathField, msg: "Please specify path to media")
             return
         }
@@ -476,7 +481,8 @@ class UploadSettingsViewController: NSViewController {
             cleanCombobox(combo: episodesCombo)
             cleanCombobox(combo: blocksCombo)
             if (values.1.count != 0) {
-                episodesCombo.isEnabled = true
+                episodesCombo.isHidden = !(byEpisodeRadio.state == NSControl.StateValue.on)
+                episodesCombo.isEnabled = !episodesCombo.isHidden
                 for item in values.1 {
                     episodesCombo.addItem(withObjectValue: item.0)
                 }
@@ -486,10 +492,11 @@ class UploadSettingsViewController: NSViewController {
             } else {
                 episodesCombo.isEnabled = false
             }
-            
+
             if (values.2.count != 0) {
-                blocksCombo.isEnabled = true
-                for item in values.1 {
+                blocksCombo.isHidden = !(byBlockRadio.state == NSControl.StateValue.on)
+                blocksCombo.isEnabled = !blocksCombo.isHidden
+                for item in values.2 {
                     blocksCombo.addItem(withObjectValue: item.0)
                 }
                 if (blocksCombo.numberOfItems != 0) {
