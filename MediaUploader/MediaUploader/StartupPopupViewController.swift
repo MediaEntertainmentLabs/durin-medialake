@@ -31,6 +31,10 @@ class StartupPopupViewController : NSViewController, NSTextFieldDelegate {
                                         object: nil)
     }
     
+    @IBAction func onCancelClicked(_ sender: Any) {
+        self.dismiss(self)
+    }
+    
     func controlTextDidChange(_ notification: Notification) {
         if let textField = notification.object as? NSTextField {
             if textField.stringValue.isEmpty {

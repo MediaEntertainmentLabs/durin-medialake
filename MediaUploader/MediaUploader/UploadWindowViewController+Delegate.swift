@@ -80,7 +80,7 @@ extension UploadWindowViewController: NSTableViewDelegate {
         let item = uploadTasks[row]
         
         if tableColumn?.identifier == NSUserInterfaceItemIdentifier(rawValue: ColumnIdentifiers.Num) {
-            text = "\(row)"
+            text = "\(row+1)"
         } else if tableColumn?.identifier == NSUserInterfaceItemIdentifier(rawValue: ColumnIdentifiers.ShowName) {
             text = item.showName
         } else if tableColumn?.identifier == NSUserInterfaceItemIdentifier(rawValue: ColumnIdentifiers.SrcPath) {

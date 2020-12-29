@@ -49,7 +49,7 @@ final class FileUploadOperation: AsyncOperation {
             if self.step == UploadType.kMetadataJsonUpload {
                 print ("------------  Completed successfully: \(sasToken) ")
                 print ("------------  Cleanup of ", self.args[1])
-                removeConfig(path: self.args[1])
+                removeFile(path: self.args[1])
                 
 
             } else if self.step == UploadType.kDataUpload {

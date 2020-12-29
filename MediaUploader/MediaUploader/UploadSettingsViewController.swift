@@ -438,20 +438,19 @@ class UploadSettingsViewController: NSViewController {
 
     private func fetchSeandsAndEpisodes(showId: String) {
         
-        fetchSeandsAndEpisodesTask(showId : showId) { (result) in
+        fetchSeasonsAndEpisodesTask(showId : showId) { (result) in
             
             DispatchQueue.main.async {
                 self.progressFetch.isHidden = true
                 self.progressFetch.stopAnimation(self)
-                
+
                 if let error = result["error"] as? String {
+                    print(error)
+                    self.seasonsCombo.addItem(withObjectValue: "Failed to fetch seasons")
+                    self.seasonsCombo.selectItem(at: 0)
+                    
                     AppDelegate.retryContext["showId"] = showId
                     AppDelegate.lastError = AppDelegate.ErrorStatus.kFailedFetchSeasonsAndEpisodes
-                    NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.ShowProgressViewControllerOnlyText),
-                                                    object: nil,
-                                                    userInfo: ["progressLabel" : error,
-                                                               "disableProgress" : true,
-                                                               "enableButton" : OutlineViewController.NameConstants.kRetryStr])
                     return
                 }
                 
@@ -476,6 +475,7 @@ class UploadSettingsViewController: NSViewController {
     }
     
     func populateComoboxes(seasonName : String) {
+        guard seasons != nil else { return }
         
         if let values = seasons[seasonName] {
             cleanCombobox(combo: episodesCombo)

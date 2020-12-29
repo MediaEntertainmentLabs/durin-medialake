@@ -75,44 +75,55 @@ func dialogOKCancel(question: String, text: String) -> Bool {
     return alert.runModal() == NSApplication.ModalResponse.alertFirstButtonReturn
 }
 
-func writeConfig(item: [String:String]) {
-    let jsonData = try? JSONSerialization.data(withJSONObject: item, options: [.sortedKeys, .prettyPrinted])
-    var configURLPath : URL!
-    if let localConfigPath = FileManager.default.urls(for: .applicationSupportDirectory, in: .allDomainsMask).first {
+func configURLPath() -> URL? {
+    var configPath : URL!
+    if let localConfigPath = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first {
         
-        configURLPath = localConfigPath.appendingPathComponent("config.json")
-        do {
-            try jsonData!.write(to: configURLPath)
-        } catch let error as NSError {
-            print(error)
-            // TODO: show Alert
-            return
+        do{
+            try FileManager.default.createDirectory(atPath: localConfigPath.appendingPathComponent(Bundle.main.bundleIdentifier!).path, withIntermediateDirectories: true, attributes: nil)
+        } catch {
+            print("Error: \(error.localizedDescription)")
         }
+        
+        configPath = localConfigPath.appendingPathComponent(Bundle.main.bundleIdentifier!).appendingPathComponent("config.json")
+        return configPath
+    }
+    return nil
+}
+
+func writeConfig(item: [String:String]) {
+    guard let configPath = configURLPath() else { return }
+    
+    do {
+        let jsonData = try? JSONSerialization.data(withJSONObject: item, options: [.sortedKeys, .prettyPrinted])
+        try jsonData!.write(to: configPath)
+    } catch let error as NSError {
+        print(error)
+        // TODO: show Alert
+        return
     }
 }
 
 func readConfig(key: String) -> String? {
-    var configURLPath : URL!
-    if let localConfigPath = FileManager.default.urls(for: .applicationSupportDirectory, in: .allDomainsMask).first {
-        configURLPath = localConfigPath.appendingPathComponent("config.json")
-        do {
-            let data = try Data(contentsOf: configURLPath, options: .mappedIfSafe)
-            let jsonResult = try JSONSerialization.jsonObject(with: data, options: .mutableLeaves)
-            if let jsonResult = jsonResult as? Dictionary<String, AnyObject> {
-                let apiURL = jsonResult[key] as? String
-                return apiURL
-            }
-        } catch let error as NSError {
-            print(error)
-            // TODO: show Alert
-            return nil
+    guard let configPath = configURLPath() else { return nil }
+    
+    do {
+        let data = try Data(contentsOf: configPath, options: .mappedIfSafe)
+        let jsonResult = try JSONSerialization.jsonObject(with: data, options: .mutableLeaves)
+        if let jsonResult = jsonResult as? Dictionary<String, AnyObject> {
+            let apiURL = jsonResult[key] as? String
+            return apiURL
         }
+    } catch let error as NSError {
+        print(error)
+        // TODO: show Alert
+        return nil
     }
     return nil
 }
 
 
-func removeConfig(path: String) {
+func removeFile(path: String) {
     do {
         if FileManager.default.fileExists(atPath: path) {
             try FileManager.default.removeItem(atPath: path)

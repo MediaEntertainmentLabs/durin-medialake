@@ -60,7 +60,7 @@ class UploadWindowViewController: NSViewController {
         var column_index : Int = 0
         tableView.tableColumns.forEach { (column) in
             switch(column_index) {
-            case 0: column.title = "#"
+            case 0: column.title = "ShowNo"
             case 1: column.title = "Show"
             case 2: column.title = "Source"
             case 3: column.title = "Destination"

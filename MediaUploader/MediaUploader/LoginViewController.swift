@@ -51,7 +51,7 @@ class LoginViewController: NSViewController {
     }
     
     static var getSeasonDetailsForShowURI : String? {
-        return LoginViewController.apiUrls["Logic-GetSeasonDetailsForShow"]
+        return LoginViewController.apiUrls["Logic-GetSeasonEpisodeForShow"]
     }
     
     static var sendEmailURI : String? {
@@ -334,6 +334,7 @@ class LoginViewController: NSViewController {
             if let error = error {
                 
                 self.updateLogging(text: "Could not acquire token: \(error)")
+                self.hideProgress()
                 return
             }
             
@@ -358,6 +359,7 @@ class LoginViewController: NSViewController {
                     }
                 }else {
                     LoginViewController.account = nil
+                    self.hideProgress()
                     // TODO: token is invalid print message
                 }
             }
@@ -421,22 +423,27 @@ class LoginViewController: NSViewController {
                 }
                 
                 self.updateLogging(text: "Could not acquire token silently: \(error)")
+                self.hideProgress()
                 return
             }
             
             guard let result = result else {
-                
                 self.updateLogging(text: "Could not acquire token: No result returned")
+                self.hideProgress()
                 return
             }
             
             self.accessToken = result.accessToken
             self.updateLogging(text: "Refreshed Access token is \(self.accessToken)")
             self.getContentWithToken() { isValid in
-                print(isValid)
                 // do something with the returned Bool
                 DispatchQueue.main.async {
-                    self.onLoginSuccessfull(self)
+                    if isValid {
+                        self.onLoginSuccessfull(self)
+                    } else {
+                        self.hideProgress()
+                    }
+                    
                 }
             }
         }

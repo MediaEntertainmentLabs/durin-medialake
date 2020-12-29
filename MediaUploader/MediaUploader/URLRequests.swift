@@ -33,7 +33,6 @@ func postUploadFailureTask(params: [String:String], completion: @escaping (_ res
     request.httpBody = jsonData
     
     let task = URLSession.shared.dataTask(with: request) { data, response, error in
-        do {
             if error != nil {
                 print("Error: \(String(describing: error))")
                 completion(false)
@@ -56,18 +55,13 @@ func postUploadFailureTask(params: [String:String], completion: @escaping (_ res
 //            }
             completion(true)
             return
-            
-        } catch let _  {
-            completion(false)
-            return
-        }
     }
     task.resume()
 }
 
 func fetchListAPI_URLs(userApiURLs: String, completion: @escaping (_ shows: [String:Any]) -> Void) {
-
-    let url = URL(string: userApiURLs)!
+    guard let url = URL(string: userApiURLs) else { completion(["error": OutlineViewController.NameConstants.kFetchListOfShowsFailedStr]); return }
+    
     var request = URLRequest(url: url)
     request.httpMethod = "GET"
     
@@ -102,8 +96,8 @@ func fetchListAPI_URLs(userApiURLs: String, completion: @escaping (_ shows: [Str
 }
 
 func fetchShowContentTask(sasURI : String, completion: @escaping (_ data: [String:Any]) -> Void) {
+    guard let url = URL(string: sasURI) else { completion(["error": OutlineViewController.NameConstants.kFetchShowContentFailedStr]); return }
     
-    let url = URL(string: sasURI)!
     var request = URLRequest(url: url)
     request.httpMethod = "GET"
     let task = URLSession.shared.dataTask(with: request) { data, response, error in
@@ -133,10 +127,13 @@ func fetchShowContentTask(sasURI : String, completion: @escaping (_ data: [Strin
 func fetchSASTokenURLTask(showId: String, synchronous: Bool, completion: @escaping (_ result: [String:Any]) -> Void) {
     
     let json = ["showId":showId, "userId":LoginViewController.cdsUserId]
-    
+
     let jsonData = try? JSONSerialization.data(withJSONObject: json, options: .prettyPrinted)
-    let url = URL(string: LoginViewController.generateSASTokenURI!)
-    var request = URLRequest(url: url!)
+    
+    guard let SASTokenURI = LoginViewController.generateSASTokenURI else { completion(["error": OutlineViewController.NameConstants.kFetchListOfShowsFailedStr]); return }
+    guard let url = URL(string: SASTokenURI) else { completion(["error": OutlineViewController.NameConstants.kFetchListOfShowsFailedStr]); return }
+    
+    var request = URLRequest(url: url)
     request.httpMethod = "POST"
     request.setValue("application/json; charset=utf-8", forHTTPHeaderField: "Content-Type")
     request.httpBody = jsonData
@@ -191,9 +188,11 @@ func fetchListOfShowsTask(completion: @escaping (_ shows: [String:Any]) -> Void)
 
     let json: [String: String] = ["userId" : LoginViewController.cdsUserId!]
     let jsonData = try? JSONSerialization.data(withJSONObject: json, options: .prettyPrinted)
-    let url = URL(string: LoginViewController.getShowForUserURI!)
     
-    var request = URLRequest(url: url!)
+    guard let showForUserURI = LoginViewController.getShowForUserURI else { completion(["error": OutlineViewController.NameConstants.kFetchListOfShowsFailedStr]); return }
+    guard let url = URL(string: showForUserURI) else { completion(["error": OutlineViewController.NameConstants.kFetchListOfShowsFailedStr]); return }
+    
+    var request = URLRequest(url: url)
     request.httpMethod = "POST"
     request.setValue("application/json; charset=utf-8", forHTTPHeaderField: "Content-Type")
     request.httpBody = jsonData
@@ -237,13 +236,14 @@ func fetchListOfShowsTask(completion: @escaping (_ shows: [String:Any]) -> Void)
 }
 
 
-func fetchSeandsAndEpisodesTask(showId: String, completion: @escaping (_ shows: [String:Any]) -> Void) {
+func fetchSeasonsAndEpisodesTask(showId: String, completion: @escaping (_ shows: [String:Any]) -> Void) {
 
-    let json: [String: String] = ["containerId" : showId]
+    let json: [String: String] = ["showid" : showId]
     let jsonData = try? JSONSerialization.data(withJSONObject: json, options: .prettyPrinted)
-    let url = URL(string: LoginViewController.getSeasonDetailsForShowURI!)
+    guard let seasonDetailsForShowURI = LoginViewController.getSeasonDetailsForShowURI else { completion(["error": OutlineViewController.NameConstants.kFetchListOfSeasonsFailedStr]); return }
+    guard let url = URL(string: seasonDetailsForShowURI) else { completion(["error": OutlineViewController.NameConstants.kFetchListOfSeasonsFailedStr]); return }
     
-    var request = URLRequest(url: url!)
+    var request = URLRequest(url: url)
     request.httpMethod = "POST"
     request.setValue("application/json; charset=utf-8", forHTTPHeaderField: "Content-Type")
     request.httpBody = jsonData
@@ -259,7 +259,7 @@ func fetchSeandsAndEpisodesTask(showId: String, completion: @escaping (_ shows: 
                 if httpResponse.statusCode != 200 {
                     // Convert HTTP Response Data to a simple String
                     if let data = data, let dataString = String(data: data, encoding: .utf8) {
-                        print("Response: \(dataString)")
+                        print("Response \(httpResponse.statusCode): \(dataString)")
                     }
                     throw OutlineViewController.NameConstants.kFetchListOfSeasonsFailedStr
                 }
@@ -270,25 +270,25 @@ func fetchSeandsAndEpisodesTask(showId: String, completion: @escaping (_ shows: 
             
             let responseJSON = try JSONSerialization.jsonObject(with: data!) as! [String:Any]
 
-            let seasons = responseJSON["season"] as? [[String:Any]]
-            if seasons == nil {
-                throw OutlineViewController.NameConstants.kFetchListOfSeasonsFailedStr
-            }
-            for season in seasons! {
-                var episodes = [(String,String)]()
-                for episode in season["episode"] as! [[String:String]]  {
-                    if let name = episode["name"] {
-                        episodes.append((name,episode["id"]! as String))
+            guard let seasons = responseJSON["seasons"] as? [[String:Any]] else { throw OutlineViewController.NameConstants.kFetchListOfSeasonsFailedStr }
+            guard let episodes = responseJSON["episodes"] as? [[String:String]] else { throw OutlineViewController.NameConstants.kFetchListOfSeasonsFailedStr }
+            guard let blocks = responseJSON["blocks"] as? [[String:String]] else { throw OutlineViewController.NameConstants.kFetchListOfSeasonsFailedStr }
+            
+            for season in seasons {
+                var out_episodes = [(String,String)]()
+                for episode in episodes {
+                    if let name = episode["name"], episode["seasonid"] == (season["seasonId"] as! String) {
+                        out_episodes.append((name,episode["id"]! as String))
                     }
                 }
-                var blocks = [(String,String)]()
-                for block in season["block"] as! [[String:String]]  {
-                    if let name = block["name"] {
-                        blocks.append((name,block["id"]! as String))
+                var out_blocks = [(String,String)]()
+                for block in blocks  {
+                    if let name = block["name"], block["seasonid"] == (season["seasonId"] as! String) {
+                        out_blocks.append((name,block["id"]! as String))
                     }
                 }
             
-                result[season["name"] as! String] = (season["id"] as! String, episodes, blocks)
+                result[season["seasonName"] as! String] = (season["seasonId"] as! String, out_episodes, out_blocks)
             }
             completion(["data": result])
             
