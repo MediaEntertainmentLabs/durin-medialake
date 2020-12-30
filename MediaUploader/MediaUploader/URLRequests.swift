@@ -26,8 +26,11 @@ func postUploadFailureTask(params: [String:String], completion: @escaping (_ res
     ]
     
     let jsonData = try? JSONSerialization.data(withJSONObject: json, options: .prettyPrinted)
-    let url = URL(string: LoginViewController.assetUploadFailureURI!)
-    var request = URLRequest(url: url!)
+    
+    guard let assetUploadFailureURI = LoginViewController.assetUploadFailureURI else { completion(false); return }
+    guard let url = URL(string: assetUploadFailureURI) else { completion(false); return }
+    
+    var request = URLRequest(url: url)
     request.httpMethod = "POST"
     request.setValue("application/json; charset=utf-8", forHTTPHeaderField: "Content-Type")
     request.httpBody = jsonData
@@ -81,12 +84,11 @@ func fetchListAPI_URLs(userApiURLs: String, completion: @escaping (_ shows: [Str
                     throw OutlineViewController.NameConstants.kFetchListOfShowsFailedStr
                 }
             }
-
-            let responseJSON = try JSONSerialization.jsonObject(with: data!) as? [[String:String]]
-            if responseJSON == nil {
-                throw OutlineViewController.NameConstants.kFetchListOfShowsFailedStr
+            if let data = data {
+                if let responseJSON = try JSONSerialization.jsonObject(with: data) as? [[String:String]] {
+                    completion(["data": responseJSON])
+                }
             }
-            completion(["data": responseJSON!])
             
         } catch let error  {
             completion(["error": error])
@@ -116,7 +118,9 @@ func fetchShowContentTask(sasURI : String, completion: @escaping (_ data: [Strin
                 }
             }
             
-            completion(["data" : data!])
+            guard let data = data else { completion(["error": OutlineViewController.NameConstants.kFetchShowContentFailedStr]); return }
+            completion(["data" : data])
+            
         } catch let error  {
             completion(["error": error])
         }
@@ -157,13 +161,12 @@ func fetchSASTokenURLTask(showId: String, synchronous: Bool, completion: @escapi
                 }
             }
             
-            var sasToken : String!
-            
-            let responseJSON = try JSONSerialization.jsonObject(with: data!) as! [String:Any]
-            sasToken = responseJSON["weburi"] as? String
-            
-            completion(["data" : sasToken!])
-            
+            if let data = data {
+                let responseJSON = try JSONSerialization.jsonObject(with: data) as! [String:Any]
+                if let sasToken = responseJSON["weburi"] as? String {
+                    completion(["data" : sasToken])
+                }
+            }
             if synchronous {
                 semaphore.signal()
             }
@@ -215,18 +218,17 @@ func fetchListOfShowsTask(completion: @escaping (_ shows: [String:Any]) -> Void)
             }
             
             var shows : [String:Any] = [:]
-            
-            let responseJSON = try JSONSerialization.jsonObject(with: data!) as? [[String:Any]]
-            if responseJSON == nil {
-                throw OutlineViewController.NameConstants.kFetchListOfShowsFailedStr
+            if let data = data {
+                if let responseJSON = try JSONSerialization.jsonObject(with: data) as? [[String:Any]] {
+                    for item in responseJSON {
+                        let showName = item["media_name"] as! String
+                        let showId = item["media_assetcontainerid"] as! String
+                        let allowed = item["media_uploadallowed"] as! Bool
+                        shows[showName] = ["showId":showId, "allowed":allowed]
+                    }
+                }
+                completion(["data": shows])
             }
-            for item in responseJSON! {
-                let showName = item["media_name"] as! String
-                let showId = item["media_assetcontainerid"] as! String
-                let allowed = item["media_uploadallowed"] as! Bool
-                shows[showName] = ["showId":showId, "allowed":allowed]
-            }
-            completion(["data": shows])
             
         } catch let error  {
             completion(["error": error])
@@ -268,7 +270,9 @@ func fetchSeasonsAndEpisodesTask(showId: String, completion: @escaping (_ shows:
             // season_name -> (list_episode_name, list_block_name)
             var result = UploadSettingsViewController.SeasonsType()
             
-            let responseJSON = try JSONSerialization.jsonObject(with: data!) as! [String:Any]
+            guard let data = data else { throw OutlineViewController.NameConstants.kFetchListOfSeasonsFailedStr }
+            
+            let responseJSON = try JSONSerialization.jsonObject(with: data) as! [String:Any]
 
             guard let seasons = responseJSON["seasons"] as? [[String:Any]] else { throw OutlineViewController.NameConstants.kFetchListOfSeasonsFailedStr }
             guard let episodes = responseJSON["episodes"] as? [[String:String]] else { throw OutlineViewController.NameConstants.kFetchListOfSeasonsFailedStr }

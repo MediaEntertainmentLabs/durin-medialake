@@ -111,9 +111,10 @@ class OutlineViewController: NSViewController,
     }
     
     @IBAction func refreshShowContent(_ sender: Any) {
-        if self.currentShowName == nil {
-            return
-        }
+        guard let currentShowName = self.currentShowName else { return }
+        guard let currentShowId = self.currentShowId else { return }
+        guard let cdsUserId = self.cdsUserId else { return }
+        
         // update show content
         NotificationCenter.default.post(
             name: Notification.Name(WindowViewController.NotificationNames.ShowProgressViewController),
@@ -123,15 +124,17 @@ class OutlineViewController: NSViewController,
         NotificationCenter.default.post(
             name: Notification.Name(WindowViewController.NotificationNames.IconSelectionChanged),
             object: nil,
-            userInfo: ["showName" : self.currentShowName!, "showId": self.currentShowId!, "cdsUserId" : self.cdsUserId!])
+            userInfo: ["showName" : currentShowName, "showId": currentShowId, "cdsUserId" : cdsUserId])
     }
     
     
     private func fetchShowContent(showName : String, showId : String) {
         
         var fetchShowContentURI : String!
-        if let sasToken = AppDelegate.cacheSASTokens[showName]?.value() {
-                fetchShowContentURI = sasToken + "&restype=container&comp=list"
+        if let sasToken = AppDelegate.cacheSASTokens[showName] {
+            if let value = sasToken.value() {
+                fetchShowContentURI = value + "&restype=container&comp=list"
+            }
         } else {
             fetchSASTokenURLTask(showId: showId, synchronous: false) { (result) in
                 if let error = result["error"] as? String {
@@ -139,14 +142,15 @@ class OutlineViewController: NSViewController,
                     return
                 }
                 
-                let sasToken = result["data"] as? String
-                fetchShowContentURI = sasToken! + "&restype=container&comp=list"
-                AppDelegate.cacheSASTokens[showName]=SASToken(showId : showId, sasToken: sasToken!)
-                
-                NotificationCenter.default.post(
-                    name: Notification.Name(WindowViewController.NotificationNames.IconSelectionChanged),
-                    object: nil,
-                    userInfo: ["showName" : showName, "showId" : showId, "cdsUserId" : LoginViewController.cdsUserId!])
+                if let sasToken = result["data"] as? String {
+                    fetchShowContentURI = sasToken + "&restype=container&comp=list"
+                    AppDelegate.cacheSASTokens[showName]=SASToken(showId : showId, sasToken: sasToken)
+                    
+                    NotificationCenter.default.post(
+                        name: Notification.Name(WindowViewController.NotificationNames.IconSelectionChanged),
+                        object: nil,
+                        userInfo: ["showName" : showName, "showId" : showId, "cdsUserId" : LoginViewController.cdsUserId!])
+                }
             }
         }
         
@@ -161,7 +165,8 @@ class OutlineViewController: NSViewController,
                 fetchShowContentErrorAndNotify(error: error, showName: showName, showId: showId)
                 return
             }
-            let parser = XMLParser(data: result["data"] as! Data)
+            guard let data = result["data"] as? Data else { fetchShowContentErrorAndNotify(error: "Failed to retrieve show content!", showName: showName, showId: showId); return }
+            let parser = XMLParser(data: data)
             parser.delegate = self
             parser.parse()
             
@@ -318,7 +323,7 @@ extension OutlineViewController: XMLParserDelegate {
     // - If we're at the end of the whole dictionary, then save that dictionary in our array
     // - If we're at the end of an element that belongs in the dictionary, then save that value in the dictionary
     func parser(_ parser: XMLParser, didEndElement elementName: String, namespaceURI: String?, qualifiedName qName: String?) {
-        if elementName == recordKey {
+        if results != nil && elementName == recordKey {
             results!.append(currentDictionary!)
             currentDictionary = nil
         } else if dictionaryKeys.contains(elementName) {

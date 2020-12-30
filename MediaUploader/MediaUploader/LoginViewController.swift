@@ -147,7 +147,7 @@ class LoginViewController: NSViewController {
         }
         
         LoginViewController.application = try MSALPublicClientApplication(configuration: msalConfiguration)
-        self.self.webViewParamaters = MSALWebviewParameters()
+        self.webViewParamaters = MSALWebviewParameters()
     }
     
     static var azureUserId: String? {
@@ -286,8 +286,8 @@ class LoginViewController: NSViewController {
     @objc func signOut(_ sender: Any) {
         
         guard let applicationContext = LoginViewController.application else { return }
-        
         guard let account = LoginViewController.currentAccount else { return }
+        guard let webViewParamaters = self.webViewParamaters else { return }
         
         do {
             
@@ -297,7 +297,7 @@ class LoginViewController: NSViewController {
              - account:    The account to remove from the cache
              */
             
-            let signoutParameters = MSALSignoutParameters(webviewParameters: self.webViewParamaters!)
+            let signoutParameters = MSALSignoutParameters(webviewParameters: webViewParamaters)
             signoutParameters.signoutFromBrowser = true
             
             applicationContext.signout(with: account, signoutParameters: signoutParameters, completionBlock: {(success, error) in
@@ -463,8 +463,8 @@ class LoginViewController: NSViewController {
         
         // Specify the Graph API endpoint
         let graphURI = getGraphEndpoint()
-        let url = URL(string: graphURI)
-        var request = URLRequest(url: url!)
+        guard let url = URL(string: graphURI) else { self.updateLogging(text: "Couldn't deserialize result JSON"); completion(false); return }
+        var request = URLRequest(url: url)
         
         // Set the Authorization header for the request. We use Bearer tokens, so we specify Bearer + the token we got from the result
         request.setValue("Bearer \(self.accessToken)", forHTTPHeaderField: "Authorization")
@@ -477,7 +477,9 @@ class LoginViewController: NSViewController {
                 return
             }
             
-            guard (try? JSONSerialization.jsonObject(with: data!, options: []) as? [String: Any]) != nil else {
+            guard let data = data else { completion(false); return }
+            
+            guard (try? JSONSerialization.jsonObject(with: data, options: []) as? [String: Any]) != nil else {
                 
                 self.updateLogging(text: "Couldn't deserialize result JSON")
                 completion(false)
@@ -490,6 +492,14 @@ class LoginViewController: NSViewController {
     
     @objc private func onLoginSuccessfull(_ sender: Any)
     {
+        guard let account = LoginViewController.account else { return }
+        
+        guard let identifier = account.identifier else { return }
+        guard let username = account.username else { return }
+        
+        LoginViewController._azureUserId = identifier.components(separatedBy: ".")[0]
+        
+        
         //NSApplication.shared.mainWindow?.windowController!.showWindow(self)
         let appDelegate = NSApplication.shared.delegate as! AppDelegate
         var windowController : NSWindowController! = appDelegate.mainWindowController
@@ -502,11 +512,9 @@ class LoginViewController: NSViewController {
             controller.showWindow(self)
             window?.performClose(nil) // nil because I'm not return a message
             
-            LoginViewController._azureUserId = LoginViewController.account?.identifier!.components(separatedBy: ".")[0]
-                
             NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.updateUserNameLabel),
                                             object: nil,
-                                            userInfo: ["azureUserName": LoginViewController.account?.username! as Any])
+                                            userInfo: ["azureUserName": username])
             
             NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.LoginSuccessfull),
                                             object: nil)

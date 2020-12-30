@@ -20,8 +20,8 @@ extension OutlineViewController: NSOutlineViewDelegate,NSOutlineViewDataSource {
     
     // Is the outline view item a group node? (not a folder but a group with Hide/Show buttons).
     func outlineView(_ outlineView: NSOutlineView, isGroupItem item: Any) -> Bool {
-        let node = OutlineViewController.node(from: item)
-        return node!.isSpecialGroup
+        guard let node = OutlineViewController.node(from: item) else { return false }
+        return node.isSpecialGroup
     }
     
     // Should we select the outline view item? (no selection for special groupings or separators).

@@ -28,25 +28,29 @@ class ClickedCollectionView: NSCollectionView {
             return nil
         }
         let indexPath = IndexPath(item: clickedIndex!, section: 0)
-        let node = (self.item(at: indexPath) as! CollectionViewItem).node
-        let uploadItemFormat = NSLocalizedString("context upload string", comment: "")
-        let uploadMenuItemTitle = String(format: uploadItemFormat, node!.title)
+        guard let it = self.item(at: indexPath) as? CollectionViewItem else { return nil }
+        guard let node = it.node else { return nil}
+        
         let menu = NSMenu()
         menu.autoenablesItems = false
-        let item = NSMenuItem(title: uploadMenuItemTitle, action: #selector(upload(_:)), keyEquivalent: "")
-        item.representedObject = node
-        menu.addItem(item)
-        item.isEnabled = node!.is_upload_allowed
+        let menuItem = NSMenuItem(title: String(format: NSLocalizedString("context upload string", comment: ""), node.title),
+                                  action: #selector(upload(_:)), keyEquivalent: "")
+        menuItem.representedObject = node
+        menu.addItem(menuItem)
+        menuItem.isEnabled = node.is_upload_allowed
         return menu
     }
     
     @objc func upload(_ item: NSMenuItem) {
         if(uploadSettingsViewController == nil) {
             uploadSettingsViewController = UploadSettingsViewController()
-            uploadSettingsViewController.showId = (item.representedObject as? Node)!.identifier // showId
+            guard let node = item.representedObject as? Node else { return }
+            
+            uploadSettingsViewController.showId = node.identifier // showId
+            
             let storyboard = NSStoryboard(name: "Main", bundle: nil)
-            let uploadSettingsWindowController = storyboard.instantiateController(withIdentifier: "UploadSettingsWindow") as? NSWindowController
-            if let uploadSettingsWindow = uploadSettingsWindowController!.window {
+            guard let uploadSettingsWindowController = storyboard.instantiateController(withIdentifier: "UploadSettingsWindow") as? NSWindowController else { return }
+            if let uploadSettingsWindow = uploadSettingsWindowController.window {
                 //let application = NSApplication.shared
                 //application.runModal(for: downloadWindow)
                 uploadSettingsWindow.level = NSWindow.Level.modalPanel
@@ -61,7 +65,7 @@ class ClickedCollectionView: NSCollectionView {
                     object: nil)
             }
             
-            uploadSettingsViewController.showNameField.stringValue = (item.representedObject as? Node)!.title
+            uploadSettingsViewController.showNameField.stringValue = node.title
         }
     }
     

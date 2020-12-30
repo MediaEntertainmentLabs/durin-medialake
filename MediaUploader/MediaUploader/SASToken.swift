@@ -32,7 +32,10 @@ class SASToken {
     }
     
     deinit {
-        expireTimer!.invalidate()
+        if (expireTimer != nil) {
+            expireTimer!.invalidate()
+            
+        }
     }
     
     func valid() -> Bool {

@@ -76,7 +76,6 @@ func dialogOKCancel(question: String, text: String) -> Bool {
 }
 
 func configURLPath() -> URL? {
-    var configPath : URL!
     if let localConfigPath = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first {
         
         do{
@@ -85,8 +84,7 @@ func configURLPath() -> URL? {
             print("Error: \(error.localizedDescription)")
         }
         
-        configPath = localConfigPath.appendingPathComponent(Bundle.main.bundleIdentifier!).appendingPathComponent("config.json")
-        return configPath
+        return localConfigPath.appendingPathComponent(Bundle.main.bundleIdentifier!).appendingPathComponent("config.json")
     }
     return nil
 }
@@ -95,8 +93,9 @@ func writeConfig(item: [String:String]) {
     guard let configPath = configURLPath() else { return }
     
     do {
-        let jsonData = try? JSONSerialization.data(withJSONObject: item, options: [.sortedKeys, .prettyPrinted])
-        try jsonData!.write(to: configPath)
+        if let jsonData = try? JSONSerialization.data(withJSONObject: item, options: [.sortedKeys, .prettyPrinted]) {
+            try jsonData.write(to: configPath)
+        }
     } catch let error as NSError {
         print(error)
         // TODO: show Alert

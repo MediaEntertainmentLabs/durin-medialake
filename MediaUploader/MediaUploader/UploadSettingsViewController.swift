@@ -85,15 +85,21 @@ class UploadSettingsViewController: NSViewController {
         
         teamPopup.removeAllItems()
         teamPopup.addItems(withTitles: teamItems)
-        teamPopup.selectItem(at: 0)
+        if teamPopup.numberOfItems > 0 {
+            teamPopup.selectItem(at: 0)
+        }
         
         unitPopup.removeAllItems()
         unitPopup.addItems(withTitles: unitItems)
-        unitPopup.selectItem(at: 0)
-        
+        if unitPopup.numberOfItems > 0 {
+            unitPopup.selectItem(at: 0)
+        }
         batchPopup.removeAllItems()
         batchPopup.addItems(withTitles: batchItems)
-        batchPopup.selectItem(at: 0)
+        
+        if batchPopup.numberOfItems > 0 {
+            batchPopup.selectItem(at: 0)
+        }
         
         seasonsCombo.removeAllItems()
         seasonsCombo.isEnabled = false
@@ -110,7 +116,7 @@ class UploadSettingsViewController: NSViewController {
         
         uploadButton.isEnabled = false
         
-        fetchSeandsAndEpisodes(showId: self.showId)
+        fetchSeasonsAndEpisodes(showId: self.showId)
         
         NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.CancelPendingURLTasks),
                                         object: nil)
@@ -181,17 +187,14 @@ class UploadSettingsViewController: NSViewController {
         dialog.canChooseDirectories    = true
         
         if (dialog.runModal() ==  NSApplication.ModalResponse.OK) {
-            let result = dialog.url
+            guard let result = dialog.url else { return }
             
-            if (result == nil) {
-                return
-            }
             var outputFiles: [[String:Any]] = []
             
-            let pathURL = NSURL(fileURLWithPath: result!.path, isDirectory: true)
+            let pathURL = NSURL(fileURLWithPath: result.path, isDirectory: true)
             var filePaths : [String : UInt64] = [:]
             
-            let enumerator = FileManager.default.enumerator(atPath: result!.path)
+            let enumerator = FileManager.default.enumerator(atPath: result.path)
             while let element = enumerator?.nextObject() as? String {
                 let filename = URL(fileURLWithPath: element).lastPathComponent
                 if filename == ".DS_Store" {
@@ -243,7 +246,7 @@ class UploadSettingsViewController: NSViewController {
                 outputFiles.append([scanItem.key : item])
             }
             
-            completion((result!.path,outputFiles))
+            completion((result.path,outputFiles))
         
         } else {
             completion(("",[[:]])) // User clicked on "Cancel"
@@ -352,6 +355,10 @@ class UploadSettingsViewController: NSViewController {
             return
         }
         
+        if blockOrEpisode == nil {
+            return
+        }
+        
         let episodeId = isBlock ? "" : blockOrEpisode.1
         let blockId = isBlock ? blockOrEpisode.1 : ""
         
@@ -389,7 +396,8 @@ class UploadSettingsViewController: NSViewController {
     }
     
     func getSeasonId(seasonName: String) -> String {
-        return self.seasons[seasonName]!.0
+        guard let season = self.seasons[seasonName] else { return String("") }
+        return season.0
     }
     
     // return array of (episopeName,episodeId)
@@ -405,7 +413,8 @@ class UploadSettingsViewController: NSViewController {
     
     // return array of (episopeName,episodeId)
     func getEpisodes(seasonName: String) -> [(String,String)] {
-        return self.seasons[seasonName]!.1
+        guard let episodes = self.seasons[seasonName] else { return [] }
+        return episodes.1
     }
     
     // return array of (episopeName,episodeId)
@@ -421,7 +430,8 @@ class UploadSettingsViewController: NSViewController {
     
     // return array of (blockName,blockId)
     func getBlocks(seasonName: String) -> [(String,String)] {
-        return self.seasons[seasonName]!.2
+        guard let block = self.seasons[seasonName] else { return [] }
+        return block.2
     }
     
     private func showPopoverMessage(positioningView: NSView, msg: String) {
@@ -436,7 +446,7 @@ class UploadSettingsViewController: NSViewController {
     }
         
 
-    private func fetchSeandsAndEpisodes(showId: String) {
+    private func fetchSeasonsAndEpisodes(showId: String) {
         
         fetchSeasonsAndEpisodesTask(showId : showId) { (result) in
             
@@ -462,7 +472,10 @@ class UploadSettingsViewController: NSViewController {
                     self.seasonsCombo.isEnabled = true
                     self.uploadButton.isEnabled = true
                 }
-                self.seasonsCombo.selectItem(at: 0)
+                
+                if self.seasonsCombo.numberOfItems > 0 {
+                    self.seasonsCombo.selectItem(at: 0)
+                }
             }
         }
     }
@@ -486,7 +499,7 @@ class UploadSettingsViewController: NSViewController {
                 for item in values.1 {
                     episodesCombo.addItem(withObjectValue: item.0)
                 }
-                if (episodesCombo.numberOfItems != 0) {
+                if episodesCombo.numberOfItems > 0 {
                     episodesCombo.selectItem(at: 0)
                 }
             } else {
@@ -499,7 +512,7 @@ class UploadSettingsViewController: NSViewController {
                 for item in values.2 {
                     blocksCombo.addItem(withObjectValue: item.0)
                 }
-                if (blocksCombo.numberOfItems != 0) {
+                if blocksCombo.numberOfItems > 0 {
                     blocksCombo.selectItem(at: 0)
                 }
             } else {
@@ -522,8 +535,9 @@ extension UploadSettingsViewController: NSComboBoxDelegate {
      
         if let comboBox = notification.object as? NSComboBox {
             if comboBox == self.seasonsCombo {
-                let seasonName  = comboBox.selectedStringValue()
-                populateComoboxes(seasonName: seasonName!)
+                if let seasonName = comboBox.selectedStringValue() {
+                    populateComoboxes(seasonName: seasonName)
+                }
             }
         }
      

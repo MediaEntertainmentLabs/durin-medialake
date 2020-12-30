@@ -288,9 +288,10 @@
 				0F991482A829CBAC995061AF /* [CP] Check Pods Manifest.lock */,
 				731C9845252DE9DB008E8A75 /* Sources */,
 				731C9846252DE9DB008E8A75 /* Frameworks */,
+				C9CC8AA4259D18D800FD3EB7 /* Auto-Increment Build version Script */,
 				731C9847252DE9DB008E8A75 /* Resources */,
 				D528E389F313EE1A441AE18C /* [CP] Embed Pods Frameworks */,
-				C961739D25911AD100F037EB /* ShellScript */,
+				C961739D25911AD100F037EB /* Archive Script */,
 			);
 			buildRules = (
 			);
@@ -437,7 +438,7 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
-		C961739D25911AD100F037EB /* ShellScript */ = {
+		C961739D25911AD100F037EB /* Archive Script */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
 			buildActionMask = 8;
@@ -447,6 +448,7 @@
 			);
 			inputPaths = (
 			);
+			name = "Archive Script";
 			outputFileListPaths = (
 			);
 			outputPaths = (
@@ -454,6 +456,24 @@
 			runOnlyForDeploymentPostprocessing = 1;
 			shellPath = /bin/sh;
 			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\n\nVERSION=$(defaults read \"${BUILT_PRODUCTS_DIR}/${FULL_PRODUCT_NAME}/Contents/Info.plist\" CFBundleVersion)\n\nPACKAGE_NAME=`echo \"$PRODUCT_NAME\" | sed \"s/ /_/g\"`\nTMP1_ARCHIVE=\"${BUILT_PRODUCTS_DIR}/$PACKAGE_NAME-tmp1.pkg\"\n\nchmod -R 755 ${INSTALL_ROOT}\nrm -rf '/Users/codecs/Library/Application Support/${PRODUCT_BUNDLE_IDENTIFIER}/config.json'\n\npkgbuild --root \"${INSTALL_ROOT}\" \\\n    --identifier \"$PRODUCT_BUNDLE_IDENTIFIER\" \\\n    --version \"$VERSION\" \\\n    --install-location \"/\" \\\n    \"${BUILT_PRODUCTS_DIR}/${PRODUCT_NAME}.pkg\"\n    \nproductbuild --distribution \"./Package/Distribution.xml\"  \\\n    --package-path \"${BUILT_PRODUCTS_DIR}\" \\\n    --resources \"./\" \\\n    \"${TMP1_ARCHIVE}\"\n";
+		};
+		C9CC8AA4259D18D800FD3EB7 /* Auto-Increment Build version Script */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Auto-Increment Build version Script";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "#buildNumber=$(/usr/libexec/PlistBuddy -c \"Print CFBundleVersion\" \"${PROJECT_DIR}/${INFOPLIST_FILE}\")\n#buildNumber=$(($buildNumber + 1))\n#/usr/libexec/PlistBuddy -c \"Set :CFBundleVersion $buildNumber\" \"${PROJECT_DIR}/${INFOPLIST_FILE}\"\n";
 		};
 		D528E389F313EE1A441AE18C /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;

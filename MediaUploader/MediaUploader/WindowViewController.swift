@@ -12,6 +12,7 @@ class WindowViewController: NSViewController {
     @IBOutlet weak var logoutButton: NSButton!
     @IBOutlet weak var username: NSTextField!
     @IBOutlet weak var uploadWindowButton: NSButton!
+    @IBOutlet weak var version: NSTextField!
     
     var window: NSWindow?
    
@@ -23,6 +24,13 @@ class WindowViewController: NSViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        if let ver = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String {
+            if let build_number = Bundle.main.infoDictionary?["CFBundleVersion"] as? String {
+                version.stringValue = "ver.\(ver).\(build_number)"
+                print ("------------ ", version.stringValue)
+            }
+        }
     }
 
     override func viewWillAppear() {

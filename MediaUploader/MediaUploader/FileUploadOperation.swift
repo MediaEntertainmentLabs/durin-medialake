@@ -45,7 +45,9 @@ final class FileUploadOperation: AsyncOperation {
     override func main() {
         let (_, error, status) = runAzCopyCommand(cmd: LoginViewController.azcopyPath.path, args: self.args)
         
+ 
         if status == 0 {
+            
             if self.step == UploadType.kMetadataJsonUpload {
                 print ("------------  Completed successfully: \(sasToken) ")
                 print ("------------  Cleanup of ", self.args[1])
@@ -54,13 +56,16 @@ final class FileUploadOperation: AsyncOperation {
 
             } else if self.step == UploadType.kDataUpload {
                 DispatchQueue.main.async {
-                    self.uploadRecord!.uploadProgress = 100.0
-                    self.uploadRecord!.completionStatusString = "Completed"
+                    
+                    guard let uploadRecord = self.uploadRecord else { return }
+                   
+                    uploadRecord.uploadProgress = 100.0
+                    uploadRecord.completionStatusString = "Completed"
                     print ("------------  Upload of data completed successfully!")
                     NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.UpdateShowUploadProgress),
                                                     object: nil,
-                                                    userInfo: ["showName" : self.uploadRecord!.showName,
-                                                               "progress" : self.uploadRecord!.uploadProgress])
+                                                    userInfo: ["showName" : uploadRecord.showName,
+                                                               "progress" : uploadRecord.uploadProgress])
                     // update show content
 //                    NotificationCenter.default.post(
 //                        name: Notification.Name(WindowViewController.NotificationNames.ShowProgressViewController),
@@ -85,10 +90,13 @@ final class FileUploadOperation: AsyncOperation {
                         uploadShowErrorAndNotify(error: OutlineViewController.NameConstants.kUploadShowFailedStr, params: dep.uploadRecord!.uploadParams, operation: self)
                     }
                 } else if self.step == UploadType.kDataUpload {
-                    print(self.uploadRecord!.completionStatusString)
-                    self.uploadRecord!.uploadProgress = 100.0
+                    
+                    guard let uploadRecord = self.uploadRecord else { return }
+                   
+                    print(uploadRecord.completionStatusString)
+                    uploadRecord.uploadProgress = 100.0
                     print ("------------  Upload failed, error: ", error)
-                    uploadShowErrorAndNotify(error: OutlineViewController.NameConstants.kUploadShowFailedStr, params: self.uploadRecord!.uploadParams, operation: self)
+                    uploadShowErrorAndNotify(error: OutlineViewController.NameConstants.kUploadShowFailedStr, params: uploadRecord.uploadParams, operation: self)
                 }
  
                 NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.UpdateShowUploadProgress),
@@ -122,7 +130,9 @@ final class FileUploadOperation: AsyncOperation {
         var terminationObserver : NSObjectProtocol!
         terminationObserver = NotificationCenter.default.addObserver(forName: Process.didTerminateNotification,
                                                       object: task, queue: nil) { notification -> Void in
-            NotificationCenter.default.removeObserver(terminationObserver!)
+            if let observer = terminationObserver {
+                NotificationCenter.default.removeObserver(observer)
+            }
         }
         
         
@@ -171,18 +181,21 @@ final class FileUploadOperation: AsyncOperation {
                     result.append(groups)
                 }
             }
-            
+  
             let (status, error_output) = self.parseResult(inputString: newOutput!)
             if status != 0 {
                 self.completionStatus = status
                 error = error_output
                 return
             }
-            
+     
             // advance progress only for actually upload data stage
             if !result.isEmpty && self.step == FileUploadOperation.UploadType.kDataUpload {
-                self.uploadRecord!.uploadProgress = ceil(Double(result[0][0])! + 0.5)
-                print("------------ progress : ", self.uploadRecord!.showName, " ", self.uploadRecord!.uploadProgress, " >> ", result[0])
+                
+                guard let uploadRecord = self.uploadRecord else { return }
+               
+                uploadRecord.uploadProgress = ceil(Double(result[0][0])! + 0.5)
+                print("------------ progress : ", uploadRecord.showName, " ", uploadRecord.uploadProgress, " >> ", result[0])
             }
             
             DispatchQueue.main.async {
@@ -219,7 +232,11 @@ final class FileUploadOperation: AsyncOperation {
         var status = task.terminationStatus
         
         outpipe.fileHandleForReading.readabilityHandler = nil
-        NotificationCenter.default.removeObserver(outpipeObserver!)
+        
+        if let observer = outpipeObserver {
+            NotificationCenter.default.removeObserver(observer)
+        }
+        
         //NotificationCenter.default.removeObserver(errpipeObserver!)
         
         // AzCopy completed with return code 0 but operation failed
@@ -238,11 +255,14 @@ final class FileUploadOperation: AsyncOperation {
             if resultString != "Completed" {
                 if self.step == UploadType.kMetadataJsonUpload {
                     for dep in self.dependens {
-                        dep.uploadRecord!.completionStatusString = resultString
+                        guard let uploadRecord = dep.uploadRecord else { continue }
+                        uploadRecord.completionStatusString = resultString
                     }
                     error = "Failed AzCopy metadata.json Upload!"
                 } else {
-                    self.uploadRecord!.completionStatusString = resultString
+                    if self.uploadRecord != nil {
+                        self.uploadRecord!.completionStatusString = resultString
+                    }
                     error = "Failed AzCopy data Upload!"
                 }
                 

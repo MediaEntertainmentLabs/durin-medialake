@@ -48,7 +48,8 @@ class IconViewController: NSViewController {
     }
     
     func showId(showName: String) -> String {
-        return (self.listShows[showName] as! [String:Any])["showId"]! as! String
+        guard let show = self.listShows[showName] as? [String:Any] else { return String() }
+        return show["showId"] as! String
     }
     
     @objc private func onNewSASTokenReceived(_ notification: Notification) {
@@ -174,8 +175,9 @@ class IconViewController: NSViewController {
     }
 
     @objc func onUploadFailed(_ notification: NSNotification) throws {
-        let op = notification.userInfo?["failedOperation"] as! FileUploadOperation
-        failedOperations.insert(op)
+        if let op = notification.userInfo?["failedOperation"] as? FileUploadOperation {
+            failedOperations.insert(op)
+        }
         
         // TODO: implement recovery logic
         
@@ -213,8 +215,8 @@ class IconViewController: NSViewController {
         let season = notification.userInfo?["season"] as! (String,String) // name:Id
         let blockOrEpisode = notification.userInfo?["blockOrEpisode"] as! (String,String) // name:Id
         let isBlock = notification.userInfo?["isBlock"] as! Bool
-        let files = notification.userInfo?["files"] as! [String:[[String:Any]]]
-        let srcDirs = notification.userInfo?["srcDir"] as! [String:String]
+        guard let files = notification.userInfo?["files"] as? [String:[[String:Any]]] else { return }
+        guard let srcDirs = notification.userInfo?["srcDir"] as? [String:String] else { return }
         var pendingUploads = notification.userInfo?["pendingUploads"] as? [String:UploadTableRow]
         
         let keys = [UploadSettingsViewController.kCameraRAWFileType,
@@ -265,7 +267,7 @@ class IconViewController: NSViewController {
         } else {
             fetchSASTokenURLTask(showId : self.showId(showName: showName), synchronous: false) { (result) in
                 
-                if let error = result["error"] as? String {
+                if (result["error"] as? String) != nil {
                     uploadShowFetchSASTokenErrorAndNotify(error: OutlineViewController.NameConstants.kUploadShowFailedStr, recoveryContext: recoveryContext)
                     return
                 }
@@ -311,9 +313,12 @@ class IconViewController: NSViewController {
             
             for item in files[type]! {
                 for (key, rec) in item {
-                    let dict = rec as! [String:Any]
-                    filesToUpload[dict["filePath"] as! String] = key
-                    jsonRecords.append(rec)
+                    if let dict = rec as? [String:Any] {
+                        if let filePathkey = dict["filePath"] as? String {
+                            filesToUpload[filePathkey] = key
+                            jsonRecords.append(rec)
+                        }
+                    }
                 }
             }
         }
@@ -321,21 +326,24 @@ class IconViewController: NSViewController {
         var json : [String:Any] = json_main
         json["files"] = jsonRecords
         
-        let jsonData = try? JSONSerialization.data(withJSONObject: json, options: [.sortedKeys, .prettyPrinted])
+        guard let jsonData = try? JSONSerialization.data(withJSONObject: json, options: [.sortedKeys, .prettyPrinted]) else { return }
+        
         var metadataPath : URL!
         if let metadataJsonPath = FileManager.default.urls(for: .applicationSupportDirectory, in: .allDomainsMask).first {
             
             metadataPath = metadataJsonPath.appendingPathComponent(metadataJsonFilename)
             print ("---------------------- metadataPath: ", metadataPath!)
             do {
-                try jsonData!.write(to: metadataPath)
+                try jsonData.write(to: metadataPath)
             } catch let error as NSError {
                 print(error)
                 // TODO: show Alert
                 return
             }
         }
-
+        
+        if metadataPath == nil { return }
+        
         self.uploadMetadataJsonOperation(showName: showName,
                                          sasToken: sasToken,
                                          dataFiles: filesToUpload,
@@ -397,17 +405,17 @@ class IconViewController: NSViewController {
         }
     }
     
-    func createUploadDirTask(showName: String, folderLayoutStr: String, sasToken: String?, uploadRecord : UploadTableRow) -> FileUploadOperation {
-        print("------------ upload DIR:", sasToken!)
+    func createUploadDirTask(showName: String, folderLayoutStr: String, sasToken: String, uploadRecord : UploadTableRow) -> FileUploadOperation {
+        print("------------ upload DIR:", sasToken)
         
         let dstPath = "/" + folderLayoutStr
-        let sasSplit = sasToken!.components(separatedBy: "?")
+        let sasSplit = sasToken.components(separatedBy: "?")
         let sasTokenWithDestPath = sasSplit[0] + dstPath+"?" + sasSplit[1]
         
         
         let uploadOperation = FileUploadOperation(showId: self.showId(showName: showName),
                                                   cdsUserId: LoginViewController.cdsUserId!,
-                                                  sasToken: sasToken!,
+                                                  sasToken: sasToken,
                                                   step: FileUploadOperation.UploadType.kDataUpload,
                                                   uploadRecord : uploadRecord,
                                                   dependens: [],
@@ -466,13 +474,15 @@ extension IconViewController : NSCollectionViewDataSource {
 extension IconViewController : NSCollectionViewDelegate {
     
     internal func collectionView(_ collectionView: NSCollectionView, didSelectItemsAt indexPaths: Set<IndexPath>) {
-        guard let indexPath = indexPaths.first else {return}
-        guard let item = collectionView.item(at: indexPath) else {return}
-        let selected = item as! CollectionViewItem
+        guard let indexPath = indexPaths.first else { return }
+        guard let item = collectionView.item(at: indexPath) else { return }
+        guard let selected = item as? CollectionViewItem else { return }
         selected.setHighlight(selected: true)
         
-        let showName = selected.node!.title
-        let showId = self.showId(showName: selected.node!.title)
+        guard let node = selected.node else { return }
+        
+        let showName = node.title
+        let showId = self.showId(showName: node.title)
         
         NotificationCenter.default.post(
             name: Notification.Name(WindowViewController.NotificationNames.ShowProgressViewController),
@@ -487,8 +497,9 @@ extension IconViewController : NSCollectionViewDelegate {
     
     internal func collectionView(_ collectionView: NSCollectionView, didDeselectItemsAt indexPaths: Set<IndexPath>) {
         guard let indexPath = indexPaths.first else {return}
-        guard let item = collectionView.item(at: indexPath) else {return}
-        (item as! CollectionViewItem).setHighlight(selected: false)
+        guard let item = collectionView.item(at: indexPath) else { return }
+        guard let selected = item as? CollectionViewItem else { return }
+        selected.setHighlight(selected: false)
     }
     
 }
