@@ -1,0 +1,15 @@
+- name: Xcode Archive
+  # You may pin to the exact commit or the version.
+  # uses: devbotsxyz/xcode-archive@b86af9fa42e02b67d87186d2ab46765a3b02dc9f
+  uses: devbotsxyz/xcode-archive@v1.0.0
+  with:
+    # Workspace
+    workspace: # optional
+    # Project
+    project: # optional
+    # Scheme
+    scheme: # optional
+    # Configuration
+    configuration: # optional
+    # Archive path. If not specified will default to MainScheme.xcarchive
+    archive-path: # optional
