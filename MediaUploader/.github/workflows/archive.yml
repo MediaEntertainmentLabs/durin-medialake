@@ -1,0 +1,2 @@
+ - name: "Archive"
+        uses: devbotsxyz/xcode-archive@v1
