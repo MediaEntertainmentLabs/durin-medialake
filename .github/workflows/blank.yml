@@ -35,8 +35,8 @@ jobs:
       - name: Start xcodebuild
         shell: bash -l -eo pipefail {0}
         run: |
-             echo '-------- echo --------', $(pwd),
-             echo '-------- GITHUB_WORKSPACE --------', $GITHUB_WORKSPACE,
-             nvm ls,
-             pod install,
+             echo '-------- pwd --------', $(pwd)
+             echo '-------- GITHUB_WORKSPACE --------', $GITHUB_WORKSPACE
+             ls -la
+             pod install
              xcodebuild clean build -workspace 'MediaUploader.xcworkspace' -scheme 'MediaUploader'
