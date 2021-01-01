@@ -33,7 +33,7 @@ jobs:
 
       # Runs a set of commands using the runners shell
       - name: Start xcodebuild
-        shell: zsh
+        shell: sh
         run: |
              echo '-------- echo --------', $(pwd),
              echo '-------- GITHUB_WORKSPACE --------', $GITHUB_WORKSPACE,
