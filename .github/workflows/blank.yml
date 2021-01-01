@@ -35,6 +35,7 @@ jobs:
       - name: Start xcodebuild
         run: |
              echo '-------- echo --------', $(pwd),
-             cd MediaUploader,
+             echo '-------- GITHUB_WORKSPACE --------', $GITHUB_WORKSPACE,
+             ls,
              pod install,
              xcodebuild clean build -workspace 'MediaUploader.xcworkspace' -scheme 'MediaUploader'
