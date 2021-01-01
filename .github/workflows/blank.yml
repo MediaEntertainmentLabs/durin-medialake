@@ -40,4 +40,4 @@ jobs:
              ls -la
              cd MediaUploader
              pod install
-             xcodebuild clean build -exportArchive -allowProvisioningDeviceRegistration -allowProvisioningUpdates -workspace 'MediaUploader.xcworkspace' -scheme 'MediaUploader'
+             xcodebuild clean build -allowProvisioningDeviceRegistration -allowProvisioningUpdates -workspace 'MediaUploader.xcworkspace' -scheme 'MediaUploader'
