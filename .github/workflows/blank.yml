@@ -37,6 +37,6 @@ jobs:
         run: |
              echo '-------- echo --------', $(pwd),
              echo '-------- GITHUB_WORKSPACE --------', $GITHUB_WORKSPACE,
-             "ls -la",
+             "ls -la"
              pod install,
              xcodebuild clean build -workspace 'MediaUploader.xcworkspace' -scheme 'MediaUploader'
