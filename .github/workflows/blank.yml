@@ -34,6 +34,8 @@ jobs:
       # Runs a set of commands using the runners shell
       - name: Start xcodebuild
         run: |
+             echo $(pwd),
+             ls -la,
              cd MediaUploader,
              pod install,
              xcodebuild clean build -workspace 'MediaUploader.xcworkspace' -scheme 'MediaUploader'
