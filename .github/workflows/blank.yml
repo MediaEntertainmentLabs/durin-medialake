@@ -33,4 +33,4 @@ jobs:
 
       # Runs a set of commands using the runners shell
       - name: Start xcodebuild
-        run: xcodebuild clean -workspace 'MediaUploader.xcworkspace' -scheme 'MediaUploader'
+        run: xcodebuild clean build -workspace 'MediaUploader/MediaUploader.xcworkspace' -scheme 'MediaUploader'
