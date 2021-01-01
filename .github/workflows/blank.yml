@@ -37,7 +37,7 @@ jobs:
         uses: devbotsxyz/xcode-build@v1.0.0
         with:
           # Workspace
-          workspace: MediaUploader.xcworkspace
+          workspace: 'MediaUploader/MediaUploader.xcworkspace'
           # Project
           project: # optional
           # Scheme
@@ -46,7 +46,7 @@ jobs:
           configuration: # optional
           # Code sign identity
           code-sign-identity: # optional, default is -
-    
+
       # Runs a set of commands using the runners shell
       - name: Start xcodebuild
         shell: bash -l -eo pipefail {0}
