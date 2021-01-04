@@ -433,17 +433,6 @@ class UploadSettingsViewController: NSViewController {
         guard let block = self.seasons[seasonName] else { return [] }
         return block.2
     }
-    
-    private func showPopoverMessage(positioningView: NSView, msg: String) {
-        let storyboard = NSStoryboard(name: "Main", bundle: nil)
-        let vc = storyboard.instantiateController(withIdentifier: "popover") as? PopoverViewController
-        let popover = NSPopover()
-        popover.behavior = .transient
-        popover.contentViewController = vc
-        popover.show(relativeTo: positioningView.bounds, of: positioningView, preferredEdge: NSRectEdge.maxY)
-        vc?.popoverMessage.stringValue = msg
-        return
-    }
         
 
     private func fetchSeasonsAndEpisodes(showId: String) {

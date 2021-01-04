@@ -8,15 +8,60 @@
 import Cocoa
 import MSAL
 
+class ConfigurationTextField : NSTextField {
+    
+    override var intrinsicContentSize: NSSize {
+        var minSize: NSSize {
+            var size = super.intrinsicContentSize
+            size.width = 0
+            return size
+        }
+        
+        var newSize = super.intrinsicContentSize
+        newSize.width = 200
+        newSize.height = 300
+        return newSize
+    }
+}
+
 class LoginViewController: NSViewController {
 
     //static let kAzCopyCmdPath = "/Applications/azcopy"
     static let kAzCopyCmdDownloadURL = "https://aka.ms/downloadazcopy-v10-mac";
-    static let kTenantID = "ba33002e-1a15-44ee-84c4-e72374a3a16e"
-    static let kClientID = "ce1a6a1d-bc2e-4a01-8fee-32dcf0929346"
     static let kGraphEndpoint = "https://graph.microsoft.com/"
     static let kAuthority = "https://login.microsoftonline.com/common"
-    static let kRedirectUri = "msalce1a6a1d-bc2e-4a01-8fee-32dcf0929346://auth"
+
+    //static let kClientID = "ce1a6a1d-bc2e-4a01-8fee-32dcf0929346"
+    //static let kTenantID = "ba33002e-1a15-44ee-84c4-e72374a3a16e"
+    //static let kRedirectUri = "msalce1a6a1d-bc2e-4a01-8fee-32dcf0929346://auth"
+    
+    static let keyTenantId = "kTenantId"
+    static let keyClientId = "kClientId"
+    static let keyRedirectURI = "kRedirectURI"
+    
+    static let keyLogicGetShowForUser: String = "Logic-GetShowForUser"
+    static let keyLogicSendEmail: String = "Logic-SendEmail"
+    static let keyLogicAssetUploadFailure: String = "Logic-AssetUploadFailure"
+    static let keyLogicGenerateSASToken: String = "Logic-GenerateSASToken"
+    static let keyLogicGetAssetsAndFiles: String = "Logic-GetAssetsAndFiles"
+    static let keyLogicGetSeasonEpisodeForShow: String = "Logic-GetSeasonEpisodeForShow"
+ 
+    
+    static var kTenantID: String!
+    static var kClientID: String!
+    static var kRedirectUri: String!
+    
+    
+    @IBOutlet weak var clientIdStackView: NSStackView!
+    @IBOutlet weak var tenantIdStackView: NSStackView!
+    @IBOutlet weak var redirectURIStackView: NSStackView!
+    
+    @IBOutlet weak var configLabel: NSTextField!
+    
+    @IBOutlet weak var cliendIdTextField: NSTextField!
+    @IBOutlet weak var tenantIdTextField: NSTextField!
+    @IBOutlet weak var redirectURITextField: NSTextField!
+    @IBOutlet weak var configTextField: NSTextField!
     
     //"https://storage.azure.com/.default"
     let kScopes: [String] = ["user.read"]
@@ -25,6 +70,8 @@ class LoginViewController: NSViewController {
                                                  .appendingPathComponent("Resources")
                                                  .appendingPathComponent("azcopy")
     
+    
+    var isInitialized : Bool = false
     var accessToken = String()
     static var application : MSALPublicClientApplication?
     var webViewParamaters : MSALWebviewParameters?
@@ -35,27 +82,27 @@ class LoginViewController: NSViewController {
     static var apiUrls: [String:String] = [:]
     
     static var getShowForUserURI : String? {
-        return LoginViewController.apiUrls["Logic-GetShowForUser"]
+        return LoginViewController.apiUrls[keyLogicGetShowForUser]
     }
     
     static var assetUploadFailureURI : String? {
-        return LoginViewController.apiUrls["Logic-AssetUploadFailure"]
+        return LoginViewController.apiUrls[keyLogicAssetUploadFailure]
     }
     
     static var generateSASTokenURI : String? {
-        return LoginViewController.apiUrls["Logic-GenerateSASToken"]
+        return LoginViewController.apiUrls[keyLogicGenerateSASToken]
     }
     
     static var getAssetsAndFilesURI : String? {
-        return LoginViewController.apiUrls["Logic-GetAssetsAndFiles"]
+        return LoginViewController.apiUrls[keyLogicGetAssetsAndFiles]
     }
     
     static var getSeasonDetailsForShowURI : String? {
-        return LoginViewController.apiUrls["Logic-GetSeasonEpisodeForShow"]
+        return LoginViewController.apiUrls[keyLogicGetSeasonEpisodeForShow]
     }
     
     static var sendEmailURI : String? {
-        return LoginViewController.apiUrls["Logic-SendEmail"]
+        return LoginViewController.apiUrls[keyLogicSendEmail]
     }
     
     typealias AccountCompletion = (MSALAccount?) -> Void
@@ -82,28 +129,59 @@ class LoginViewController: NSViewController {
         AppDelegate.appDelegate.loginWindowController = window!.windowController
     }
 
+    func hideConfiguration(hide: Bool) {
+        clientIdStackView.isHidden = hide
+        tenantIdStackView.isHidden = hide
+        redirectURIStackView.isHidden = hide
+        configLabel.isHidden = hide
+        configTextField.isHidden = hide
+    }
+    
+    func tryLogin() {
+        if self.isInitialized {
+            do {
+                try self.initMSAL()
+            } catch let error {
+                self.updateLogging(text: "Unable to create Application Context \(error)")
+            }
+            
+            self.loadCurrentAccount()
+        }
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        do {
-            try self.initMSAL()
-        } catch let error {
-            self.updateLogging(text: "Unable to create Application Context \(error)")
-        }
+        self.isInitialized = checkConfigInitialized()
         
-        self.loadCurrentAccount()
+        hideConfiguration(hide: self.isInitialized)
+        
+        tryLogin()
+
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(signOut(_:)),
+            name: Notification.Name(WindowViewController.NotificationNames.logoutItem),
+            object: nil)
     }
     
     
     override func viewWillAppear() {
         super.viewWillAppear()
         
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(signOut(_:)),
-            name: Notification.Name(WindowViewController.NotificationNames.logoutItem),
-            object: nil)
-               
+        var width :Int = 600
+        var height :Int = 800
+        
+        if isInitialized == true {
+            width  = 300
+            height = 450
+        }
+        if let w = self.view.window {
+            var frame = w.frame
+            frame.size = NSSize(width: width, height: height)
+            w.setFrame(frame, display: true, animate: true)
+            
+        }
     }
     
     deinit {
@@ -266,8 +344,113 @@ class LoginViewController: NSViewController {
         }
     }
 
-
+    private func checkConfigInitialized() -> Bool {
+        
+        if let url = readConfig(key: LoginViewController.keyLogicGetShowForUser) {
+            LoginViewController.apiUrls[LoginViewController.keyLogicGetShowForUser] = url
+        } else {
+            print("-------- failed to read \(LoginViewController.keyLogicGetShowForUser) from config.json")
+            return false
+        }
+        
+        if let url = readConfig(key: LoginViewController.keyLogicAssetUploadFailure) {
+            LoginViewController.apiUrls[LoginViewController.keyLogicAssetUploadFailure] = url
+        } else {
+            print("-------- failed to read \(LoginViewController.keyLogicAssetUploadFailure) from config.json")
+            return false
+        }
+        
+        if let url = readConfig(key: LoginViewController.keyLogicGenerateSASToken) {
+            LoginViewController.apiUrls[LoginViewController.keyLogicGenerateSASToken] = url
+        } else {
+            print("-------- failed to read \(LoginViewController.keyLogicGenerateSASToken) from config.json")
+            return false
+        }
+        
+        if let url = readConfig(key: LoginViewController.keyLogicGetSeasonEpisodeForShow) {
+            LoginViewController.apiUrls[LoginViewController.keyLogicGetSeasonEpisodeForShow] = url
+        }
+        else {
+            print("-------- failed to read \(LoginViewController.keyLogicGetSeasonEpisodeForShow) from config.json")
+            return false
+        }
+        
+        if let url = readConfig(key: LoginViewController.keyLogicSendEmail) {
+            LoginViewController.apiUrls[LoginViewController.keyLogicSendEmail] = url
+        } else {
+            print("-------- failed to read \(LoginViewController.keyLogicSendEmail) from config.json")
+            return false
+        }
+        
+        if let clientId = readConfig(key: LoginViewController.keyClientId) {
+            LoginViewController.kClientID = clientId
+        } else {
+            print("-------- failed to read \(LoginViewController.keyClientId) from config.json")
+            return false
+        }
+        
+        if let tenantId = readConfig(key: LoginViewController.keyTenantId) {
+            LoginViewController.kTenantID = tenantId
+        } else {
+            print("-------- failed to read \(LoginViewController.keyTenantId) from config.json")
+            return false
+        }
+        
+        if let redirectURI = readConfig(key: LoginViewController.keyRedirectURI) {
+            LoginViewController.kRedirectUri = redirectURI
+        } else {
+            print("-------- failed to read \(LoginViewController.keyRedirectURI) from config.json")
+            return false
+        }
+        
+        return true
+    }
+    
     @IBAction func loginButtonClicked(_ sender: Any) {
+        
+        if !self.isInitialized {
+        
+            //hideConfiguration(hide: false)
+            
+            if cliendIdTextField.stringValue.isEmpty &&
+                tenantIdTextField.stringValue.isEmpty &&
+                redirectURITextField.stringValue.isEmpty &&
+                configTextField.stringValue.isEmpty {
+                showPopoverMessage(positioningView: cliendIdTextField, msg: "Please, fill in all the fields!")
+                return
+            }
+            var dict:[String:String] = [:]
+            
+            LoginViewController.kClientID = cliendIdTextField.stringValue
+            //writeConfig(item: [LoginViewController.keyClientId:cliendIdTextField.stringValue])
+            dict[LoginViewController.keyClientId] = LoginViewController.kClientID
+                
+            LoginViewController.kTenantID = tenantIdTextField.stringValue
+            //writeConfig(item: [LoginViewController.keyTenantId:tenantIdTextField.stringValue])
+            dict[LoginViewController.keyTenantId] = LoginViewController.kTenantID
+            
+            LoginViewController.kRedirectUri = redirectURITextField.stringValue
+            //writeConfig(item: [LoginViewController.keyRedirectURI:redirectURITextField.stringValue])
+            dict[LoginViewController.keyRedirectURI] = LoginViewController.kRedirectUri
+            
+            do {
+                let data = Data(configTextField.stringValue.utf8)
+                if let json = try JSONSerialization.jsonObject(with: data) as? [String:String] {
+                    for (key,value) in json {
+                        LoginViewController.apiUrls[key] = value
+                        dict[key] = value
+                    }
+                }
+            } catch {
+                _ = dialogOKCancel(question: "Warning", text: "Wrong configuration string!")
+                return
+            }
+            writeConfig(item: dict)
+
+            self.isInitialized = true
+            
+            tryLogin()
+        }
         
         self.loadCurrentAccount { (account) in
             
