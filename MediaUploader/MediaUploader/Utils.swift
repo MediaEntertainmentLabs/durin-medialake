@@ -75,6 +75,17 @@ func dialogOKCancel(question: String, text: String) -> Bool {
     return alert.runModal() == NSApplication.ModalResponse.alertFirstButtonReturn
 }
 
+func showPopoverMessage(positioningView: NSView, msg: String) {
+    let storyboard = NSStoryboard(name: "Main", bundle: nil)
+    let vc = storyboard.instantiateController(withIdentifier: "popover") as? PopoverViewController
+    let popover = NSPopover()
+    popover.behavior = .transient
+    popover.contentViewController = vc
+    popover.show(relativeTo: positioningView.bounds, of: positioningView, preferredEdge: NSRectEdge.maxY)
+    vc?.popoverMessage.stringValue = msg
+    return
+}
+
 func configURLPath() -> URL? {
     if let localConfigPath = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first {
         
@@ -87,6 +98,38 @@ func configURLPath() -> URL? {
         return localConfigPath.appendingPathComponent(Bundle.main.bundleIdentifier!).appendingPathComponent("config.json")
     }
     return nil
+}
+
+extension Data {
+    func appendToURL(fileURL: URL) throws {
+        if let fileHandle = try? FileHandle(forWritingTo: fileURL) {
+            defer {
+                fileHandle.closeFile()
+            }
+            fileHandle.seekToEndOfFile()
+            fileHandle.write(self)
+        }
+        else {
+            try write(to: fileURL, options: .atomic)
+        }
+    }
+}
+
+func appendConfig(item: [String:String]) {
+    guard let configPath = configURLPath() else { return }
+    
+    do {
+        if let jsonData = try? JSONSerialization.data(withJSONObject: item, options: [.sortedKeys, .prettyPrinted]) {
+            try jsonData.appendToURL(fileURL: configPath)
+            if let str: Data = "\r\n".data(using: .utf8) {
+                try str.appendToURL(fileURL: configPath)
+            }
+        }
+    } catch let error as NSError {
+        print(error)
+        // TODO: show Alert
+        return
+    }
 }
 
 func writeConfig(item: [String:String]) {
