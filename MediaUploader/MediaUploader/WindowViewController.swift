@@ -64,15 +64,14 @@ class WindowViewController: NSViewController {
     }
 
     @IBAction func clearConfig(_ sender: AnyObject) {
-        var configURLPath : URL!
-        if let localConfigPath = FileManager.default.urls(for: .applicationSupportDirectory, in: .allDomainsMask).first {
-            configURLPath = localConfigPath.appendingPathComponent("config.json")
-            do {
-                try FileManager.default.removeItem(atPath: configURLPath.path)
-            } catch _ {
-                
-            }
+        guard let configPath = configURLPath() else { return }
+        
+        do {
+            try FileManager.default.removeItem(atPath: configPath.path)
+        } catch _ {
+            
         }
+    
     }
     
     @IBAction func showUploadProgressWindow(_ sender: AnyObject) {
