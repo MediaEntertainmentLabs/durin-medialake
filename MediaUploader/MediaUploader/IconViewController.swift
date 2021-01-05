@@ -63,16 +63,11 @@ class IconViewController: NSViewController {
 
         LoginViewController.cdsUserId = LoginViewController.azureUserId!
         
-        if let apiURL = readConfig(key: "apiURL") {
-            self.fetchApiURLs(apiURL: apiURL)
-        }
-        else {
-            print("------------- error read config!")
-            
-            let storyboard = NSStoryboard(name: "Main", bundle: nil)
-            let vc = storyboard.instantiateController(withIdentifier: "StartupPopupView") as? NSViewController
-            self.presentAsSheet(vc!)
-         }
+        NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.ShowProgressViewControllerOnlyText),
+                                        object: nil,
+                                        userInfo: ["progressLabel" : OutlineViewController.NameConstants.kFetchListOfShowsStr])
+        
+        fetchListShows()
     }
     
     private func fetchApiURLs(apiURL : String) {
@@ -396,8 +391,10 @@ class IconViewController: NSViewController {
                         return
                     }
                     
-                    self.uploadQueue.addOperations(uploadOperation.dependens , waitUntilFinished: false)
-                    
+                    // WARNING: delay after metadata JSON uploading completed successfully
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 20 /* delay 20 secs */) {
+                        self.uploadQueue.addOperations(uploadOperation.dependens , waitUntilFinished: false)
+                    }
                 }
                 
                 self.uploadQueue.addOperations([uploadOperation], waitUntilFinished: false)

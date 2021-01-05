@@ -12,7 +12,7 @@ class WindowViewController: NSViewController {
     @IBOutlet weak var logoutButton: NSButton!
     @IBOutlet weak var username: NSTextField!
     @IBOutlet weak var uploadWindowButton: NSButton!
-    @IBOutlet weak var version: NSTextField!
+    @IBOutlet weak var versionLabel: NSTextField!
     
     var window: NSWindow?
    
@@ -27,8 +27,8 @@ class WindowViewController: NSViewController {
         
         if let ver = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String {
             if let build_number = Bundle.main.infoDictionary?["CFBundleVersion"] as? String {
-                version.stringValue = "ver.\(ver).\(build_number)"
-                print ("------------ ", version.stringValue)
+                versionLabel.stringValue = "ver.\(ver).\(build_number)"
+                print ("------------ ", versionLabel.stringValue)
             }
         }
     }

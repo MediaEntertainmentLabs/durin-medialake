@@ -30,10 +30,6 @@ class LoginViewController: NSViewController {
     static let kAzCopyCmdDownloadURL = "https://aka.ms/downloadazcopy-v10-mac";
     static let kGraphEndpoint = "https://graph.microsoft.com/"
     static let kAuthority = "https://login.microsoftonline.com/common"
-
-    //static let kClientID = "ce1a6a1d-bc2e-4a01-8fee-32dcf0929346"
-    //static let kTenantID = "ba33002e-1a15-44ee-84c4-e72374a3a16e"
-    //static let kRedirectUri = "msalce1a6a1d-bc2e-4a01-8fee-32dcf0929346://auth"
     
     static let keyTenantId = "kTenantId"
     static let keyClientId = "kClientId"
@@ -51,6 +47,10 @@ class LoginViewController: NSViewController {
     static var kClientID: String!
     static var kRedirectUri: String!
     
+    @IBOutlet weak var usernameTextField: NSTextField!
+    @IBOutlet weak var passwordTextField: NSSecureTextField!
+    @IBOutlet weak var loginButton: NSButton!
+    @IBOutlet weak var loginProgress: NSProgressIndicator!
     
     @IBOutlet weak var clientIdStackView: NSStackView!
     @IBOutlet weak var tenantIdStackView: NSStackView!
@@ -63,6 +63,8 @@ class LoginViewController: NSViewController {
     @IBOutlet weak var redirectURITextField: NSTextField!
     @IBOutlet weak var configTextField: NSTextField!
     
+    @IBOutlet weak var versionLabel: NSTextField!
+    
     //"https://storage.azure.com/.default"
     let kScopes: [String] = ["user.read"]
  
@@ -71,7 +73,7 @@ class LoginViewController: NSViewController {
                                                  .appendingPathComponent("azcopy")
     
     
-    var isInitialized : Bool = false
+    var isConfigInitialized : Bool = false
     var accessToken = String()
     static var application : MSALPublicClientApplication?
     var webViewParamaters : MSALWebviewParameters?
@@ -106,17 +108,6 @@ class LoginViewController: NSViewController {
     }
     
     typealias AccountCompletion = (MSALAccount?) -> Void
-
-    
-    @IBOutlet weak var usernameTextField: NSTextField!
-    @IBOutlet weak var passwordTextField: NSSecureTextField!
-    @IBOutlet weak var loginButton: NSButton!
-    @IBOutlet weak var loginProgress: NSProgressIndicator!
-    
-    struct NotificationNames {
-        
-        static let showWindowViewController = "ShowWindowViewController"
-    }
     
     // reference to a window
     var window: NSWindow?
@@ -128,36 +119,23 @@ class LoginViewController: NSViewController {
         
         AppDelegate.appDelegate.loginWindowController = window!.windowController
     }
-
-    func hideConfiguration(hide: Bool) {
-        clientIdStackView.isHidden = hide
-        tenantIdStackView.isHidden = hide
-        redirectURIStackView.isHidden = hide
-        configLabel.isHidden = hide
-        configTextField.isHidden = hide
-    }
-    
-    func tryLogin() {
-        if self.isInitialized {
-            do {
-                try self.initMSAL()
-            } catch let error {
-                self.updateLogging(text: "Unable to create Application Context \(error)")
-            }
-            
-            self.loadCurrentAccount()
-        }
-    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        self.isInitialized = checkConfigInitialized()
+        self.isConfigInitialized = checkConfigInitialized()
         
-        hideConfiguration(hide: self.isInitialized)
+        hideConfiguration(hide: self.isConfigInitialized)
+        
+        if let ver = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String {
+            if let build_number = Bundle.main.infoDictionary?["CFBundleVersion"] as? String {
+                versionLabel.stringValue = "ver.\(ver).\(build_number)"
+                print ("------------ ", versionLabel.stringValue)
+            }
+        }
         
         tryLogin()
-
+    
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(signOut(_:)),
@@ -172,9 +150,10 @@ class LoginViewController: NSViewController {
         var width :Int = 600
         var height :Int = 800
         
-        if isInitialized == true {
+        if isConfigInitialized == true {
             width  = 300
             height = 450
+            hideConfiguration(hide: true)
         }
         if let w = self.view.window {
             var frame = w.frame
@@ -190,6 +169,19 @@ class LoginViewController: NSViewController {
             name: Notification.Name(WindowViewController.NotificationNames.logoutItem),
             object: nil)
     }
+    
+    func tryLogin() {
+        if self.isConfigInitialized {
+            do {
+                try self.initMSAL()
+            } catch let error {
+                self.updateLogging(text: "Unable to create Application Context \(error)")
+            }
+            
+            self.loadCurrentAccount()
+        }
+    }
+    
     
     /**
      
@@ -345,28 +337,28 @@ class LoginViewController: NSViewController {
     }
 
     private func checkConfigInitialized() -> Bool {
-        
+
         if let url = readConfig(key: LoginViewController.keyLogicGetShowForUser) {
             LoginViewController.apiUrls[LoginViewController.keyLogicGetShowForUser] = url
         } else {
             print("-------- failed to read \(LoginViewController.keyLogicGetShowForUser) from config.json")
             return false
         }
-        
+
         if let url = readConfig(key: LoginViewController.keyLogicAssetUploadFailure) {
             LoginViewController.apiUrls[LoginViewController.keyLogicAssetUploadFailure] = url
         } else {
             print("-------- failed to read \(LoginViewController.keyLogicAssetUploadFailure) from config.json")
             return false
         }
-        
+
         if let url = readConfig(key: LoginViewController.keyLogicGenerateSASToken) {
             LoginViewController.apiUrls[LoginViewController.keyLogicGenerateSASToken] = url
         } else {
             print("-------- failed to read \(LoginViewController.keyLogicGenerateSASToken) from config.json")
             return false
         }
-        
+
         if let url = readConfig(key: LoginViewController.keyLogicGetSeasonEpisodeForShow) {
             LoginViewController.apiUrls[LoginViewController.keyLogicGetSeasonEpisodeForShow] = url
         }
@@ -374,86 +366,91 @@ class LoginViewController: NSViewController {
             print("-------- failed to read \(LoginViewController.keyLogicGetSeasonEpisodeForShow) from config.json")
             return false
         }
-        
+
         if let url = readConfig(key: LoginViewController.keyLogicSendEmail) {
             LoginViewController.apiUrls[LoginViewController.keyLogicSendEmail] = url
         } else {
             print("-------- failed to read \(LoginViewController.keyLogicSendEmail) from config.json")
             return false
         }
-        
+
         if let clientId = readConfig(key: LoginViewController.keyClientId) {
             LoginViewController.kClientID = clientId
         } else {
             print("-------- failed to read \(LoginViewController.keyClientId) from config.json")
             return false
         }
-        
+
         if let tenantId = readConfig(key: LoginViewController.keyTenantId) {
             LoginViewController.kTenantID = tenantId
         } else {
             print("-------- failed to read \(LoginViewController.keyTenantId) from config.json")
             return false
         }
-        
+
         if let redirectURI = readConfig(key: LoginViewController.keyRedirectURI) {
             LoginViewController.kRedirectUri = redirectURI
         } else {
             print("-------- failed to read \(LoginViewController.keyRedirectURI) from config.json")
             return false
         }
+
+        return true
+    }
+    
+    func saveCredentials () -> Bool {
+        if cliendIdTextField.stringValue.isEmpty &&
+            tenantIdTextField.stringValue.isEmpty &&
+            redirectURITextField.stringValue.isEmpty &&
+            configTextField.stringValue.isEmpty {
+            showPopoverMessage(positioningView: cliendIdTextField, msg: "Please, fill in all the fields!")
+            return false
+        }
+        var dict:[String:String] = [:]
+
+        LoginViewController.kClientID = cliendIdTextField.stringValue
+        //writeConfig(item: [LoginViewController.keyClientId:cliendIdTextField.stringValue])
+        dict[LoginViewController.keyClientId] = LoginViewController.kClientID
+
+        LoginViewController.kTenantID = tenantIdTextField.stringValue
+        //writeConfig(item: [LoginViewController.keyTenantId:tenantIdTextField.stringValue])
+        dict[LoginViewController.keyTenantId] = LoginViewController.kTenantID
+
+        LoginViewController.kRedirectUri = redirectURITextField.stringValue
+        //writeConfig(item: [LoginViewController.keyRedirectURI:redirectURITextField.stringValue])
+        dict[LoginViewController.keyRedirectURI] = LoginViewController.kRedirectUri
+
+        do {
+            let data = Data(configTextField.stringValue.utf8)
+            if let json = try JSONSerialization.jsonObject(with: data) as? [String:String] {
+                for (key,value) in json {
+                    LoginViewController.apiUrls[key] = value
+                    dict[key] = value
+                }
+            }
+        } catch {
+            _ = dialogOKCancel(question: "Warning", text: "Wrong configuration string!")
+            return false
+        }
+        writeConfig(item: dict)
         
         return true
     }
     
     @IBAction func loginButtonClicked(_ sender: Any) {
         
-        if !self.isInitialized {
-        
-            //hideConfiguration(hide: false)
+        if !self.isConfigInitialized {
             
-            if cliendIdTextField.stringValue.isEmpty &&
-                tenantIdTextField.stringValue.isEmpty &&
-                redirectURITextField.stringValue.isEmpty &&
-                configTextField.stringValue.isEmpty {
-                showPopoverMessage(positioningView: cliendIdTextField, msg: "Please, fill in all the fields!")
+            if !saveCredentials() {
                 return
             }
-            var dict:[String:String] = [:]
             
-            LoginViewController.kClientID = cliendIdTextField.stringValue
-            //writeConfig(item: [LoginViewController.keyClientId:cliendIdTextField.stringValue])
-            dict[LoginViewController.keyClientId] = LoginViewController.kClientID
-                
-            LoginViewController.kTenantID = tenantIdTextField.stringValue
-            //writeConfig(item: [LoginViewController.keyTenantId:tenantIdTextField.stringValue])
-            dict[LoginViewController.keyTenantId] = LoginViewController.kTenantID
+            self.isConfigInitialized = true
             
-            LoginViewController.kRedirectUri = redirectURITextField.stringValue
-            //writeConfig(item: [LoginViewController.keyRedirectURI:redirectURITextField.stringValue])
-            dict[LoginViewController.keyRedirectURI] = LoginViewController.kRedirectUri
-            
-            do {
-                let data = Data(configTextField.stringValue.utf8)
-                if let json = try JSONSerialization.jsonObject(with: data) as? [String:String] {
-                    for (key,value) in json {
-                        LoginViewController.apiUrls[key] = value
-                        dict[key] = value
-                    }
-                }
-            } catch {
-                _ = dialogOKCancel(question: "Warning", text: "Wrong configuration string!")
-                return
-            }
-            writeConfig(item: dict)
-
-            self.isInitialized = true
-            
-            tryLogin()
+            self.tryLogin()
         }
         
         self.loadCurrentAccount { (account) in
-            
             guard account != nil else {
                 
                 // We check to see if we have a current logged in account.
@@ -528,7 +525,7 @@ class LoginViewController: NSViewController {
             }
             
             self.accessToken = result.accessToken
-            self.updateLogging(text: "Access token is \(self.accessToken)")
+            self.updateLogging(text: "----------- Access token is \(self.accessToken)")
             
             self.getContentWithToken() { isValid in
                 
@@ -562,6 +559,33 @@ class LoginViewController: NSViewController {
             self.loginProgress.isHidden = false
             self.loginProgress.startAnimation(self)
             self.loginButton.isEnabled = false
+            self.enableConfiguration(enable: false)
+        }
+    }
+    
+    func hideConfiguration(hide: Bool) {
+        DispatchQueue.main.async {
+            self.clientIdStackView.isHidden = hide
+            self.tenantIdStackView.isHidden = hide
+            self.redirectURIStackView.isHidden = hide
+            self.configLabel.isHidden = hide
+            self.configTextField.isHidden = hide
+        }
+    }
+    
+    func enableConfiguration(enable: Bool) {
+        DispatchQueue.main.async {
+            if !self.isConfigInitialized {
+                self.cliendIdTextField.isEnabled = enable
+                self.tenantIdTextField.isEnabled = enable
+                self.redirectURITextField.isEnabled = enable
+                self.configTextField.isEnabled = enable
+            } else {
+                self.cliendIdTextField.isEnabled = false
+                self.tenantIdTextField.isEnabled = false
+                self.redirectURITextField.isEnabled = false
+                self.configTextField.isEnabled = false
+            }
         }
     }
     
