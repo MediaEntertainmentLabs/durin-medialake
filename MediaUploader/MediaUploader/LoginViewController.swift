@@ -24,6 +24,58 @@ class ConfigurationTextField : NSTextField {
     }
 }
 
+
+@IBDesignable
+class HyperlinkTextField: NSTextField {
+
+    var parent: LoginViewController!
+    
+    @IBInspectable var href: String = ""
+
+    override func resetCursorRects() {
+        discardCursorRects()
+        addCursorRect(self.bounds, cursor: NSCursor.pointingHand)
+    }
+
+    override func awakeFromNib() {
+        super.awakeFromNib()
+
+        // TODO:  Fix this and get the hover click to work.
+
+        let attributes: [NSAttributedString.Key: Any] = [
+            NSAttributedString.Key.foregroundColor: NSColor.linkColor,
+            NSAttributedString.Key.underlineStyle: NSUnderlineStyle.single.rawValue as AnyObject,
+        ]
+        attributedStringValue = NSAttributedString(string: self.stringValue, attributes: attributes)
+    }
+    
+    func setParent(parent: LoginViewController) {
+        self.parent = parent
+    }
+    
+    override func mouseDown(with theEvent: NSEvent) {
+        if (self.parent != nil) {
+            self.parent.newUserButtonClicked(self)
+        }
+    }
+    
+    override func becomeFirstResponder() -> Bool {
+        addTrackingAreaIfNeeded()
+        return super.becomeFirstResponder()
+    }
+    override func mouseMoved(with event: NSEvent) {
+        super.mouseMoved(with: event)
+        NSCursor.pointingHand.set()
+    }
+    private func addTrackingAreaIfNeeded() {
+        if trackingAreas.isEmpty {
+            let area = NSTrackingArea(rect: bounds, options: [.mouseEnteredAndExited, .activeAlways], owner: self, userInfo: nil)
+            addTrackingArea(area)
+        }
+    }
+}
+
+
 class LoginViewController: NSViewController {
 
     //static let kAzCopyCmdPath = "/Applications/azcopy"
@@ -46,12 +98,11 @@ class LoginViewController: NSViewController {
     static var kTenantID: String!
     static var kClientID: String!
     static var kRedirectUri: String!
-    static var kConfigStr: String!
+    static var kConfigJson: [String:String]!
     
     @IBOutlet weak var usernameTextField: NSTextField!
     @IBOutlet weak var passwordTextField: NSSecureTextField!
     @IBOutlet weak var loginButton: NSButton!
-    @IBOutlet weak var newUserButton: NSButton!
     
     @IBOutlet weak var backButton: NSButton!
     @IBOutlet weak var loginProgress: NSProgressIndicator!
@@ -69,6 +120,8 @@ class LoginViewController: NSViewController {
     @IBOutlet weak var redirectURITextField: NSTextField!
     
     @IBOutlet weak var versionLabel: NSTextField!
+    
+    @IBOutlet weak var newUserLabel: HyperlinkTextField!
     
     //"https://storage.azure.com/.default"
     let kScopes: [String] = ["user.read"]
@@ -135,7 +188,8 @@ class LoginViewController: NSViewController {
         hideConfiguration(hide: self.isConfigInitialized)
         
         self.backButton.isHidden = true
-        self.newUserButton.isHidden = !self.isConfigInitialized
+        self.newUserLabel.isHidden = !self.isConfigInitialized
+        self.newUserLabel.setParent(parent: self)
         
         if let ver = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String {
             if let build_number = Bundle.main.infoDictionary?["CFBundleVersion"] as? String {
@@ -166,7 +220,7 @@ class LoginViewController: NSViewController {
             self.backButton.isHidden = !isConfigScreen
         }
         
-        self.newUserButton.isHidden = isConfigScreen
+        self.newUserLabel.isHidden = isConfigScreen
         
         if isConfigScreen == false {
             width  = 300
@@ -317,8 +371,8 @@ class LoginViewController: NSViewController {
             self.showProgress()
             self.acquireTokenSilently(LoginViewController.account)
         }
-        
-        self.loginButton.title = acc != nil ? "Sign Out" : "Sign In";
+        let signInStr = self.isConfigScreen ? "Save & Sign In" : "Sign In"
+        self.loginButton.title = acc != nil ? "Sign Out" : signInStr
    
         /*
         if (account != nil)
@@ -425,18 +479,11 @@ class LoginViewController: NSViewController {
             //dict[LoginViewController.keyTenantId] = LoginViewController.kTenantID
             dict[LoginViewController.keyRedirectURI] = LoginViewController.kRedirectUri
             
-            do {
-                let data = Data(configurationTextField.stringValue.utf8)
-                if let json = try JSONSerialization.jsonObject(with: data) as? [String:String] {
-                    for (key,value) in json {
-                        LoginViewController.apiUrls[key] = value
-                        dict[key] = value
-                    }
-                }
-            } catch {
-                _ = dialogOKCancel(question: "Warning", text: "Wrong configuration string!")
-                return false
+            for (key,value) in LoginViewController.kConfigJson {
+                LoginViewController.apiUrls[key] = value
+                dict[key] = value
             }
+            
             writeConfig(item: dict)
         }
         self.isConfigInitialized = true
@@ -448,8 +495,8 @@ class LoginViewController: NSViewController {
         
         if self.isConfigScreen {
                         
-            if clientIdTextField.stringValue.isEmpty &&
-                redirectURITextField.stringValue.isEmpty &&
+            if clientIdTextField.stringValue.isEmpty ||
+                redirectURITextField.stringValue.isEmpty ||
                 configurationTextField.stringValue.isEmpty {
                 showPopoverMessage(positioningView: clientIdTextField, msg: "Please, fill in all the fields!")
                 return
@@ -457,9 +504,18 @@ class LoginViewController: NSViewController {
             
             LoginViewController.kClientID = clientIdTextField.stringValue
             LoginViewController.kRedirectUri = redirectURITextField.stringValue
-            LoginViewController.kConfigStr = configurationTextField.stringValue
-            self.tryLogin()
             
+            do {
+                let data = Data(configurationTextField.stringValue.utf8)
+                if let json = try JSONSerialization.jsonObject(with: data) as? [String:String] {
+                    LoginViewController.kConfigJson = json
+                }
+            } catch {
+                _ = dialogOKCancel(question: "Warning", text: "Wrong configuration string!")
+                return
+            }
+            
+            self.tryLogin()
         }
         
         self.loadCurrentAccount { (account) in
@@ -474,19 +530,25 @@ class LoginViewController: NSViewController {
             return
         }
     }
-
-    @IBAction func newUserButtonClicked(_ sender: Any) {
+    
+    func updateLoginButtonTitle() {
+        let signInStr = self.isConfigScreen ? "Save & Sign In" : "Sign In"
+        self.loginButton.title = LoginViewController.account != nil ? "Sign Out" : signInStr
+    }
+    
+    func newUserButtonClicked(_ sender: Any) {
         let state = self.isConfigInitialized
         self.isConfigInitialized = false
         self.isConfigScreen = true
         
         DispatchQueue.main.async {
+            self.updateLoginButtonTitle()
             self.viewWillAppear()
             self.hideConfiguration(hide: false)
             self.enableConfiguration(enable: true)
         }
         
-        self.newUserButton.isHidden = true
+        self.newUserLabel.isHidden = true
         self.backButton.isHidden = false
         
         self.isConfigInitialized = state
@@ -496,12 +558,13 @@ class LoginViewController: NSViewController {
         self.isConfigScreen = false
         
         DispatchQueue.main.async {
+            self.updateLoginButtonTitle()
             self.hideConfiguration(hide: true)
             self.viewWillAppear()
         }
         
         self.backButton.isHidden = true
-        self.newUserButton.isHidden = false
+        self.newUserLabel.isHidden = false
     }
     
     @objc func signOut(_ sender: Any) {
@@ -529,9 +592,15 @@ class LoginViewController: NSViewController {
                 }
                 self.accessToken = ""
                 self.updateCurrentAccount(acc: nil)
-                self.window?.makeKeyAndOrderFront(self)
-                AppDelegate.appDelegate.mainWindowController.contentViewController?.removeFromParent()
-                AppDelegate.appDelegate.mainWindowController.contentViewController = nil
+                
+                if (self.window != nil) {
+                    self.window?.makeKeyAndOrderFront(self)
+                }
+                
+                if (AppDelegate.appDelegate.mainWindowController.contentViewController != nil) {
+                    AppDelegate.appDelegate.mainWindowController.contentViewController?.removeFromParent()
+                    AppDelegate.appDelegate.mainWindowController.contentViewController = nil
+                }
                 AppDelegate.appDelegate.mainWindowController = nil
             })
         }
@@ -556,6 +625,7 @@ class LoginViewController: NSViewController {
                 if !self.isConfigInitialized {
                     self.hideConfiguration(hide: false)
                 }
+                showPopoverMessage(positioningView: self.clientIdTextField, msg: "Invalid credentials!")
                 return
             }
             
@@ -606,7 +676,7 @@ class LoginViewController: NSViewController {
             self.loginProgress.isHidden = true
             self.loginProgress.stopAnimation(self)
             self.loginButton.isEnabled = true
-            self.newUserButton.isEnabled = true
+            self.newUserLabel.isEnabled = true
             self.backButton.isEnabled = true
             self.enableConfiguration(enable: true)
         }
@@ -617,7 +687,7 @@ class LoginViewController: NSViewController {
             self.loginProgress.isHidden = false
             self.loginProgress.startAnimation(self)
             self.loginButton.isEnabled = false
-            self.newUserButton.isEnabled = false
+            self.newUserLabel.isEnabled = false
             self.backButton.isEnabled = false
             self.enableConfiguration(enable: false)
         }
