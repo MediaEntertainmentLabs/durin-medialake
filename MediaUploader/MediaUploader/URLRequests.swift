@@ -223,7 +223,10 @@ func fetchListOfShowsTask(completion: @escaping (_ shows: [String:Any]) -> Void)
                     for item in responseJSON {
                         let showName = item["media_name"] as! String
                         let showId = item["media_assetcontainerid"] as! String
-                        let allowed = item["media_uploadallowed"] as! Bool
+                        
+                        // NOTE: as special request I need to reverse this bit deliberately!
+                        let allowed = !(item["media_uploadallowed"] as! Bool)
+
                         shows[showName] = ["showId":showId, "allowed":allowed]
                     }
                 }
