@@ -35,10 +35,7 @@ jobs:
         run: |
             ls -la .github/secrets
             .github/secrets/decrypt_secrets.sh
-      - name: Archiving project
-        env:
-          PR_NUMBER: $(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
-        run: ./.github/scripts/archive_app.sh
+      
       # Runs a single command using the runners shell
       - name: Force xcode
         run: sudo xcode-select -switch /Applications/Xcode_11.3.app
@@ -53,3 +50,7 @@ jobs:
              cd MediaUploader
              pod install
              xcodebuild clean build -allowProvisioningDeviceRegistration -allowProvisioningUpdates -workspace 'MediaUploader.xcworkspace' -scheme 'MediaUploader'
+      - name: Archiving project
+        env:
+          PR_NUMBER: $(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
+        run: ./.github/scripts/archive_app.sh
