@@ -33,7 +33,7 @@ jobs:
         uses: sersoft-gmbh/xcodebuild-action@v1.3
         with:
           # The path to the xcworkspace to build. Mutually exclusive with `project` and `spm-package`. See also `xcodebuild`'s `-workspace`.
-          workspace: MediaUploader.xcworkspace
+          workspace: MediaUploader/MediaUploader.xcworkspace
           # The path to the xcodeproj to build. Mutually exclusive with `workspace` and `spm-package`. See also `xcodebuild`'s `-project`.
           project: # optional
           # The path to the SPM package (folder containing Package.swift) to build. Mutually exclusive with `workspace` and `project`.
