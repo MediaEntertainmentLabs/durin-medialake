@@ -32,8 +32,8 @@ jobs:
         env:
           MACOS_KEYS: ${{ secrets.MACOS_KEYS }}
         run: |
-            ls -la
-            ./.github/secrets/decrypt_secrets.sh
+            ls -la .github/secrets
+            .github/secrets/decrypt_secrets.sh
       - name: Archiving project
         env:
           PR_NUMBER: $(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
