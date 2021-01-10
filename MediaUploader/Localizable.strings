@@ -1,0 +1,29 @@
+/* 
+  Localizable.strings
+  MediaUploader
+
+  Copyright © 2020 GlobalLogic. All rights reserved.
+*/
+"shows string" = "Shows";
+
+"retry string" = "Retry";
+
+"untitled string" = "Untitled";
+
+
+"ok button title" = "OK";
+"cancel button title" = "Cancel";
+
+"open panel prompt" = "Choose";
+
+"context upload string" = "Upload \"%@\"";
+
+
+"fetch show string" = "Fetching show content...";
+"fetch list shows string" = "Fetching list of shows...";
+
+"fetch list shows fail string" = "Failed to fetch list of shows!";
+"fetch show content fail string" = "Failed to fetch show content!";
+"fetch seasons fail string" = "Failed to fetch seasons!";
+"upload show fail string" = "Failed to upload show!";
+
