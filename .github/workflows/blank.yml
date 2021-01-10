@@ -85,7 +85,7 @@ jobs:
           # The action to perform (e.g. build, test, ...). Can also contain multiple actions.
           action: build
           # Whether the output of xcodebuild should be forwarded to xcpretty.
-          use-xcpretty: # default is true
+          use-xcpretty: true
           # <TEST ONLY> Whether the commands should only be printed but not actually run. Only used in test.
           dry-run: # optional
 
