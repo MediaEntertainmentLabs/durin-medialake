@@ -25,7 +25,8 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
         with:
-          ref: macos_client
+          ref: macos-client-ci-6 
+          #macos_client
       - name: Install gpg
         run: brew install gnupg
       - name: Setup provisioning profile
