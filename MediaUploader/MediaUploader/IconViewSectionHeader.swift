@@ -13,8 +13,13 @@ class IconViewSectionHeader : NSView {
     
     override func draw(_ dirtyRect: NSRect) {
         super.draw(dirtyRect)
-        NSColor(calibratedWhite: 0.8 , alpha: 0.8).set()
-        NSColor(cgColor: NSColor.controlLightHighlightColor.cgColor)?.setFill()
+
+        if isDarkMode() {
+            NSColor(cgColor: NSColor.controlLightHighlightColor.cgColor)?.setFill()
+        } else {
+            NSColor(calibratedWhite: 0.8 , alpha: 0.8).setFill()
+        }
+     
         dirtyRect.fill()
     }
 }

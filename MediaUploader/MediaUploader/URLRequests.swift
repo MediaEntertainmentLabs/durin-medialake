@@ -239,6 +239,10 @@ func fetchListOfShowsTask(completion: @escaping (_ shows: [String:Any]) -> Void)
 
                         shows[showName] = ["showId":showId, "studio":studioName, "studioId":studioId, "allowed":allowed]
                     }
+                } else {
+                    if let string = String(bytes: data, encoding: .utf8) {
+                        print (" ---------------- Response JSON \(string)")
+                    }
                 }
                 completion(["data": shows])
             }

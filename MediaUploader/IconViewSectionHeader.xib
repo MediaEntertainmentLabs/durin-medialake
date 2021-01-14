@@ -17,7 +17,7 @@
                     <rect key="frame" x="18" y="3" width="42" height="17"/>
                     <textFieldCell key="cell" lineBreakMode="clipping" alignment="left" title="Label" id="FO7-Pv-cmo">
                         <font key="font" metaFont="systemBold" size="14"/>
-                        <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                        <color key="textColor" name="secondaryLabelColor" catalog="System" colorSpace="catalog"/>
                         <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                     </textFieldCell>
                 </textField>

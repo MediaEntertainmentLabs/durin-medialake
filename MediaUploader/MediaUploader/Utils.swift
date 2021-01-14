@@ -66,6 +66,11 @@ extension NSMutableAttributedString {
     }
 }
 
+func isDarkMode() -> Bool {
+    let mode = UserDefaults.standard.string(forKey: "AppleInterfaceStyle")
+    return mode == "Dark"
+}
+
 func dialogOKCancel(question: String, text: String) -> Bool {
     let alert = NSAlert()
     alert.messageText = question

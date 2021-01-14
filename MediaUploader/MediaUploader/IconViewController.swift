@@ -14,8 +14,14 @@ class IconViewController: NSViewController {
     private var fetchSASTokenQueue = OperationQueue()
     private var uploadQueue = OperationQueue()
     private var listShows : [String:Any] = [:]
-    private var numSections : [String:Int] = [:]
-    private var sectionNames : [String] = []
+    
+    struct SectionAttributes {
+        var name: String
+        var offset: Int  // the index of the first image of this section in the imageFiles array
+        var length: Int  // number of images in the section
+    }
+    
+    private var iconSections : [Int:SectionAttributes] = [:]
     private var failedOperations = Set<FileUploadOperation>()
     
     
@@ -122,9 +128,21 @@ class IconViewController: NSViewController {
                 }
                 self.listShows = result["data"] as! [String : Any]
                 
+                if (self.listShows.count == 0) {
+                    AppDelegate.retryContext["cdsUserId"] = LoginViewController.cdsUserId
+                    AppDelegate.lastError = AppDelegate.ErrorStatus.kFailedFetchListShows
+                    NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.ShowProgressViewControllerOnlyText),
+                                                    object: nil,
+                                                    userInfo: ["progressLabel" : OutlineViewController.NameConstants.kFetchListOfShowsFailedStr,
+                                                               "disableProgress" : true,
+                                                               "enableButton" : OutlineViewController.NameConstants.kRetryStr])
+                    return
+                }
+                
                 NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.ShowOutlineViewController), object: nil)
                     
                 var contentArray : [Node] = []
+                var elems : Int = 0
                 for show in self.listShows {
                     
                     let node = OutlineViewController.fileSystemNode(from: show.key, isFolder: true)
@@ -134,18 +152,34 @@ class IconViewController: NSViewController {
                     contentArray.append(node)
                     let studioName = value["studio"] as! String
                     
-                    if (self.numSections[studioName] != nil) {
-                        self.numSections[studioName]! += 1
-                    } else {
-                        self.sectionNames.append(studioName)
-                        self.numSections[studioName] = 1
+                
+                    var found : Bool = false
+                    for (key,value) in self.iconSections {
+                        if value.name == studioName {
+                            self.iconSections[key]!.length += 1
+                            found = true
+                            break
+                        }
                     }
+                    
+                    if !found {
+                        let attr = SectionAttributes(name: studioName, offset: 0, length: 1)
+                        self.iconSections[elems] = attr
+                        elems += 1
+                    }
+                    
                     /*
                     // disable background fetching of SAS Tokens, fetch SAS Token ONLY on demand
                      
                     let fetchSASTokenOperation = FetchSASTokenOperation(showName: show.key, cdsUserId: self.cdsUserId, showId: self.showId(showName: show.key))
                     self.fetchSASTokenQueue.addOperations([fetchSASTokenOperation], waitUntilFinished: false)
                     */
+                }
+                
+                if (self.iconSections.count != 0) {
+                    for i in 1 ..< self.iconSections.count {
+                        self.iconSections[i]!.offset = self.iconSections[i-1]!.offset + self.iconSections[i-1]!.length
+                    }
                 }
                 
                 if contentArray.count != 0 {
@@ -460,15 +494,15 @@ class IconViewController: NSViewController {
 extension IconViewController : NSCollectionViewDataSource {
     
     func numberOfSections(in collectionView: NSCollectionView) -> Int {
-        return self.sectionNames.count
+        return self.iconSections.count
       }
     
     func collectionView(_ collectionView: NSCollectionView, numberOfItemsInSection section: Int) -> Int {
-        if (self.sectionNames.count == 0) {
+        if (self.iconSections.count == 0) {
             return 0
         }
         
-        return self.numSections[self.sectionNames[section]]!
+        return self.iconSections[section]!.length
     }
     
     func collectionView(_ collectionView: NSCollectionView, itemForRepresentedObjectAt indexPath: IndexPath) -> NSCollectionViewItem {
@@ -476,7 +510,7 @@ extension IconViewController : NSCollectionViewDataSource {
         let item = collectionView.makeItem(withIdentifier: NSUserInterfaceItemIdentifier("CollectionViewItem"), for: indexPath)
         guard let collectionViewItem = item as? CollectionViewItem else {return item}
         
-        let data = icons[indexPath.item]
+        let data = icons[self.iconSections[indexPath.section]!.offset + indexPath.item]
         collectionViewItem.node = data
 
         return item
@@ -487,7 +521,7 @@ extension IconViewController : NSCollectionViewDataSource {
         let view = collectionView.makeSupplementaryView(ofKind: NSCollectionView.elementKindSectionHeader,
                                                         withIdentifier: NSUserInterfaceItemIdentifier(rawValue: "IconViewSectionHeader"),
                                                         for: indexPath) as! IconViewSectionHeader
-        view.sectionTitle.stringValue = self.sectionNames[indexPath.section]
+        view.sectionTitle.stringValue = self.iconSections[indexPath.section]!.name
         return view
     }
 }

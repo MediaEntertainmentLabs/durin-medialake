@@ -57,11 +57,6 @@ class UploadWindowViewController: NSViewController {
         self.tableView.delegate = self
         self.tableView.dataSource = self
         
-        var isDarkMode: Bool {
-            let mode = UserDefaults.standard.string(forKey: "AppleInterfaceStyle")
-            return mode == "Dark"
-        }
-        
         var column_index : Int = 0
         tableView.tableColumns.forEach { (column) in
             switch(column_index) {
@@ -76,7 +71,7 @@ class UploadWindowViewController: NSViewController {
             column_index += 1
             column.headerCell.attributedStringValue = NSAttributedString(string: column.title,
                                                                          attributes: [NSAttributedString.Key.font: NSFont.boldSystemFont(ofSize: 12),
-                                                                                      NSAttributedString.Key.foregroundColor : isDarkMode ? NSColor.controlLightHighlightColor : NSColor.headerColor ])
+                                                                                      NSAttributedString.Key.foregroundColor : isDarkMode() ? NSColor.controlLightHighlightColor : NSColor.headerColor ])
 
 //               // Optional: you can change title color also jsut by adding NSForegroundColorAttributeName
            }
