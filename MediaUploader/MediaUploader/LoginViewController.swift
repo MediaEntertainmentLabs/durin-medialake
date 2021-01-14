@@ -19,7 +19,7 @@ class ConfigurationTextField : NSTextField {
 
         var newSize = super.intrinsicContentSize
         newSize.width = 200
-        newSize.height = 300
+        newSize.height = 450
         return newSize
     }
 }

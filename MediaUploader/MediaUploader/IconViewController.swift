@@ -14,6 +14,8 @@ class IconViewController: NSViewController {
     private var fetchSASTokenQueue = OperationQueue()
     private var uploadQueue = OperationQueue()
     private var listShows : [String:Any] = [:]
+    private var numSections : [String:Int] = [:]
+    private var sectionNames : [String] = []
     private var failedOperations = Set<FileUploadOperation>()
     
     
@@ -130,7 +132,14 @@ class IconViewController: NSViewController {
                     node.identifier = value["showId"] as! String
                     node.is_upload_allowed = value["allowed"] as! Bool
                     contentArray.append(node)
+                    let studioName = value["studio"] as! String
                     
+                    if (self.numSections[studioName] != nil) {
+                        self.numSections[studioName]! += 1
+                    } else {
+                        self.sectionNames.append(studioName)
+                        self.numSections[studioName] = 1
+                    }
                     /*
                     // disable background fetching of SAS Tokens, fetch SAS Token ONLY on demand
                      
@@ -154,7 +163,10 @@ class IconViewController: NSViewController {
         // 1
         let flowLayout = NSCollectionViewFlowLayout()
         flowLayout.itemSize = NSSize(width: 105.0, height: 100.0)
-        flowLayout.sectionInset = NSEdgeInsets(top: 10.0, left: 10.0, bottom: 10.0, right: 10.0)
+        
+        flowLayout.sectionInset = NSEdgeInsets(top: 30.0, left: 20.0, bottom: 30.0, right: 20.0)
+        
+        
         flowLayout.minimumInteritemSpacing = 5.0
         //flowLayout.minimumLineSpacing = 10.0
         collectionView.collectionViewLayout = flowLayout
@@ -447,13 +459,16 @@ class IconViewController: NSViewController {
 
 extension IconViewController : NSCollectionViewDataSource {
     
-    // 1
-    //  func numberOfSectionsInCollectionView(collectionView: NSCollectionView) -> Int {
-    //    return imageDirectoryLoader.numberOfSections
-    //  }
+    func numberOfSections(in collectionView: NSCollectionView) -> Int {
+        return self.sectionNames.count
+      }
     
     func collectionView(_ collectionView: NSCollectionView, numberOfItemsInSection section: Int) -> Int {
-        return icons.count//imageDirectoryLoader.numberOfItemsInSection(section)
+        if (self.sectionNames.count == 0) {
+            return 0
+        }
+        
+        return self.numSections[self.sectionNames[section]]!
     }
     
     func collectionView(_ collectionView: NSCollectionView, itemForRepresentedObjectAt indexPath: IndexPath) -> NSCollectionViewItem {
@@ -466,7 +481,25 @@ extension IconViewController : NSCollectionViewDataSource {
 
         return item
     }
+    
+    func collectionView(_ collectionView: NSCollectionView, viewForSupplementaryElementOfKind kind: String, at indexPath: IndexPath) -> NSView {
+        
+        let view = collectionView.makeSupplementaryView(ofKind: NSCollectionView.elementKindSectionHeader,
+                                                        withIdentifier: NSUserInterfaceItemIdentifier(rawValue: "IconViewSectionHeader"),
+                                                        for: indexPath) as! IconViewSectionHeader
+        view.sectionTitle.stringValue = self.sectionNames[indexPath.section]
+        return view
+    }
 }
+
+extension IconViewController : NSCollectionViewDelegateFlowLayout {
+  func collectionView(_ collectionView: NSCollectionView, layout collectionViewLayout: NSCollectionViewLayout, referenceSizeForHeaderInSection section: Int) -> NSSize {
+    return NSSize(width: 1000, height: 40)
+  }
+}
+
+
+
 
 extension IconViewController : NSCollectionViewDelegate {
     

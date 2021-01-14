@@ -223,11 +223,21 @@ func fetchListOfShowsTask(completion: @escaping (_ shows: [String:Any]) -> Void)
                     for item in responseJSON {
                         let showName = item["media_name"] as! String
                         let showId = item["media_assetcontainerid"] as! String
+                        let studio = item["media_Studio"] as! String
+                        var studioName:String = "noname"
+                        var studioId:String = ""
+                        if let data = studio.data(using: String.Encoding.utf8) {
+                            guard let json = try JSONSerialization.jsonObject(with: data, options: .mutableContainers) as? [String:String] else { continue }
+                            guard let name : String = json["media_name"]  else { continue }
+                            guard let id : String = json["media_studioid"]  else { continue }
+                            studioName = name
+                            studioId = id
+                        }
                         
                         // NOTE: as special request I need to reverse this bit deliberately!
                         let allowed = !(item["media_uploadallowed"] as! Bool)
 
-                        shows[showName] = ["showId":showId, "allowed":allowed]
+                        shows[showName] = ["showId":showId, "studio":studioName, "studioId":studioId, "allowed":allowed]
                     }
                 }
                 completion(["data": shows])

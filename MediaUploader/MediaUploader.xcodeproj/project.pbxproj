@@ -19,6 +19,8 @@
 		731C9885252EE911008E8A75 /* OutlineViewController+Restoration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 731C9884252EE911008E8A75 /* OutlineViewController+Restoration.swift */; };
 		731C9887252EEAE0008E8A75 /* SplitViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 731C9886252EEAE0008E8A75 /* SplitViewController.swift */; };
 		731C9889252EF427008E8A75 /* WindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 731C9888252EF427008E8A75 /* WindowController.swift */; };
+		C917DDCC25B01D7F00B967B8 /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C917DDCA25B01D6400B967B8 /* AppKit.framework */; };
+		C917DDCF25B0229B00B967B8 /* IconViewSectionHeader.xib in Resources */ = {isa = PBXBuildFile; fileRef = C97A62D625AF915F0062A3D9 /* IconViewSectionHeader.xib */; };
 		C95E74E7257ACEB80073410F /* AsyncOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = C95E74E6257ACEB80073410F /* AsyncOperation.swift */; };
 		C95F6C1A2580B8B20008D8A0 /* ErrorHandling.swift in Sources */ = {isa = PBXBuildFile; fileRef = C95F6C192580B8B20008D8A0 /* ErrorHandling.swift */; };
 		C95F6C1C2582B6EE0008D8A0 /* FileUploadOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = C95F6C1B2582B6EE0008D8A0 /* FileUploadOperation.swift */; };
@@ -39,6 +41,7 @@
 		C97621D8256BABCA00C48E15 /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = C97621D7256BABCA00C48E15 /* Info.plist */; };
 		C97621DD256C1C4400C48E15 /* UploadSettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C97621DB256C1C4400C48E15 /* UploadSettingsViewController.swift */; };
 		C97621DE256C1C4400C48E15 /* UploadSettingsViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = C97621DC256C1C4400C48E15 /* UploadSettingsViewController.xib */; };
+		C97A62D825AF93950062A3D9 /* IconViewSectionHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = C97A62D725AF93950062A3D9 /* IconViewSectionHeader.swift */; };
 		C9807E66257E8FD400488E46 /* ProgressViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9807E64257E8FD400488E46 /* ProgressViewController.swift */; };
 		C9807E67257E8FD400488E46 /* ProgressViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = C9807E65257E8FD400488E46 /* ProgressViewController.xib */; };
 		C9807E69257F923A00488E46 /* Utils.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9807E68257F923A00488E46 /* Utils.swift */; };
@@ -88,6 +91,7 @@
 		731C9886252EEAE0008E8A75 /* SplitViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SplitViewController.swift; sourceTree = "<group>"; };
 		731C9888252EF427008E8A75 /* WindowController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WindowController.swift; sourceTree = "<group>"; };
 		78F0B96BC353C152F8ADDF9A /* Pods_MediaUploader.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_MediaUploader.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		C917DDCA25B01D6400B967B8 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
 		C95E74E6257ACEB80073410F /* AsyncOperation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncOperation.swift; sourceTree = "<group>"; };
 		C95F6C192580B8B20008D8A0 /* ErrorHandling.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorHandling.swift; sourceTree = "<group>"; };
 		C95F6C1B2582B6EE0008D8A0 /* FileUploadOperation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileUploadOperation.swift; sourceTree = "<group>"; };
@@ -111,6 +115,8 @@
 		C97795AC256EC65100BEE3CE /* AzureCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AzureCore.framework; path = ThirdPartyFrameworks/AzureCore.framework; sourceTree = "<group>"; };
 		C97795B0256EC65D00BEE3CE /* AzureIdentity.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AzureIdentity.framework; path = ThirdPartyFrameworks/AzureIdentity.framework; sourceTree = "<group>"; };
 		C97795B3256EC66700BEE3CE /* AzureStorageBlob.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AzureStorageBlob.framework; path = ThirdPartyFrameworks/AzureStorageBlob.framework; sourceTree = "<group>"; };
+		C97A62D625AF915F0062A3D9 /* IconViewSectionHeader.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = IconViewSectionHeader.xib; path = "/Users/codecs/Documents/git/durin-medialake/MediaUploader/IconViewSectionHeader.xib"; sourceTree = "<absolute>"; };
+		C97A62D725AF93950062A3D9 /* IconViewSectionHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IconViewSectionHeader.swift; sourceTree = "<group>"; };
 		C9807E64257E8FD400488E46 /* ProgressViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressViewController.swift; sourceTree = "<group>"; };
 		C9807E65257E8FD400488E46 /* ProgressViewController.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = ProgressViewController.xib; sourceTree = "<group>"; };
 		C9807E68257F923A00488E46 /* Utils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utils.swift; sourceTree = "<group>"; };
@@ -128,6 +134,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				E27783F0928EA7F319BDE5D4 /* Pods_MediaUploader.framework in Frameworks */,
+				C917DDCC25B01D7F00B967B8 /* AppKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -190,6 +197,7 @@
 				C987BB34253CC93E00A440A7 /* CustomTableCellView.swift */,
 				C95F6C21258388650008D8A0 /* HorizontalSplitViewController.swift */,
 				C97621CE25682C3500C48E15 /* IconViewController.swift */,
+				C97A62D725AF93950062A3D9 /* IconViewSectionHeader.swift */,
 				C987BB36255BC97B00A440A7 /* LoginViewController.swift */,
 				731C9878252E4D1A008E8A75 /* OutlineViewController.swift */,
 				C987BB282534CA9500A440A7 /* OutlineViewController+Delegate.swift */,
@@ -258,6 +266,7 @@
 				C96173A62593AFA600F037EB /* azcopy */,
 				731C9852252DE9DC008E8A75 /* Main.storyboard */,
 				C97621D3256BA90900C48E15 /* CollectionViewItem.xib */,
+				C97A62D625AF915F0062A3D9 /* IconViewSectionHeader.xib */,
 				C97621DC256C1C4400C48E15 /* UploadSettingsViewController.xib */,
 				731C9856252DE9DD008E8A75 /* MediaUploader.entitlements */,
 				C97621D7256BABCA00C48E15 /* Info.plist */,
@@ -270,6 +279,7 @@
 		E3F4A5FCDAAF2D923869E980 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				C917DDCA25B01D6400B967B8 /* AppKit.framework */,
 				C97795B3256EC66700BEE3CE /* AzureStorageBlob.framework */,
 				C97795B0256EC65D00BEE3CE /* AzureIdentity.framework */,
 				C97795AC256EC65100BEE3CE /* AzureCore.framework */,
@@ -386,6 +396,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C917DDCF25B0229B00B967B8 /* IconViewSectionHeader.xib in Resources */,
 				C96173A72593AFA600F037EB /* azcopy in Resources */,
 				C9807E67257E8FD400488E46 /* ProgressViewController.xib in Resources */,
 				C96173A025911CAE00F037EB /* MediaUploader.plist in Resources */,
@@ -513,6 +524,7 @@
 				C95F6C202583748B0008D8A0 /* UploadWindowViewController+Delegate.swift in Sources */,
 				C95F6C1A2580B8B20008D8A0 /* ErrorHandling.swift in Sources */,
 				C97621CF25682C3500C48E15 /* IconViewController.swift in Sources */,
+				C97A62D825AF93950062A3D9 /* IconViewSectionHeader.swift in Sources */,
 				C984960425948C3E00A1FED5 /* StartupPopupViewController.swift in Sources */,
 				731C9887252EEAE0008E8A75 /* SplitViewController.swift in Sources */,
 				C95F6C1C2582B6EE0008D8A0 /* FileUploadOperation.swift in Sources */,
