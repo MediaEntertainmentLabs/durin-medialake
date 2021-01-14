@@ -128,17 +128,6 @@ class IconViewController: NSViewController {
                 }
                 self.listShows = result["data"] as! [String : Any]
                 
-                if (self.listShows.count == 0) {
-                    AppDelegate.retryContext["cdsUserId"] = LoginViewController.cdsUserId
-                    AppDelegate.lastError = AppDelegate.ErrorStatus.kFailedFetchListShows
-                    NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.ShowProgressViewControllerOnlyText),
-                                                    object: nil,
-                                                    userInfo: ["progressLabel" : OutlineViewController.NameConstants.kFetchListOfShowsFailedStr,
-                                                               "disableProgress" : true,
-                                                               "enableButton" : OutlineViewController.NameConstants.kRetryStr])
-                    return
-                }
-                
                 NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.ShowOutlineViewController), object: nil)
                     
                 var contentArray : [Node] = []

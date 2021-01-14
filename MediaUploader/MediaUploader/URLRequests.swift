@@ -239,12 +239,15 @@ func fetchListOfShowsTask(completion: @escaping (_ shows: [String:Any]) -> Void)
 
                         shows[showName] = ["showId":showId, "studio":studioName, "studioId":studioId, "allowed":allowed]
                     }
+                    if (shows.count != 0) {
+                        completion(["data": shows])
+                    }
                 } else {
                     if let string = String(bytes: data, encoding: .utf8) {
                         print (" ---------------- Response JSON \(string)")
+                        throw OutlineViewController.NameConstants.kFetchListOfShowsFailedStr
                     }
                 }
-                completion(["data": shows])
             }
             
         } catch let error  {
