@@ -21,6 +21,8 @@
 		731C9889252EF427008E8A75 /* WindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 731C9888252EF427008E8A75 /* WindowController.swift */; };
 		C917DDCC25B01D7F00B967B8 /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C917DDCA25B01D6400B967B8 /* AppKit.framework */; };
 		C917DDCF25B0229B00B967B8 /* IconViewSectionHeader.xib in Resources */ = {isa = PBXBuildFile; fileRef = C97A62D625AF915F0062A3D9 /* IconViewSectionHeader.xib */; };
+		C917DDD125B2075F00B967B8 /* RightPaneToolPalette.xib in Resources */ = {isa = PBXBuildFile; fileRef = C917DDD025B2075F00B967B8 /* RightPaneToolPalette.xib */; };
+		C917DDD325B226F500B967B8 /* RightPaneToolPalette.swift in Sources */ = {isa = PBXBuildFile; fileRef = C917DDD225B226F500B967B8 /* RightPaneToolPalette.swift */; };
 		C95E74E7257ACEB80073410F /* AsyncOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = C95E74E6257ACEB80073410F /* AsyncOperation.swift */; };
 		C95F6C1A2580B8B20008D8A0 /* ErrorHandling.swift in Sources */ = {isa = PBXBuildFile; fileRef = C95F6C192580B8B20008D8A0 /* ErrorHandling.swift */; };
 		C95F6C1C2582B6EE0008D8A0 /* FileUploadOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = C95F6C1B2582B6EE0008D8A0 /* FileUploadOperation.swift */; };
@@ -92,6 +94,8 @@
 		731C9888252EF427008E8A75 /* WindowController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WindowController.swift; sourceTree = "<group>"; };
 		78F0B96BC353C152F8ADDF9A /* Pods_MediaUploader.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_MediaUploader.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		C917DDCA25B01D6400B967B8 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
+		C917DDD025B2075F00B967B8 /* RightPaneToolPalette.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = RightPaneToolPalette.xib; sourceTree = "<group>"; };
+		C917DDD225B226F500B967B8 /* RightPaneToolPalette.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RightPaneToolPalette.swift; sourceTree = "<group>"; };
 		C95E74E6257ACEB80073410F /* AsyncOperation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncOperation.swift; sourceTree = "<group>"; };
 		C95F6C192580B8B20008D8A0 /* ErrorHandling.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorHandling.swift; sourceTree = "<group>"; };
 		C95F6C1B2582B6EE0008D8A0 /* FileUploadOperation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileUploadOperation.swift; sourceTree = "<group>"; };
@@ -206,6 +210,7 @@
 				C962D1A2258788420012F684 /* OutlineViewController+Expansion.swift */,
 				731C9850252DE9DC008E8A75 /* Assets.xcassets */,
 				C9807E64257E8FD400488E46 /* ProgressViewController.swift */,
+				C917DDD225B226F500B967B8 /* RightPaneToolPalette.swift */,
 				C962D1A4258AA3A40012F684 /* PopoverViewController.swift */,
 				C97621DB256C1C4400C48E15 /* UploadSettingsViewController.swift */,
 				C95F6C1D2583748B0008D8A0 /* UploadWindowViewController.swift */,
@@ -272,6 +277,7 @@
 				C97621D7256BABCA00C48E15 /* Info.plist */,
 				C987BB2A2534CF5400A440A7 /* Localizable.strings */,
 				C9807E65257E8FD400488E46 /* ProgressViewController.xib */,
+				C917DDD025B2075F00B967B8 /* RightPaneToolPalette.xib */,
 			);
 			name = Resources;
 			sourceTree = "<group>";
@@ -404,6 +410,7 @@
 				731C9851252DE9DC008E8A75 /* Assets.xcassets in Resources */,
 				C97621D5256BA90900C48E15 /* CollectionViewItem.xib in Resources */,
 				C97621DE256C1C4400C48E15 /* UploadSettingsViewController.xib in Resources */,
+				C917DDD125B2075F00B967B8 /* RightPaneToolPalette.xib in Resources */,
 				C987BB2B2534CF5400A440A7 /* Localizable.strings in Resources */,
 				C97621D8256BABCA00C48E15 /* Info.plist in Resources */,
 				731C9854252DE9DC008E8A75 /* Main.storyboard in Resources */,
@@ -536,6 +543,7 @@
 				C987BB35253CC93E00A440A7 /* CustomTableCellView.swift in Sources */,
 				C95E74E7257ACEB80073410F /* AsyncOperation.swift in Sources */,
 				C961739C25910B5800F037EB /* CalculateChecksumOperation.swift in Sources */,
+				C917DDD325B226F500B967B8 /* RightPaneToolPalette.swift in Sources */,
 				C987BB37255BC97B00A440A7 /* LoginViewController.swift in Sources */,
 				C987BB292534CA9500A440A7 /* OutlineViewController+Delegate.swift in Sources */,
 				C9807E66257E8FD400488E46 /* ProgressViewController.swift in Sources */,

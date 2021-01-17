@@ -28,6 +28,7 @@ class SplitViewController: NSSplitViewController {
     
     private var outlineViewController: NSViewController!
     private var progressViewController: ProgressViewController!
+    private var rightPaneToolPalette: RightPaneToolPalette!
     
     override func viewDidAppear() {
         super.viewDidAppear()
@@ -50,13 +51,19 @@ class SplitViewController: NSSplitViewController {
         if hasChildViewController == false {
             embedChildViewController(progressViewController)
         } else {
-            for child in splitViewItems[1].viewController.children {
+            for child in detailViewController.children {
                 if let outlineViewController = child as? OutlineViewController {
                     embedChildViewController(outlineViewController)
                 } else {
                     embedChildViewController(progressViewController)
                 }
             }
+        }
+        if rightPaneToolPalette == nil {
+            rightPaneToolPalette = RightPaneToolPalette()
+            rightPaneToolPalette.view.translatesAutoresizingMaskIntoConstraints = false
+            detailViewController.addChild(rightPaneToolPalette)
+            detailViewController.view.addSubview(rightPaneToolPalette.view)
         }
         
         NotificationCenter.default.addObserver(
@@ -85,9 +92,14 @@ class SplitViewController: NSSplitViewController {
     private func embedChildViewController(_ childViewController: NSViewController) {
 
         if hasChildViewController {
-            detailViewController.removeChild(at: 0)
-            // Remove the old child detail view.
-            detailViewController.view.subviews[0].removeFromSuperview()
+            for index in 0 ..< detailViewController.children.count {
+                if detailViewController.children[index] is OutlineViewController || detailViewController.children[index] is ProgressViewController {
+                    detailViewController.removeChild(at: index)
+                    // Remove the old fetchhild detail view.
+                    detailViewController.view.subviews[index].removeFromSuperview()
+                    break
+                }
+            }
         }
         
         detailViewController.addChild(childViewController)

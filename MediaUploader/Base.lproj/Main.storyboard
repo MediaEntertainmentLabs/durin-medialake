@@ -336,6 +336,12 @@
                                                 </items>
                                             </menu>
                                         </menuItem>
+                                        <menuItem title="Upload" id="csn-zk-Ctz">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                            <connections>
+                                                <action selector="showUploadSettings:" target="Ady-hI-5gd" id="Lnb-5a-fML"/>
+                                            </connections>
+                                        </menuItem>
                                         <menuItem title="Upload Progress" keyEquivalent="u" id="3o6-jm-kNX">
                                             <connections>
                                                 <action selector="showUploadProgressWindow:" target="Ady-hI-5gd" id="WUF-vj-xKd"/>
@@ -786,14 +792,14 @@ Gw
                         <rect key="frame" x="0.0" y="0.0" width="454" height="141"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <subviews>
-                            <scrollView autohidesScrollers="YES" horizontalLineScroll="26" horizontalPageScroll="10" verticalLineScroll="26" verticalPageScroll="10" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="CHu-nw-35Q">
-                                <rect key="frame" x="0.0" y="35" width="454" height="65"/>
+                            <scrollView borderType="none" autohidesScrollers="YES" horizontalLineScroll="26" horizontalPageScroll="10" verticalLineScroll="26" verticalPageScroll="10" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="CHu-nw-35Q">
+                                <rect key="frame" x="0.0" y="35" width="454" height="59"/>
                                 <clipView key="contentView" drawsBackground="NO" id="fsf-IO-o13">
-                                    <rect key="frame" x="1" y="1" width="452" height="48"/>
+                                    <rect key="frame" x="0.0" y="0.0" width="454" height="44"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
                                         <outlineView verticalHuggingPriority="750" ambiguous="YES" allowsExpansionToolTips="YES" columnAutoresizingStyle="lastColumnOnly" selectionHighlightStyle="sourceList" columnReordering="NO" columnResizing="NO" autosaveColumns="NO" autosaveName="OutlineView" rowHeight="24" rowSizeStyle="systemDefault" viewBased="YES" floatsGroupRows="NO" indentationPerLevel="14" autosaveExpandedItems="YES" outlineTableColumn="Yhw-Gl-L8c" id="sIF-82-mv6">
-                                            <rect key="frame" x="0.0" y="0.0" width="516" height="48"/>
+                                            <rect key="frame" x="0.0" y="0.0" width="516" height="44"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                             <size key="intercellSpacing" width="3" height="2"/>
                                             <color key="backgroundColor" name="_sourceListBackgroundColor" catalog="System" colorSpace="catalog"/>
@@ -915,7 +921,7 @@ Gw
                                     <nil key="backgroundColor"/>
                                 </clipView>
                                 <scroller key="horizontalScroller" wantsLayer="YES" verticalHuggingPriority="750" horizontal="YES" id="7gv-i5-061">
-                                    <rect key="frame" x="1" y="49" width="452" height="15"/>
+                                    <rect key="frame" x="0.0" y="44" width="454" height="15"/>
                                     <autoresizingMask key="autoresizingMask"/>
                                 </scroller>
                                 <scroller key="verticalScroller" hidden="YES" wantsLayer="YES" verticalHuggingPriority="750" doubleValue="1" horizontal="NO" id="dq0-bi-yT0">
@@ -923,22 +929,10 @@ Gw
                                     <autoresizingMask key="autoresizingMask"/>
                                 </scroller>
                             </scrollView>
-                            <button toolTip="Refresh show content" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="xBx-dt-KFn">
-                                <rect key="frame" x="10" y="2" width="19" height="30"/>
-                                <buttonCell key="cell" type="bevel" bezelStyle="regularSquare" image="NSTouchBarRefreshTemplate" imagePosition="overlaps" alignment="center" imageScaling="proportionallyDown" inset="2" id="cT2-4l-iZa">
-                                    <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
-                                    <font key="font" metaFont="system"/>
-                                </buttonCell>
-                                <connections>
-                                    <action selector="refreshShowContent:" target="XfG-lQ-9wD" id="QaG-Nk-FRp"/>
-                                </connections>
-                            </button>
                         </subviews>
                         <constraints>
                             <constraint firstItem="CHu-nw-35Q" firstAttribute="leading" secondItem="84j-gJ-Vpo" secondAttribute="leading" id="Lj7-7C-eC9"/>
-                            <constraint firstItem="xBx-dt-KFn" firstAttribute="top" secondItem="CHu-nw-35Q" secondAttribute="bottom" constant="3" id="MzF-z0-Kxf"/>
                             <constraint firstAttribute="bottom" secondItem="CHu-nw-35Q" secondAttribute="bottom" constant="35" id="Tpo-HW-h3b"/>
-                            <constraint firstItem="xBx-dt-KFn" firstAttribute="leading" secondItem="84j-gJ-Vpo" secondAttribute="leading" constant="10" id="mvx-Um-H5R"/>
                             <constraint firstAttribute="trailing" secondItem="CHu-nw-35Q" secondAttribute="trailing" id="x6u-Ju-g7j"/>
                             <constraint firstItem="CHu-nw-35Q" firstAttribute="top" secondItem="84j-gJ-Vpo" secondAttribute="top" id="zC9-7Q-KNE"/>
                         </constraints>
@@ -1826,6 +1820,5 @@ Gw
     <resources>
         <image name="NSShareTemplate" width="11" height="16"/>
         <image name="NSTouchBarGoBackTemplate" width="10" height="30"/>
-        <image name="NSTouchBarRefreshTemplate" width="19" height="30"/>
     </resources>
 </document>

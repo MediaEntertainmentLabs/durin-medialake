@@ -217,7 +217,7 @@ func fetchListOfShowsTask(completion: @escaping (_ shows: [String:Any]) -> Void)
                 }
             }
             
-            var shows : [String:Any] = [:]
+            var shows = [[String:Any]]()
             if let data = data {
                 if let responseJSON = try JSONSerialization.jsonObject(with: data) as? [[String:Any]] {
                     for item in responseJSON {
@@ -237,10 +237,16 @@ func fetchListOfShowsTask(completion: @escaping (_ shows: [String:Any]) -> Void)
                         // NOTE: as special request I need to reverse this bit deliberately!
                         let allowed = !(item["media_uploadallowed"] as! Bool)
 
-                        shows[showName] = ["showId":showId, "studio":studioName, "studioId":studioId, "allowed":allowed]
+                        shows.append(["showName":showName, "showId":showId, "studio":studioName, "studioId":studioId, "allowed":allowed])
                     }
                     if (shows.count != 0) {
-                        completion(["data": shows])
+                        let sortedByStudio = shows.sorted(by: {
+                                                                if $0["studio"] as! String != $1["studio"] as! String {
+                                return ($0["studio"] as! String) < ($1["studio"] as! String)
+                            } else {
+                                return String(describing: $0["studio"] as! String) > String(describing: $1["studio"] as! String) } })
+                        
+                        completion(["data": sortedByStudio])
                     }
                 } else {
                     if let string = String(bytes: data, encoding: .utf8) {

@@ -71,7 +71,10 @@ class WindowViewController: NSViewController {
         } catch _ {
             
         }
+    }
     
+    @IBAction func showUploadSettings(_ sender: AnyObject) {
+        NotificationCenter.default.post(name: Notification.Name(NotificationNames.ShowUploadSettings), object: nil)
     }
     
     @IBAction func showUploadProgressWindow(_ sender: AnyObject) {
@@ -110,11 +113,15 @@ class WindowViewController: NSViewController {
         
         static let NewSASToken = "NewSASToken"
         
+        static let RefreshShowContent = "RefreshShowContent"
+        
         static let ShowProgressViewController = "StartFetchingShowContent"
         
         static let ShowProgressViewControllerOnlyText = "ShowProgressViewControllerOnlyText"
         
         static let ShowOutlineViewController = "ShowOutlineContent"
+        
+        static let ShowUploadSettings = "ShowUploadSettings"
         
         static let UpdateShowUploadProgress = "UpdateShowUploadProgress"
         

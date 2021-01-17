@@ -79,6 +79,12 @@ class OutlineViewController: NSViewController,
             selector: #selector(onCancelPendingTasks(_:)),
             name: Notification.Name(WindowViewController.NotificationNames.CancelPendingURLTasks),
             object: nil)
+        
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(onRefreshShowContent(_:)),
+            name: Notification.Name(WindowViewController.NotificationNames.RefreshShowContent),
+            object: nil)
     }
 
     func addPathToTree(root: TreeElement, fullPath: inout [String])
@@ -110,7 +116,7 @@ class OutlineViewController: NSViewController,
         fetchShowContent(showName: self.currentShowName, showId: self.currentShowId)
     }
     
-    @IBAction func refreshShowContent(_ sender: Any) {
+    @objc func onRefreshShowContent(_ sender: Any) {
         guard let currentShowName = self.currentShowName else { return }
         guard let currentShowId = self.currentShowId else { return }
         guard let cdsUserId = self.cdsUserId else { return }
@@ -286,6 +292,11 @@ class OutlineViewController: NSViewController,
         NotificationCenter.default.removeObserver(
             self,
             name: Notification.Name(WindowViewController.NotificationNames.CancelPendingURLTasks),
+            object: nil)
+        
+        NotificationCenter.default.removeObserver(
+            self,
+            name: Notification.Name(WindowViewController.NotificationNames.RefreshShowContent),
             object: nil)
     }
 }

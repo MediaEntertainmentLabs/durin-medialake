@@ -13,7 +13,8 @@ class IconViewController: NSViewController {
     
     private var fetchSASTokenQueue = OperationQueue()
     private var uploadQueue = OperationQueue()
-    private var listShows : [String:Any] = [:]
+    private var listShows : [[String:Any]] = [[:]]
+    var currentSelectionIndex : IndexPath!
     
     struct SectionAttributes {
         var name: String
@@ -23,7 +24,7 @@ class IconViewController: NSViewController {
     
     private var iconSections : [Int:SectionAttributes] = [:]
     private var failedOperations = Set<FileUploadOperation>()
-    
+    var uploadSettingsViewController : UploadSettingsViewController!
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -53,11 +54,55 @@ class IconViewController: NSViewController {
             selector: #selector(onStartUploadShow(_:)),
             name: Notification.Name(WindowViewController.NotificationNames.OnStartUploadShow),
             object: nil)
+        
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(onShowUploadSettings(_:)),
+            name: Notification.Name(WindowViewController.NotificationNames.ShowUploadSettings),
+            object: nil)
     }
     
     func showId(showName: String) -> String {
-        guard let show = self.listShows[showName] as? [String:Any] else { return String() }
-        return show["showId"] as! String
+        
+        if let index = self.listShows.firstIndex(where: { ($0["showName"] as! String) == showName }) {
+            return self.listShows[index]["showId"]as! String
+        }
+        return String()
+    }
+    
+    @objc func onShowUploadSettings(_ notification: NSNotification) {
+        if(uploadSettingsViewController == nil && currentSelectionIndex != nil) {
+            uploadSettingsViewController = UploadSettingsViewController()
+            guard let item = collectionView.item(at: self.currentSelectionIndex) else { return }
+            guard let selected = item as? CollectionViewItem else { return }
+            guard let node = selected.node else { return }
+            
+            uploadSettingsViewController.showId = node.identifier // showId
+            
+            let storyboard = NSStoryboard(name: "Main", bundle: nil)
+            guard let uploadSettingsWindowController = storyboard.instantiateController(withIdentifier: "UploadSettingsWindow") as? NSWindowController else { return }
+            if let uploadSettingsWindow = uploadSettingsWindowController.window {
+                //let application = NSApplication.shared
+                //application.runModal(for: downloadWindow)
+                uploadSettingsWindow.level = NSWindow.Level.modalPanel
+                let controller =  NSWindowController(window: uploadSettingsWindow)
+                uploadSettingsWindow.contentViewController = uploadSettingsViewController
+                controller.showWindow(self)
+                
+                NotificationCenter.default.addObserver(
+                    self,
+                    selector: #selector(resetViewController(_:)),
+                    name: Notification.Name(WindowViewController.NotificationNames.DismissUploadSettingsDialog),
+                    object: nil)
+            }
+            
+            uploadSettingsViewController.showNameField.stringValue = node.title
+        }
+    }
+    
+    @objc func resetViewController(_ sender: Any)
+    {
+        uploadSettingsViewController = nil
     }
     
     @objc private func onNewSASTokenReceived(_ notification: Notification) {
@@ -68,7 +113,12 @@ class IconViewController: NSViewController {
     }
     
     @objc private func onLoginSuccessfull(_ notification: NSNotification) {
-
+        icons.removeAll()
+        listShows.removeAll()
+        iconSections.removeAll()
+        currentSelectionIndex = nil
+        collectionView.reloadData()
+        
         LoginViewController.cdsUserId = LoginViewController.azureUserId!
         
         NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.ShowProgressViewControllerOnlyText),
@@ -126,16 +176,15 @@ class IconViewController: NSViewController {
                                                                "enableButton" : OutlineViewController.NameConstants.kRetryStr])
                     return
                 }
-                self.listShows = result["data"] as! [String : Any]
-                
+                self.listShows = result["data"] as! [[String : Any]]
+                self.iconSections.removeAll()
                 NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.ShowOutlineViewController), object: nil)
                     
                 var contentArray : [Node] = []
                 var elems : Int = 0
-                for show in self.listShows {
+                for value in self.listShows {
                     
-                    let node = OutlineViewController.fileSystemNode(from: show.key, isFolder: true)
-                    let value = show.value as! [String:Any]
+                    let node = OutlineViewController.fileSystemNode(from: value["showName"] as! String, isFolder: true)
                     node.identifier = value["showId"] as! String
                     node.is_upload_allowed = value["allowed"] as! Bool
                     contentArray.append(node)
@@ -427,7 +476,7 @@ class IconViewController: NSViewController {
                     }
                     
                     // WARNING: delay after metadata JSON uploading completed successfully
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 20 /* delay 20 secs */) {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 10 /* delay 10 secs */) {
                         self.uploadQueue.addOperations(uploadOperation.dependens , waitUntilFinished: false)
                     }
                 }
@@ -531,7 +580,7 @@ extension IconViewController : NSCollectionViewDelegate {
         guard let item = collectionView.item(at: indexPath) else { return }
         guard let selected = item as? CollectionViewItem else { return }
         selected.setHighlight(selected: true)
-        
+        self.currentSelectionIndex = indexPath
         guard let node = selected.node else { return }
         
         let showName = node.title

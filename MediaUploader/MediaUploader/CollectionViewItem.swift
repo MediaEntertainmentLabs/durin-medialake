@@ -19,7 +19,6 @@ class ClickedCollectionView: NSCollectionView {
         let point = convert(event.locationInWindow, from: nil)
         for section in 0..<numberOfSections {
             for index in 0..<numberOfItems(inSection: section) {
-                //let frame = frameForItem(at: index)
                 let frame = layoutAttributesForItem(at: IndexPath(item: index, section: section))?.frame ?? .zero
                 if NSMouseInRect(point, frame, isFlipped) {
                     clickedIndex = index
