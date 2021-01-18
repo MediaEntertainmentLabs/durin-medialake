@@ -115,6 +115,8 @@ class WindowViewController: NSViewController {
         
         static let RefreshShowContent = "RefreshShowContent"
         
+        static let ClearShowContent = "ClearShowContent"
+        
         static let ShowProgressViewController = "StartFetchingShowContent"
         
         static let ShowProgressViewControllerOnlyText = "ShowProgressViewControllerOnlyText"

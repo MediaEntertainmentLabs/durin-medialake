@@ -85,10 +85,15 @@ class OutlineViewController: NSViewController,
             selector: #selector(onRefreshShowContent(_:)),
             name: Notification.Name(WindowViewController.NotificationNames.RefreshShowContent),
             object: nil)
+        
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(clearContent(_:)),
+            name: Notification.Name(WindowViewController.NotificationNames.ClearShowContent),
+            object: nil)
     }
 
-    func addPathToTree(root: TreeElement, fullPath: inout [String])
-    {
+    func addPathToTree(root: TreeElement, fullPath: inout [String]) {
         if(fullPath.isEmpty) {
             return
         }
@@ -100,6 +105,13 @@ class OutlineViewController: NSViewController,
             root.add(newRoot)
             addPathToTree(root: newRoot, fullPath: &fullPath)
         }
+    }
+    
+    @objc private func clearContent(_ notification: Notification) {
+        treeController.content = nil
+        contents.removeAll()
+        currentShowName = nil
+        currentShowId = nil
     }
     
     @objc private func onCancelPendingTasks(_ notification: Notification) {
@@ -275,7 +287,6 @@ class OutlineViewController: NSViewController,
         self.treeController.insert(node, atArrangedObjectIndexPath: insertionIndexPath)
     }
     
-    
     // MARK: MSALInteractiveDelegate
     
     func didCompleteMSALRequest(withResult result: MSALResult) {
@@ -297,6 +308,11 @@ class OutlineViewController: NSViewController,
         NotificationCenter.default.removeObserver(
             self,
             name: Notification.Name(WindowViewController.NotificationNames.RefreshShowContent),
+            object: nil)
+        
+        NotificationCenter.default.removeObserver(
+            self,
+            name: Notification.Name(WindowViewController.NotificationNames.ClearShowContent),
             object: nil)
     }
 }

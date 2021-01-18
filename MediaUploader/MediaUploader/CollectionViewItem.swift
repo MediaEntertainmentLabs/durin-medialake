@@ -107,8 +107,4 @@ class CollectionViewItem: NSCollectionViewItem {
         super.viewDidLoad()
         view.wantsLayer = true
     }
-    
-    func setHighlight(selected: Bool) {
-        self.view.layer?.backgroundColor = isSelected ? NSColor.gray.cgColor : NSColor.clear.cgColor
-    }
 }

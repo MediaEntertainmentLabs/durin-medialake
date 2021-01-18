@@ -125,6 +125,9 @@ class UploadSettingsViewController: NSViewController {
     override func viewDidAppear() {
         // After a window is displayed, get the handle to the new window.
         window = self.view.window!
+        if window != nil {
+            window?.center()
+        }
     }
         
     override func viewDidDisappear() {

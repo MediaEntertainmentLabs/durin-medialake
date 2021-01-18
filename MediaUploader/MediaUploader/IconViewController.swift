@@ -113,12 +113,14 @@ class IconViewController: NSViewController {
     }
     
     @objc private func onLoginSuccessfull(_ notification: NSNotification) {
+        
+        collectionView.deselectAll(nil)
         icons.removeAll()
         listShows.removeAll()
         iconSections.removeAll()
         currentSelectionIndex = nil
         collectionView.reloadData()
-        
+
         LoginViewController.cdsUserId = LoginViewController.azureUserId!
         
         NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.ShowProgressViewControllerOnlyText),
@@ -251,6 +253,10 @@ class IconViewController: NSViewController {
     private func updateIcons(_ data: [Node]) {
         icons = data
         collectionView.reloadData()
+//        if (currentSelectionIndex != nil) {
+//            collectionView.selectItems(at: [currentSelectionIndex], scrollPosition: NSCollectionView.ScrollPosition.top)
+//            setHighlight(indexPath: currentSelectionIndex, select: true)
+//        }
     }
 
     @objc func onUploadFailed(_ notification: NSNotification) throws {
@@ -579,7 +585,7 @@ extension IconViewController : NSCollectionViewDelegate {
         guard let indexPath = indexPaths.first else { return }
         guard let item = collectionView.item(at: indexPath) else { return }
         guard let selected = item as? CollectionViewItem else { return }
-        selected.setHighlight(selected: true)
+        setHighlight(indexPath: indexPath, select: true)
         self.currentSelectionIndex = indexPath
         guard let node = selected.node else { return }
         
@@ -599,9 +605,13 @@ extension IconViewController : NSCollectionViewDelegate {
     
     internal func collectionView(_ collectionView: NSCollectionView, didDeselectItemsAt indexPaths: Set<IndexPath>) {
         guard let indexPath = indexPaths.first else {return}
-        guard let item = collectionView.item(at: indexPath) else { return }
-        guard let selected = item as? CollectionViewItem else { return }
-        selected.setHighlight(selected: false)
+
+        setHighlight(indexPath: indexPath, select: false)
     }
     
+    func setHighlight(indexPath : IndexPath, select: Bool) {
+        guard let item = collectionView.item(at: indexPath) else { return }
+        guard let selected = item as? CollectionViewItem else { return }
+        selected.view.layer?.backgroundColor = select ? NSColor.gray.cgColor : NSColor.clear.cgColor
+    }
 }
