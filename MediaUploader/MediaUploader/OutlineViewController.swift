@@ -42,7 +42,6 @@ class OutlineViewController: NSViewController,
     //var sasToken : String!
     var currentShowName:  String!
     var currentShowId: String!
-    var cdsUserId: String!
     
     var savedSelection: [IndexPath] = []
     
@@ -123,7 +122,6 @@ class OutlineViewController: NSViewController,
         
         self.currentShowName = notification.userInfo?["showName"] as? String
         self.currentShowId = notification.userInfo?["showId"] as? String
-        self.cdsUserId = notification.userInfo?["cdsUserId"] as? String
         
         fetchShowContent(showName: self.currentShowName, showId: self.currentShowId)
     }
@@ -131,7 +129,6 @@ class OutlineViewController: NSViewController,
     @objc func onRefreshShowContent(_ sender: Any) {
         guard let currentShowName = self.currentShowName else { return }
         guard let currentShowId = self.currentShowId else { return }
-        guard let cdsUserId = self.cdsUserId else { return }
         
         // update show content
         NotificationCenter.default.post(
@@ -142,7 +139,7 @@ class OutlineViewController: NSViewController,
         NotificationCenter.default.post(
             name: Notification.Name(WindowViewController.NotificationNames.IconSelectionChanged),
             object: nil,
-            userInfo: ["showName" : currentShowName, "showId": currentShowId, "cdsUserId" : cdsUserId])
+            userInfo: ["showName" : currentShowName, "showId": currentShowId])
     }
     
     
