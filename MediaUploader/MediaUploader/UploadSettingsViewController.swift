@@ -43,10 +43,6 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
     
     @IBOutlet weak var tblUploadFiles: NSTableView!
     
-    var cameraRAWFiles: [[String:Any]] = []
-    var audioFiles: [[String:Any]] = []
-    var CDLFiles: [[String:Any]] = []
-    var LUTFiles: [[String:Any]] = []
     
     // season_name : (season_id, [(episode_name,episode_id)], [(block_name,block_id)])
     typealias SeasonsType = [String:(String, [(String,String)],[(String,String)])]
@@ -73,15 +69,19 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
     
     fileprivate let batchItems = ["1st Batch", "2nd Batch","Lunch and Wrap"]
   
+    var selectedArray:[String] = ["Camera RAW","LUT","CDL","Stills","Reports/Notes"]
+    var selectedFilePathsArray = [[String:[[String:Any]]]]()
     
-   // var selectedArray = [String]()
-    var selectedArray:[String] = ["Camera RAW","LUT", "CDL","Stills","Reports/Notes"]
-    var selectedFilePathsArray = [String]()
-    
-    var selectedCameraFilePathsArray = [String](repeating: "", count:5)
-    var selectedSoundFilePathsArray = [String](repeating: "", count: 2)
-    var selectedScriptsFilePathsArray = [String](repeating: "", count: 1)
-    var selectedOthersFilePathsArray = [String](repeating: "", count: 1)
+    // [
+    //     textField_0: [dir:[[filename:meta]],
+    //     textField_1: [dir:[[filename:meta]],
+    //     ...
+    //     textField_n: [dir:[[filename:meta]]
+    // ]
+    var selectedCameraFilePathsArray = [[String:[[String:Any]]]](repeating: [:], count:5)
+    var selectedSoundFilePathsArray = [[String:[[String:Any]]]](repeating: [:], count: 2)
+    var selectedScriptsFilePathsArray = [[String:[[String:Any]]]](repeating: [:], count: 1)
+    var selectedOthersFilePathsArray = [[String:[[String:Any]]]](repeating: [:], count: 1)
     
     
     var showId : String!
@@ -89,7 +89,7 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        selectedFilePathsArray = [String](repeating:"", count:selectedArray.count)
+        selectedFilePathsArray = [[String:[[String:Any]]]](repeating:[:], count:selectedArray.count)
     
         radios = [(byEpisodeRadio,episodesCombo,episodesComboLabel),
                   (byBlockRadio,blocksCombo,blocksComboLabel)]
@@ -202,8 +202,8 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
         }
     }
     
-// MARK: - FilePickerDialouge
-    func filePickerDialog(fileType: String, completion: @escaping (_ result: (String,[[String:Any]])) -> Void) {
+    // MARK: - FilePickerDialouge
+    func filePickerDialog(fileType: String, completion: @escaping (_ result:[String:[[String:Any]]]) -> Void) {
         
         let dialog = NSOpenPanel();
         
@@ -215,127 +215,78 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
         dialog.allowsMultipleSelection = true
         
         if (dialog.runModal() ==  NSApplication.ModalResponse.OK) {
-            guard let result = dialog.url else { return }
-            
-            
             let results = dialog.urls
             
-            // Do whatever you need with every selected file
-            // in this case, print on the terminal every path
+            var outputFiles: [String: [[String:Any]]] = [:]
+            
             for result in results {
-                // /Users/ourcodeworld/Desktop/folderA
-                print(result.path)
-            }
-            
-            var outputFiles: [[String:Any]] = []
-            
-            let pathURL = NSURL(fileURLWithPath: result.path, isDirectory: true)
-            var filePaths : [String : UInt64] = [:]
-            
-            let enumerator = FileManager.default.enumerator(atPath: result.path)
-            while let element = enumerator?.nextObject() as? String {
-                let filename = URL(fileURLWithPath: element).lastPathComponent
-                if filename == ".DS_Store" {
-                    continue
-                }
-                if let fType = enumerator?.fileAttributes?[FileAttributeKey.type] as? FileAttributeType {
-                    
-                    switch fType{
-                    case .typeRegular:
-                        let path = NSURL(fileURLWithPath: element, relativeTo: pathURL as URL).path
-                        if let fSize = enumerator?.fileAttributes?[FileAttributeKey.size] as? UInt64 {
-                            filePaths[path!]=fSize
-                        }
-                        
-                    case .typeDirectory:
-                        print("a dir")
-                    default:
+                
+                let pathURL = NSURL(fileURLWithPath: result.path, isDirectory: true)
+                var filePaths : [String : UInt64] = [:]
+                
+                let enumerator = FileManager.default.enumerator(atPath: result.path)
+                while let element = enumerator?.nextObject() as? String {
+                    let filename = URL(fileURLWithPath: element).lastPathComponent
+                    if filename == ".DS_Store" {
                         continue
                     }
+                    if let fType = enumerator?.fileAttributes?[FileAttributeKey.type] as? FileAttributeType {
+                        
+                        switch fType{
+                        case .typeRegular:
+                            let path = NSURL(fileURLWithPath: element, relativeTo: pathURL as URL).path
+                            if let fSize = enumerator?.fileAttributes?[FileAttributeKey.size] as? UInt64 {
+                                filePaths[path!]=fSize
+                            }
+                            
+                        case .typeDirectory:
+                            print("a dir")
+                        default:
+                            continue
+                        }
+                    }
+                    
                 }
-                
-            }
-            let scanItems = filePaths
-            /*
-             let scanItems = filePaths.filter{ fileName in
-             let fileNameLower = fileName.lowercased()
-             for keyword in [".mp4", ".mov", ".mxf", ".ari", ".ale", ".xml"] {
-             if fileNameLower.contains(keyword) {
-             return true
-             }
-             }
-             return false
-             }
-             */
-            for scanItem in scanItems {
-                let filename = URL(fileURLWithPath: scanItem.key).lastPathComponent
-                let filefolder = URL(fileURLWithPath: scanItem.key).deletingLastPathComponent()
-                
-                var parsed = filefolder.path.replacingOccurrences(of: pathURL.deletingLastPathComponent!.path, with: "")
-                if parsed.hasPrefix("/") {
-                    parsed = String(parsed.dropFirst())
+                let scanItems = filePaths
+                /*
+                 let scanItems = filePaths.filter{ fileName in
+                 let fileNameLower = fileName.lowercased()
+                 for keyword in [".mp4", ".mov", ".mxf", ".ari", ".ale", ".xml"] {
+                 if fileNameLower.contains(keyword) {
+                 return true
+                 }
+                 }
+                 return false
+                 }
+                 */
+                var files = [[String:Any]]()
+                for scanItem in scanItems {
+                    let filename = URL(fileURLWithPath: scanItem.key).lastPathComponent
+                    let filefolder = URL(fileURLWithPath: scanItem.key).deletingLastPathComponent()
+                    
+                    var parsed = filefolder.path.replacingOccurrences(of: pathURL.deletingLastPathComponent!.path, with: "")
+                    if parsed.hasPrefix("/") {
+                        parsed = String(parsed.dropFirst())
+                    }
+                    let filePath = parsed.isEmpty ? filename : parsed + "/" + filename
+                    let item : [String : Any] = ["name": filename,
+                                                 "filePath": fileType + "/" + filePath,
+                                                 "filesize":scanItem.value,
+                                                 "checksum":fileType + "/" + filePath, /* will be replaced latter by real checksum value */
+                                                 "type":fileType]
+                    files.append([scanItem.key : item])
+                    
                 }
-                let filePath = parsed.isEmpty ? filename : parsed + "/" + filename
-                let item : [String : Any] = ["name": filename,
-                            "filePath": fileType + "/" + filePath,
-                            "filesize":scanItem.value,
-                            "checksum":fileType + "/" + filePath, /* will be replaced latter by real checksum value */
-                            "type":fileType]
-                outputFiles.append([scanItem.key : item])
+                outputFiles[result.path] = files
             }
-            
-            completion((result.path,outputFiles))
+            completion(outputFiles)
         
         } else {
-            completion(("",[[:]])) // User clicked on "Cancel"
+            completion([:]) // User clicked on "Cancel"
             return
         }
     }
     
-    @IBAction func chooseShowFolder(_ sender: Any) {
-        
-        filePickerDialog(fileType: UploadSettingsViewController.kCameraRAWFileType) { (path,files) in
-            if path.isEmpty {
-                return
-            }
-            
-            self.cameraRAWPathField.stringValue = path
-            self.cameraRAWFiles = files
-        }
-    }
-    
-    @IBAction func onClickAudioBrowseButton(_ sender: Any) {
-        filePickerDialog(fileType: UploadSettingsViewController.kAudioFileType) { (path,files) in
-            if path.isEmpty {
-                return
-            }
-            
-            self.audioPathField.stringValue = path
-            self.audioFiles = files
-        }
-    }
-    
-    @IBAction func onClickCDLBrowseButton(_ sender: Any) {
-        filePickerDialog(fileType: UploadSettingsViewController.kCDLFileType) { (path,files) in
-            if path.isEmpty {
-                return
-            }
-            
-            self.CDLPathField.stringValue = path
-            self.CDLFiles = files
-        }
-    }
-    
-    @IBAction func onClickLUTBrowseButton(_ sender: Any) {
-        filePickerDialog(fileType: UploadSettingsViewController.kLUTFileType) { (path,files) in
-            if path.isEmpty {
-                return
-            }
-            
-            self.LUTPathField.stringValue = path
-            self.LUTFiles = files
-        }
-    }
     
     func isValidEmail(_ email: String) -> Bool {
         let emailRegEx = "[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,64}"
@@ -375,10 +326,15 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
             blockOrEpisode = getEpisode(seasonName: season, episopeName: episode)
         }
  
-        if cameraRAWPathField.stringValue.isEmpty &&
-           audioPathField.stringValue.isEmpty &&
-           CDLPathField.stringValue.isEmpty &&
-           LUTPathField.stringValue.isEmpty {
+        var isEmpty: Bool = true
+        for item in selectedFilePathsArray {
+            if !item.isEmpty {
+                isEmpty = false
+                break
+            }
+        }
+        
+        if isEmpty {
             showPopoverMessage(positioningView: cameraRAWPathField, msg: "Please specify path to media")
             return
         }
@@ -414,6 +370,20 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
             "checksum":"md5",
         ]
         
+        var uploadFiles : [String:[[String:Any]]] = [:]
+        var uploadDirs : [String:[String]] = [:]
+        
+        for i in 0 ..< selectedArray.count {
+            uploadDirs[selectedArray[i]] = []
+            uploadFiles[selectedArray[i]] = []
+            for (key, value) in selectedFilePathsArray[i] {
+                uploadDirs[selectedArray[i]]?.append(key)
+                for f in value {
+                    uploadFiles[selectedArray[i]]?.append(f)
+                }
+            }
+        }
+        
         NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.OnStartUploadShow),
                                         object: nil,
                                         userInfo: ["json_main":json_main,
@@ -421,14 +391,8 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
                                                    "season": (season, getSeasonId(seasonName: season)),
                                                    "blockOrEpisode":blockOrEpisode!,
                                                    "isBlock":isBlock,
-                                                   "files": [UploadSettingsViewController.kCameraRAWFileType : cameraRAWFiles,
-                                                             UploadSettingsViewController.kAudioFileType : audioFiles,
-                                                             UploadSettingsViewController.kCDLFileType : CDLFiles,
-                                                             UploadSettingsViewController.kLUTFileType : LUTFiles],
-                                                   "srcDir":[UploadSettingsViewController.kCameraRAWFileType : cameraRAWPathField.stringValue,
-                                                             UploadSettingsViewController.kAudioFileType : audioPathField.stringValue,
-                                                             UploadSettingsViewController.kCDLFileType : CDLPathField.stringValue,
-                                                             UploadSettingsViewController.kLUTFileType : LUTPathField.stringValue],
+                                                   "files": uploadFiles,
+                                                   "srcDir": uploadDirs,
                                                    ])
         window?.performClose(nil) // nil because I'm not return a message
     }
@@ -550,36 +514,36 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
     
     
     func numberOfRows(in tableView: NSTableView) -> Int {
-        
         return selectedArray.count
-       }
+    }
     
     func tableView(_ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int) -> NSView? {
-           guard let uploadCell = tableView.makeView(withIdentifier: NSUserInterfaceItemIdentifier(rawValue: "uploadCell"), owner: self) as? CustomUploadCell else { return nil }
-           
+        guard let uploadCell = tableView.makeView(withIdentifier: NSUserInterfaceItemIdentifier(rawValue: "uploadCell"), owner: self) as? CustomUploadCell else { return nil }
+        
         uploadCell.delegate = self
         uploadCell.lblTitle.stringValue = ("\(selectedArray[row]) :")
-        uploadCell.txtFilePath.stringValue = selectedFilePathsArray[row]
+        uploadCell.txtFilePath.stringValue = ""
+        if (!selectedFilePathsArray.isEmpty && row < selectedFilePathsArray.count) {
+            var pathString = String()
+            for (key, _) in selectedFilePathsArray[row] {
+                pathString += ("\(key);")
+            }
+            
+            uploadCell.txtFilePath.stringValue = pathString.trimmingCharacters(in: [";"])
+        }
         uploadCell.btnBrowse.tag = row
-           return uploadCell
-       }
+        return uploadCell
+    }
     
     // MARK:  File Browser
     func didFileBrowseTapped(_ sender: NSButton) {
-        
-        //           if let indexPath = getCurrentCellIndexPath(sender) {
-        //               item = items[indexPath.row]
-        //           }
-        
-        
         
         let index = teamPopup.indexOfSelectedItem
         
         var fileType:String?
         let btnTag = sender.tag
         
-        
-        if(index == 0){
+        if (index == 0) {
             switch btnTag {
             case 0:
                 fileType = UploadSettingsViewController.kCameraRAWFileType
@@ -587,109 +551,62 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
                 fileType = UploadSettingsViewController.kLUTFileType
             case 2:
                 fileType = UploadSettingsViewController.kCDLFileType
-                
             case 3:
                 fileType = UploadSettingsViewController.kStillsFileType
-                
             case 4:
                 fileType = UploadSettingsViewController.kReportsFileType
             default:
-                fileType = UploadSettingsViewController.kOthersFileType
-                
+                break
             }
-            
-        }else if(index == 1){
+        } else if (index == 1) {
             switch btnTag {
             case 0:
                 fileType = UploadSettingsViewController.kAudioFileType
             case 1:
                 fileType = UploadSettingsViewController.kReportsFileType
             default:
-                fileType = UploadSettingsViewController.kOthersFileType
+                break
             }
-        }else if(index == 2){
+        } else if (index == 2) {
             switch btnTag {
             case 0:
                 fileType = UploadSettingsViewController.kReportsFileType
             default:
-                fileType = UploadSettingsViewController.kOthersFileType
+                break
             }
-        }else if(index == 3){
+        } else if (index == 3) {
             switch btnTag {
             case 0:
                 fileType = UploadSettingsViewController.kOthersFileType
             default:
-                fileType = UploadSettingsViewController.kOthersFileType
+                break
             }
         }
         
+        if (fileType == nil) { return }
         
-        filePickerDialog(fileType: fileType!) { (path,files) in
-            if path.isEmpty {
+        filePickerDialog(fileType: fileType!) { (files) in
+            if files.isEmpty {
                 return
             }
             
-            
-            if(index == 0){
-                if(btnTag == 0){
-                    self.selectedCameraFilePathsArray[0] = path
-                }else if(btnTag == 1){
-                    self.selectedCameraFilePathsArray[1] = path
-                }else if(btnTag == 2){
-                    self.selectedCameraFilePathsArray[2] = path
-                }
-                else if(btnTag == 3){
-                    self.selectedCameraFilePathsArray[3] = path
-                }else if(btnTag == 4){
-                    self.selectedCameraFilePathsArray[4] = path
-                }
-                
+            if (index == 0) {
+                self.selectedCameraFilePathsArray[btnTag] = files
                 self.selectedFilePathsArray = self.selectedCameraFilePathsArray
-                
-            }else if(index == 1){
-                if(btnTag == 0){
-                    self.selectedSoundFilePathsArray[0] = path
-                }else if(btnTag == 1){
-                    self.selectedSoundFilePathsArray[1] = path
-                }
+            } else if(index == 1) {
+                self.selectedSoundFilePathsArray[btnTag] = files
                 self.selectedFilePathsArray = self.selectedSoundFilePathsArray
-                
-            }else if(index == 2){
-                if(btnTag == 0){
-                    self.selectedScriptsFilePathsArray[0] = path
-                }else if(btnTag == 1){
-                    self.selectedScriptsFilePathsArray[1] = path
-                }
-                
+            } else if(index == 2) {
+                self.selectedScriptsFilePathsArray[btnTag] = files
                 self.selectedFilePathsArray = self.selectedScriptsFilePathsArray
-            }else if(index == 3){
-                if(btnTag == 0){
-                    self.selectedOthersFilePathsArray[0] = path
-                }
-                
+            } else if(index == 3) {
+                self.selectedOthersFilePathsArray[btnTag] = files
                 self.selectedFilePathsArray = self.selectedOthersFilePathsArray
             }
             
-            
-            //  self.selectedFilePathsArray[btnTag] = path
-            
-            //self.cameraRAWPathField.stringValue = path
-            self.cameraRAWFiles = files
-            
             self.reloadTable()
         }
-        
-        
     }
-
-       func getCurrentCellIndexPath(_ sender: NSButton) -> IndexPath? {
-           let buttonPosition = sender.convert(CGPoint.zero, to: tblUploadFiles)
-//           if let indexPath: IndexPath = tblUploadFiles.indexPathForRow(at: buttonPosition) {
-//               return indexPath
-//           }
-           return nil
-       }
-
     
     @IBAction func popUpSelectionDidChange(_ sender: NSPopUpButton) {
        
@@ -697,35 +614,24 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
         
         let index = teamPopup.indexOfSelectedItem
         selectedArray.removeAll()
-       // selectedFilePathsArray.removeAll()
-        if(index == 0){
-         
+        if(index == 0) {
             selectedArray.append("Camera RAW")
             selectedArray.append("LUT")
             selectedArray.append("CDL")
             selectedArray.append("Stills")
             selectedArray.append("Reports/Notes")
-            
             selectedFilePathsArray = selectedCameraFilePathsArray
-        }else if(index == 1){
+        } else if(index == 1) {
             selectedArray.append("Audio")
             selectedArray.append("Reports/Notes")
             selectedFilePathsArray = selectedSoundFilePathsArray
-        }else if(index == 2){
+        } else if(index == 2) {
             selectedArray.append("Reports/Notes")
             selectedFilePathsArray = selectedScriptsFilePathsArray
-        }else if(index == 3){
+        } else if(index == 3) {
             selectedArray.append("Others")
             selectedFilePathsArray = selectedOthersFilePathsArray
         }
-        
-        if sender.selectedItem === teamPopup.selectedItem {
-                print("User has re-selected the initially selected item.")
-            } else {
-                print("User has selected some item other than the initially selected item.")
-            }
-        
-       // selectedFilePathsArray = [String](repeating:"", count:selectedArray.count)
         
         reloadTable()
     }

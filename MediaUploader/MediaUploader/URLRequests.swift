@@ -90,6 +90,9 @@ func fetchListAPI_URLs(userApiURLs: String, completion: @escaping (_ shows: [Str
                 }
             }
             
+        } catch let error as NSError {
+            completion(["error" : OutlineViewController.NameConstants.kFetchListOfShowsFailedStr])
+            print("\(error)")
         } catch let error  {
             completion(["error": error])
         }
@@ -121,6 +124,9 @@ func fetchShowContentTask(sasURI : String, completion: @escaping (_ data: [Strin
             guard let data = data else { completion(["error": OutlineViewController.NameConstants.kFetchShowContentFailedStr]); return }
             completion(["data" : data])
             
+        } catch let error as NSError {
+            completion(["error" : OutlineViewController.NameConstants.kFetchShowContentFailedStr])
+            print("\(error)")
         } catch let error  {
             completion(["error": error])
         }
@@ -171,9 +177,17 @@ func fetchSASTokenURLTask(showId: String, synchronous: Bool, completion: @escapi
                 semaphore.signal()
             }
             
-        } catch let error {
+        }
+        catch let error as NSError {
+            completion(["error" : OutlineViewController.NameConstants.kFetchShowContentFailedStr])
+            print("\(error)")
+            if synchronous {
+                semaphore.signal()
+            }
+        }
+        catch let error {
             completion(["error" : error])
-            
+            print(error)
             if synchronous {
                 semaphore.signal()
             }
@@ -256,6 +270,9 @@ func fetchListOfShowsTask(completion: @escaping (_ shows: [String:Any]) -> Void)
                 }
             }
             
+        } catch let error as NSError {
+            completion(["error" : OutlineViewController.NameConstants.kFetchListOfShowsFailedStr])
+            print("\(error)")
         } catch let error  {
             completion(["error": error])
         }
@@ -322,6 +339,9 @@ func fetchSeasonsAndEpisodesTask(showId: String, completion: @escaping (_ shows:
             }
             completion(["data": result])
             
+        } catch let error as NSError {
+            completion(["error" : OutlineViewController.NameConstants.kFetchListOfSeasonsFailedStr])
+            print("\(error)")
         } catch let error  {
             completion(["error": error])
         }

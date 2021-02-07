@@ -305,13 +305,8 @@ class IconViewController: NSViewController {
         let blockOrEpisode = notification.userInfo?["blockOrEpisode"] as! (String,String) // name:Id
         let isBlock = notification.userInfo?["isBlock"] as! Bool
         guard let files = notification.userInfo?["files"] as? [String:[[String:Any]]] else { return }
-        guard let srcDirs = notification.userInfo?["srcDir"] as? [String:String] else { return }
-        var pendingUploads = notification.userInfo?["pendingUploads"] as? [String:UploadTableRow]
-        
-        let keys = [UploadSettingsViewController.kCameraRAWFileType,
-                    UploadSettingsViewController.kAudioFileType,
-                    UploadSettingsViewController.kCDLFileType,
-                    UploadSettingsViewController.kLUTFileType]
+        guard let srcDirs = notification.userInfo?["srcDir"] as? [String:[String]] else { return }
+        var pendingUploads = notification.userInfo?["pendingUploads"] as? [String:[UploadTableRow]]
         
         // template for full path for upload:
         //      [show name]/[season name]/[block name]/[shootday]/[batch]/[unit ]/Camera RAW/browsed folder
@@ -324,20 +319,19 @@ class IconViewController: NSViewController {
         
         if (pendingUploads == nil) {
             pendingUploads = [:]
-            for type in keys {
-                if files[type]?.count == 0 {
-                    continue
+            for (type, value) in srcDirs {
+                pendingUploads![type] = []
+                for dir in value {
+                    // folderLayoutStr -> [season name]/[block name]/[shootday]/[batch]/[unit ]/[type]
+                    let folderLayoutStr = metadatafolderLayout + "\(type)/"
+                    
+                    // create UI row in TableView (one per each folder being upload) before all upload tasks will be created
+                    let uploadRecord = UploadTableRow(showName: showName, uploadParams: json_main, srcPath: dir, dstPath: folderLayoutStr)
+                    pendingUploads![type]!.append(uploadRecord)
+                    NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.AddUploadTask),
+                                                    object: nil,
+                                                    userInfo: ["uploadRecord" : uploadRecord])
                 }
-                
-                // folderLayoutStr -> [season name]/[block name]/[shootday]/[batch]/[unit ]/[type]
-                let folderLayoutStr = metadatafolderLayout + "\(type)/"
-                
-                // create UI rows in table before all upload tasks will be created
-                let uploadRecord = UploadTableRow(showName: showName, uploadParams: json_main, srcPath: srcDirs[type]!, dstPath: folderLayoutStr)
-                pendingUploads![type] = uploadRecord
-                NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.AddUploadTask),
-                                                object: nil,
-                                                userInfo: ["uploadRecord" : uploadRecord])
             }
         }
         
@@ -386,21 +380,20 @@ class IconViewController: NSViewController {
         var filesToUpload : [String:String] = [:]
         var dataSubTasks: [FileUploadOperation] = []
         
-        for type in keys {
-            if files[type]?.count == 0 {
+        for (type, value) in files {
+            if value.isEmpty {
                 continue
             }
-            
             // folderLayoutStr -> [season name]/[block name]/[shootday]/[batch]/[unit ]/[type]
             let folderLayoutStr = metadatafolderLayout + "\(type)/"
 
             // metadata.json upload task is root task, all data tasks are subtasks
             // sasToken is unavailable here, will be filled in latter
-            let op = self.createUploadDirTask(showName: showName, folderLayoutStr: folderLayoutStr, sasToken: sasToken, uploadRecord: pendingUploads![type]!)
-            dataSubTasks.append(op)
+            let op = self.createUploadDirTask(showName: showName, folderLayoutStr: folderLayoutStr, sasToken: sasToken, uploadRecords: pendingUploads![type]!)
+            dataSubTasks.append(contentsOf: op)
           
             
-            for item in files[type]! {
+            for item in value {
                 for (key, rec) in item {
                     if let dict = rec as? [String:Any] {
                         if let filePathkey = dict["filePath"] as? String {
@@ -496,22 +489,24 @@ class IconViewController: NSViewController {
         }
     }
     
-    func createUploadDirTask(showName: String, folderLayoutStr: String, sasToken: String, uploadRecord : UploadTableRow) -> FileUploadOperation {
+    func createUploadDirTask(showName: String, folderLayoutStr: String, sasToken: String, uploadRecords : [UploadTableRow]) -> [FileUploadOperation] {
         print("------------ upload DIR:", sasToken)
         
         let dstPath = "/" + folderLayoutStr
         let sasSplit = sasToken.components(separatedBy: "?")
         let sasTokenWithDestPath = sasSplit[0] + dstPath+"?" + sasSplit[1]
         
-        
-        let uploadOperation = FileUploadOperation(showId: self.showId(showName: showName),
-                                                  cdsUserId: LoginViewController.cdsUserId!,
-                                                  sasToken: sasToken,
-                                                  step: FileUploadOperation.UploadType.kDataUpload,
-                                                  uploadRecord : uploadRecord,
-                                                  dependens: [],
-                                                  args: ["copy", uploadRecord.srcPath, sasTokenWithDestPath, "--recursive", "--put-md5"])
-        return uploadOperation
+        var uploadOperations = [FileUploadOperation]()
+        for uploadRecord in uploadRecords {
+            uploadOperations.append(FileUploadOperation(showId: self.showId(showName: showName),
+                                                        cdsUserId: LoginViewController.cdsUserId!,
+                                                        sasToken: sasToken,
+                                                        step: FileUploadOperation.UploadType.kDataUpload,
+                                                        uploadRecord : uploadRecord,
+                                                        dependens: [],
+                                                        args: ["copy", uploadRecord.srcPath, sasTokenWithDestPath, "--recursive", "--put-md5"]))
+        }
+        return uploadOperations
     }
     
     deinit {
