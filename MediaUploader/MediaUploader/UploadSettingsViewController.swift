@@ -44,6 +44,7 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
     @IBOutlet weak var tblUploadFiles: NSTableView!
     
     
+    @IBOutlet weak var lblShootDayHint: NSTextField!
     // season_name : (season_id, [(episode_name,episode_id)], [(block_name,block_id)])
     typealias SeasonsType = [String:(String, [(String,String)],[(String,String)])]
 
@@ -61,6 +62,9 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
     static let kStillsFileType = "Stills"
     static let kReportsFileType = "Reports"
     static let kOthersFileType = "Others"
+    
+    static let strOK = "OK"
+    static let strCancel = "Cancel"
     
     fileprivate let teamItems = ["Camera", "Sound","Scripts","Others"]
    
@@ -85,6 +89,9 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
     
     
     var showId : String!
+    
+    var strShootDayFormat : String?
+    var strLastShootDay : String?
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -142,6 +149,12 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
         tblUploadFiles.sizeToFit()
         tblUploadFiles.selectionHighlightStyle = .none
         tblUploadFiles.backgroundColor = .clear
+        
+        strShootDayFormat =  "shoot001-245"
+        strShootDayFormat =  "shoot200-675"
+        
+        shootDayField.delegate = self
+        lblShootDayHint.stringValue = "Supported format :\(String(describing: strShootDayFormat)) , Last uploaded shoot day:\(String(describing: strShootDayFormat))"
       
        
     }
@@ -640,6 +653,17 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
     func reloadTable(){
          tblUploadFiles .reloadData()
     }
+    
+    func showAlert(alertMessage: String){
+        let alert = NSAlert()
+        alert.messageText = alertMessage
+       // alert.informativeText = text
+        alert.alertStyle = .warning
+        alert.addButton(withTitle: UploadSettingsViewController.strOK)
+        //alert.addButton(withTitle: UploadSettingsViewController.strCancel)
+        alert.runModal() == .alertFirstButtonReturn
+    }
+
 }
 
 extension NSComboBox {
@@ -665,6 +689,71 @@ extension UploadSettingsViewController: NSComboBoxDelegate {
 
 }
 
+
+extension String{
+     
+    func isStringPatternMatch(withstring: String) -> Bool {
+
+           var retVal:Bool = false
+
+           let regex = try! NSRegularExpression(pattern: "\\d+", options: NSRegularExpression.Options.caseInsensitive)
+
+            let range1 = NSMakeRange(0, self.count)
+
+           let modPatternString = regex.stringByReplacingMatches(in: self, options: [], range: range1, withTemplate: "@")
+
+
+
+           let range2 = NSMakeRange(0, withstring.count)
+
+           let modActualString = regex.stringByReplacingMatches(in: withstring, options: [], range: range2, withTemplate: "@")
+
+           if (modPatternString.elementsEqual(modActualString) == true)
+
+           {
+
+               retVal = true
+
+           }else
+
+           {
+
+              retVal = false
+
+           }
+                return retVal
+
+    }
+}
+
+extension UploadSettingsViewController:NSTextFieldDelegate,NSControlTextEditingDelegate {
+    
+    func controlTextDidChange(_ obj: Notification) {
+        //Here check the changes of textField input
+    }
+    
+    func controlTextDidEndEditing(_ obj: Notification) {
+        //Here check the changes of textField input
+        
+        
+        if let sender = obj.object as? NSTextField {
+            
+            if sender.tag == 105{
+                
+                
+                if shootDayField.stringValue.isStringPatternMatch(withstring: strShootDayFormat ?? " "){
+                    print("shootDay string :\(shootDayField.stringValue)")
+                }else{
+                    showAlert(alertMessage: "Kindly enter shoot day as shoot day format")
+                }
+            }
+            
+           
+        }
+        
+    }
+    
+}
 /*
 extension UploadSettingsViewController: NSControlTextEditingDelegate {
     func controlTextDidChange(_ notification: Notification) {
