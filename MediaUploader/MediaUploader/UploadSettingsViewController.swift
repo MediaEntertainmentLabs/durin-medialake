@@ -44,11 +44,13 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
     @IBOutlet weak var tblUploadFiles: NSTableView!
     
     
-    // season_name : (season_id, [(episode_name,episode_id)], [(block_name,block_id)])
-    typealias SeasonsType = [String:(String, [(String,String)],[(String,String)])]
+    // season_name : (season_id, [(episode_name,episode_id)], [(block_name,block_id)], lastShootDay, shootDayFormat)
+    typealias SeasonsType = [String:(String, [(String,String)],[(String,String)], String, String)]
 
     
     var seasons: SeasonsType!
+    var lastShootDay: String!
+    var shootDayFormat: String!
     
     // reference to a window
     var window: NSWindow?
@@ -482,6 +484,10 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
         guard seasons != nil else { return }
         
         if let values = seasons[seasonName] {
+            
+            self.lastShootDay  = values.3
+            self.shootDayFormat = values.4
+            
             cleanCombobox(combo: episodesCombo)
             cleanCombobox(combo: blocksCombo)
             if (values.1.count != 0) {

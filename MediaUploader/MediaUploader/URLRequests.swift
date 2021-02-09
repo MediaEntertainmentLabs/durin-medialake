@@ -320,7 +320,9 @@ func fetchSeasonsAndEpisodesTask(showId: String, completion: @escaping (_ shows:
             guard let seasons = responseJSON["seasons"] as? [[String:Any]] else { throw OutlineViewController.NameConstants.kFetchListOfSeasonsFailedStr }
             guard let episodes = responseJSON["episodes"] as? [[String:String]] else { throw OutlineViewController.NameConstants.kFetchListOfSeasonsFailedStr }
             guard let blocks = responseJSON["blocks"] as? [[String:String]] else { throw OutlineViewController.NameConstants.kFetchListOfSeasonsFailedStr }
-            
+            guard let lastShootDay = responseJSON["lastShootDay"] as? String else { throw OutlineViewController.NameConstants.kFetchListOfSeasonsFailedStr }
+            guard let shootDayFormat = responseJSON["shootDayFormat"] as? String else { throw OutlineViewController.NameConstants.kFetchListOfSeasonsFailedStr }
+          
             for season in seasons {
                 var out_episodes = [(String,String)]()
                 for episode in episodes {
@@ -335,7 +337,7 @@ func fetchSeasonsAndEpisodesTask(showId: String, completion: @escaping (_ shows:
                     }
                 }
             
-                result[season["seasonName"] as! String] = (season["seasonId"] as! String, out_episodes, out_blocks)
+                result[season["seasonName"] as! String] = (season["seasonId"] as! String, out_episodes, out_blocks, lastShootDay, shootDayFormat)
             }
             completion(["data": result])
             
