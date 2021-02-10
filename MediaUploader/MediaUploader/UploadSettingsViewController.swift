@@ -8,7 +8,7 @@
 import Cocoa
 
 class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTableViewDataSource,FileBrowseDelegate {
-
+    
     @IBOutlet weak var showNameField: NSTextField!
     @IBOutlet weak var shootDayField: NSTextField!
     //@IBOutlet weak var shootDate: NSDatePicker!
@@ -18,11 +18,6 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
     @IBOutlet weak var uploadButton: NSButton!
     
     @IBOutlet weak var progressFetch: NSProgressIndicator!
-    
-    @IBOutlet weak var cameraRAWPathField: NSTextField!
-    @IBOutlet weak var audioPathField: NSTextField!
-    @IBOutlet weak var CDLPathField: NSTextField!
-    @IBOutlet weak var LUTPathField: NSTextField!
     
     @IBOutlet weak var byEpisodeRadio: NSButton!
     @IBOutlet weak var byBlockRadio: NSButton!
@@ -34,7 +29,7 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
     @IBOutlet weak var episodesComboLabel: NSTextField!
     @IBOutlet weak var blocksComboLabel: NSTextField!
     
-
+    
     var radios:[(NSButton, NSComboBox, NSTextField)] = []
     
     @IBOutlet weak var teamPopup: NSPopUpButton!
@@ -43,10 +38,12 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
     
     @IBOutlet weak var tblUploadFiles: NSTableView!
     
+    @IBOutlet weak var lblShootDayHint: NSTextField!
     
     // season_name : (season_id, [(episode_name,episode_id)], [(block_name,block_id)], lastShootDay, shootDayFormat)
     typealias SeasonsType = [String:(String, [(String,String)],[(String,String)], String, String)]
-
+    
+    
     
     var seasons: SeasonsType!
     var lastShootDay: String!
@@ -64,13 +61,16 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
     static let kReportsFileType = "Reports"
     static let kOthersFileType = "Others"
     
+    static let strOK = "OK"
+    static let strCancel = "Cancel"
+    
     fileprivate let teamItems = ["Camera", "Sound","Scripts","Others"]
-   
+    
     fileprivate let unitItems = ["Main Unit", "Second Unit", "Splinter Unit",
                                  "Kelly's Unit & John's Unit", "\"1U\" & \"2U\" & \"3U\""]
     
     fileprivate let batchItems = ["1st Batch", "2nd Batch","Lunch and Wrap"]
-  
+    
     var selectedArray:[String] = ["Camera RAW","LUT","CDL","Stills","Reports/Notes"]
     var selectedFilePathsArray = [[String:[[String:Any]]]]()
     
@@ -92,7 +92,7 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
         super.viewDidLoad()
         
         selectedFilePathsArray = [[String:[[String:Any]]]](repeating:[:], count:selectedArray.count)
-    
+        
         radios = [(byEpisodeRadio,episodesCombo,episodesComboLabel),
                   (byBlockRadio,blocksCombo,blocksComboLabel)]
         
@@ -144,8 +144,8 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
         tblUploadFiles.sizeToFit()
         tblUploadFiles.selectionHighlightStyle = .none
         tblUploadFiles.backgroundColor = .clear
-      
-       
+        
+        shootDayField.delegate = self
     }
     
     override func viewDidAppear() {
@@ -155,7 +155,7 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
             window?.center()
         }
     }
-        
+    
     override func viewDidDisappear() {
         super.viewDidDisappear()
         
@@ -282,7 +282,7 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
                 outputFiles[result.path] = files
             }
             completion(outputFiles)
-        
+            
         } else {
             completion([:]) // User clicked on "Cancel"
             return
@@ -292,13 +292,13 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
     
     func isValidEmail(_ email: String) -> Bool {
         let emailRegEx = "[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,64}"
-
+        
         let emailPred = NSPredicate(format:"SELF MATCHES %@", emailRegEx)
         return emailPred.evaluate(with: email)
     }
     
     @IBAction func startUpload(_ sender: Any) {
-               
+        
         let dateformat: String = "yyyy-MM-dd"
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = dateformat
@@ -313,12 +313,10 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
         let isBlock : Bool = byBlockRadio.state == NSControl.StateValue.on
         
         if byBlockRadio.state == NSControl.StateValue.on {
-            
             if block.isEmpty {
                 showPopoverMessage(positioningView: blocksCombo, msg: "Invalid params for Block")
                 return
             }
-  
             blockOrEpisode = getBlock(seasonName: season, blockName: block)
         } else {
             if episode.isEmpty {
@@ -327,7 +325,7 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
             }
             blockOrEpisode = getEpisode(seasonName: season, episopeName: episode)
         }
- 
+        
         var isEmpty: Bool = true
         for item in selectedFilePathsArray {
             if !item.isEmpty {
@@ -337,13 +335,20 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
         }
         
         if isEmpty {
-            showPopoverMessage(positioningView: cameraRAWPathField, msg: "Please specify path to media")
+            showPopoverMessage(positioningView: teamPopup, msg: "Please specify path to media")
             return
         }
         
         if shootDayField.stringValue.isEmpty {
             showPopoverMessage(positioningView: shootDayField, msg: "Please specify shoot Day")
             return
+        } else {
+            if shootDayField.stringValue.isStringPatternMatch(withstring: shootDayFormat ?? " "){
+                print("shootDay string: \(shootDayField.stringValue)")
+            } else {
+                showPopoverMessage(positioningView: shootDayField, msg: "Please specify shoot day as shoot day format")
+                return
+            }
         }
         
         if !emailField.stringValue.isEmpty && !isValidEmail(emailField.stringValue){
@@ -395,7 +400,7 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
                                                    "isBlock":isBlock,
                                                    "files": uploadFiles,
                                                    "srcDir": uploadDirs,
-                                                   ])
+                                        ])
         window?.performClose(nil) // nil because I'm not return a message
     }
     
@@ -437,8 +442,8 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
         guard let block = self.seasons[seasonName] else { return [] }
         return block.2
     }
-        
-
+    
+    
     private func fetchSeasonsAndEpisodes(showId: String) {
         
         fetchSeasonsAndEpisodesTask(showId : showId) { (result) in
@@ -446,7 +451,7 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
             DispatchQueue.main.async {
                 self.progressFetch.isHidden = true
                 self.progressFetch.stopAnimation(self)
-
+                
                 if let error = result["error"] as? String {
                     print(error)
                     self.seasonsCombo.addItem(withObjectValue: "Failed to fetch seasons")
@@ -488,6 +493,17 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
             self.lastShootDay  = values.3
             self.shootDayFormat = values.4
             
+            if let myValue = shootDayFormat as NSString?  {
+                lblShootDayHint.isHidden = false;
+                if let strLastShootDay = lastShootDay as NSString? {
+                    lblShootDayHint.stringValue = "Supported format: \(myValue), Last uploaded shoot day: \(strLastShootDay)"
+                } else {
+                    lblShootDayHint.stringValue = "Supported format: \(myValue)"
+                }
+            } else {
+                lblShootDayHint.isHidden = true
+            }
+            
             cleanCombobox(combo: episodesCombo)
             cleanCombobox(combo: blocksCombo)
             if (values.1.count != 0) {
@@ -502,7 +518,7 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
             } else {
                 episodesCombo.isEnabled = false
             }
-
+            
             if (values.2.count != 0) {
                 blocksCombo.isHidden = !(byBlockRadio.state == NSControl.StateValue.on)
                 blocksCombo.isEnabled = !blocksCombo.isHidden
@@ -615,7 +631,7 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
     }
     
     @IBAction func popUpSelectionDidChange(_ sender: NSPopUpButton) {
-       
+        
         print("selected Item : ",teamPopup.titleOfSelectedItem!)
         
         let index = teamPopup.indexOfSelectedItem
@@ -642,9 +658,8 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
         reloadTable()
     }
     
-    
-    func reloadTable(){
-         tblUploadFiles .reloadData()
+    func reloadTable() {
+        tblUploadFiles.reloadData()
     }
 }
 
@@ -652,13 +667,12 @@ extension NSComboBox {
     func selectedStringValue() -> String? {
         return self.itemObjectValue(at: self.indexOfSelectedItem) as? String
     }
-    
 }
 
 extension UploadSettingsViewController: NSComboBoxDelegate {
-
+    
     func comboBoxSelectionDidChange(_ notification: Notification) {
-     
+        
         if let comboBox = notification.object as? NSComboBox {
             if comboBox == self.seasonsCombo {
                 if let seasonName = comboBox.selectedStringValue() {
@@ -666,18 +680,48 @@ extension UploadSettingsViewController: NSComboBoxDelegate {
                 }
             }
         }
-     
     }
-
 }
 
-/*
-extension UploadSettingsViewController: NSControlTextEditingDelegate {
-    func controlTextDidChange(_ notification: Notification) {
-        if let textField = notification.object as? NSTextField {
-            print(textField.stringValue)
-            //do what you need here
+
+extension String{
+    
+    func isStringPatternMatch(withstring: String) -> Bool {
+        var retVal:Bool = false
+        let regex = try! NSRegularExpression(pattern: "\\d+", options: NSRegularExpression.Options.caseInsensitive)
+        let range1 = NSMakeRange(0, self.count)
+        let modPatternString = regex.stringByReplacingMatches(in: self, options: [], range: range1, withTemplate: "@")
+        let range2 = NSMakeRange(0, withstring.count)
+        let modActualString = regex.stringByReplacingMatches(in: withstring, options: [], range: range2, withTemplate: "@")
+        
+        retVal = modPatternString.elementsEqual(modActualString) == true
+        
+        return retVal
+    }
+}
+
+extension UploadSettingsViewController:NSTextFieldDelegate,NSControlTextEditingDelegate {
+    
+    func controlTextDidEndEditing(_ obj: Notification) {
+        if let sender = obj.object as? NSTextField {
+            if sender.tag == 105 {
+                if shootDayField.stringValue.isStringPatternMatch(withstring: shootDayFormat ?? " ") {
+                    print("shootDay string: \(shootDayField.stringValue)")
+                } else {
+                    showPopoverMessage(positioningView: shootDayField, msg: "Kindly enter shoot day as shoot day format")
+                }
+            }
         }
     }
 }
-*/
+
+/*
+ extension UploadSettingsViewController: NSControlTextEditingDelegate {
+ func controlTextDidChange(_ notification: Notification) {
+ if let textField = notification.object as? NSTextField {
+ print(textField.stringValue)
+ //do what you need here
+ }
+ }
+ }
+ */
