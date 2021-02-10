@@ -156,11 +156,11 @@
                         <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                     </textFieldCell>
                 </textField>
-                <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="Fh3-7i-MY2">
+                <textField hidden="YES" horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="Fh3-7i-MY2">
                     <rect key="frame" x="139" y="530" width="857" height="16"/>
                     <textFieldCell key="cell" lineBreakMode="clipping" alignment="left" title="Supported Format-&quot;day-0011&quot;, Last Uploaded Shoot Day-&quot;day-006&quot;" id="fpP-dw-9FO">
                         <font key="font" metaFont="system"/>
-                        <color key="textColor" name="systemGrayColor" catalog="System" colorSpace="catalog"/>
+                        <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                         <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                     </textFieldCell>
                 </textField>
