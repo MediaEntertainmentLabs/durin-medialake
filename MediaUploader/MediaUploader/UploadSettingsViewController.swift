@@ -19,11 +19,6 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
     
     @IBOutlet weak var progressFetch: NSProgressIndicator!
     
-    @IBOutlet weak var cameraRAWPathField: NSTextField!
-    @IBOutlet weak var audioPathField: NSTextField!
-    @IBOutlet weak var CDLPathField: NSTextField!
-    @IBOutlet weak var LUTPathField: NSTextField!
-    
     @IBOutlet weak var byEpisodeRadio: NSButton!
     @IBOutlet weak var byBlockRadio: NSButton!
     
@@ -318,12 +313,10 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
         let isBlock : Bool = byBlockRadio.state == NSControl.StateValue.on
         
         if byBlockRadio.state == NSControl.StateValue.on {
-            
             if block.isEmpty {
                 showPopoverMessage(positioningView: blocksCombo, msg: "Invalid params for Block")
                 return
             }
-            
             blockOrEpisode = getBlock(seasonName: season, blockName: block)
         } else {
             if episode.isEmpty {
@@ -342,19 +335,18 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
         }
         
         if isEmpty {
-            showPopoverMessage(positioningView: cameraRAWPathField, msg: "Please specify path to media")
+            showPopoverMessage(positioningView: teamPopup, msg: "Please specify path to media")
             return
         }
         
         if shootDayField.stringValue.isEmpty {
             showPopoverMessage(positioningView: shootDayField, msg: "Please specify shoot Day")
             return
-        }else{
-            
+        } else {
             if shootDayField.stringValue.isStringPatternMatch(withstring: shootDayFormat ?? " "){
-                print("shootDay string :\(shootDayField.stringValue)")
+                print("shootDay string: \(shootDayField.stringValue)")
             } else {
-                showPopoverMessage(positioningView: shootDayField, msg: "Kindly enter shoot day as shoot day format")
+                showPopoverMessage(positioningView: shootDayField, msg: "Please specify shoot day as shoot day format")
                 return
             }
         }
@@ -501,19 +493,16 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
             self.lastShootDay  = values.3
             self.shootDayFormat = values.4
             
-            
-            
             if let myValue = shootDayFormat as NSString?  {
                 lblShootDayHint.isHidden = false;
                 if let strLastShootDay = lastShootDay as NSString? {
-                    lblShootDayHint.stringValue = "Supported format :\(myValue) , Last uploaded shoot day:\(strLastShootDay)"
-                }else{
-                    lblShootDayHint.stringValue = "Supported format :\(myValue)"
+                    lblShootDayHint.stringValue = "Supported format: \(myValue), Last uploaded shoot day: \(strLastShootDay)"
+                } else {
+                    lblShootDayHint.stringValue = "Supported format: \(myValue)"
                 }
-            }else{
+            } else {
                 lblShootDayHint.isHidden = true
             }
-            
             
             cleanCombobox(combo: episodesCombo)
             cleanCombobox(combo: blocksCombo)
@@ -669,19 +658,15 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
         reloadTable()
     }
     
-    
-    func reloadTable(){
-        tblUploadFiles .reloadData()
+    func reloadTable() {
+        tblUploadFiles.reloadData()
     }
-    
-  
 }
 
 extension NSComboBox {
     func selectedStringValue() -> String? {
         return self.itemObjectValue(at: self.indexOfSelectedItem) as? String
     }
-    
 }
 
 extension UploadSettingsViewController: NSComboBoxDelegate {
@@ -695,9 +680,7 @@ extension UploadSettingsViewController: NSComboBoxDelegate {
                 }
             }
         }
-        
     }
-    
 }
 
 
@@ -719,17 +702,11 @@ extension String{
 
 extension UploadSettingsViewController:NSTextFieldDelegate,NSControlTextEditingDelegate {
     
-    func controlTextDidChange(_ obj: Notification) {
-        //Here check the changes of textField input
-    }
-    
     func controlTextDidEndEditing(_ obj: Notification) {
-        //Here check the changes of textField input
-        
         if let sender = obj.object as? NSTextField {
             if sender.tag == 105 {
-                if shootDayField.stringValue.isStringPatternMatch(withstring: shootDayFormat ?? " "){
-                    print("shootDay string :\(shootDayField.stringValue)")
+                if shootDayField.stringValue.isStringPatternMatch(withstring: shootDayFormat ?? " ") {
+                    print("shootDay string: \(shootDayField.stringValue)")
                 } else {
                     showPopoverMessage(positioningView: shootDayField, msg: "Kindly enter shoot day as shoot day format")
                 }
