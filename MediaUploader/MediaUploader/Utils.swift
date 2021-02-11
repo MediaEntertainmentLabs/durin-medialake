@@ -80,6 +80,27 @@ func dialogOKCancel(question: String, text: String) -> Bool {
     return alert.runModal() == NSApplication.ModalResponse.alertFirstButtonReturn
 }
 
+func dialogOverwrite(question: String, text: String) {
+    let alert = NSAlert()
+    alert.messageText = question
+    alert.informativeText = text
+    alert.alertStyle = NSAlert.Style.critical
+    alert.addButton(withTitle: "Overwrite")
+    alert.addButton(withTitle: "Append")
+    let modalResult = alert.runModal()
+
+    switch modalResult {
+    case .alertFirstButtonReturn: // NSApplication.ModalResponse.alertFirstButtonReturn
+        print("First button clicked")
+    case .alertSecondButtonReturn:
+        print("Second button clicked")
+    case .alertThirdButtonReturn:
+        print("Third button clicked")
+    default:
+        print("Fourth button clicked")
+    }
+}
+
 func showPopoverMessage(positioningView: NSView, msg: String) {
     let storyboard = NSStoryboard(name: "Main", bundle: nil)
     let vc = storyboard.instantiateController(withIdentifier: "popover") as? PopoverViewController
@@ -93,8 +114,7 @@ func showPopoverMessage(positioningView: NSView, msg: String) {
 
 func configURLPath() -> URL? {
     if let localConfigPath = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first {
-        
-        do{
+        do {
             try FileManager.default.createDirectory(atPath: localConfigPath.appendingPathComponent(Bundle.main.bundleIdentifier!).path, withIntermediateDirectories: true, attributes: nil)
         } catch {
             print("Error: \(error.localizedDescription)")

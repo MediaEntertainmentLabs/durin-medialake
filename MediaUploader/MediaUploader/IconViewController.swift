@@ -424,6 +424,8 @@ class IconViewController: NSViewController {
             }
         }
         
+        //dialogOverwrite(question: "Path already exist", text: "Please choose "override" or "Ignore" to proceed.")
+        
         if metadataPath == nil { return }
         
         self.uploadMetadataJsonOperation(showName: showName,
