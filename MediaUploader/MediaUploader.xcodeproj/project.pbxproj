@@ -51,6 +51,9 @@
 		C987BB2B2534CF5400A440A7 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = C987BB2A2534CF5400A440A7 /* Localizable.strings */; };
 		C987BB35253CC93E00A440A7 /* CustomTableCellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C987BB34253CC93E00A440A7 /* CustomTableCellView.swift */; };
 		C987BB37255BC97B00A440A7 /* LoginViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C987BB36255BC97B00A440A7 /* LoginViewController.swift */; };
+		C9DF48DD25D59EF30016626F /* ALESelectionViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9DF48DB25D59EF30016626F /* ALESelectionViewController.swift */; };
+		C9DF48DE25D59EF30016626F /* ALESelectionViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = C9DF48DC25D59EF30016626F /* ALESelectionViewController.xib */; };
+		C9DF490825D717520016626F /* CustomALECell.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9DF490725D717520016626F /* CustomALECell.swift */; };
 		C9E6C1DE25C17BFA00F07B3D /* azcopy in Resources */ = {isa = PBXBuildFile; fileRef = C9E6C1DD25C17BFA00F07B3D /* azcopy */; };
 		C9E6C1E825C17DCB00F07B3D /* IconViewSectionHeader.xib in Resources */ = {isa = PBXBuildFile; fileRef = C9E6C1E725C17DCB00F07B3D /* IconViewSectionHeader.xib */; };
 		C9E6C1F325C86BFF00F07B3D /* CustomUploadCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9E6C1F225C86BFF00F07B3D /* CustomUploadCell.swift */; };
@@ -130,6 +133,9 @@
 		C987BB2A2534CF5400A440A7 /* Localizable.strings */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; path = Localizable.strings; sourceTree = "<group>"; };
 		C987BB34253CC93E00A440A7 /* CustomTableCellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomTableCellView.swift; sourceTree = "<group>"; };
 		C987BB36255BC97B00A440A7 /* LoginViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginViewController.swift; sourceTree = "<group>"; };
+		C9DF48DB25D59EF30016626F /* ALESelectionViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ALESelectionViewController.swift; sourceTree = "<group>"; };
+		C9DF48DC25D59EF30016626F /* ALESelectionViewController.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = ALESelectionViewController.xib; sourceTree = "<group>"; };
+		C9DF490725D717520016626F /* CustomALECell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomALECell.swift; sourceTree = "<group>"; };
 		C9E6C1DD25C17BFA00F07B3D /* azcopy */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = azcopy; sourceTree = "<group>"; };
 		C9E6C1E725C17DCB00F07B3D /* IconViewSectionHeader.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = IconViewSectionHeader.xib; sourceTree = SOURCE_ROOT; };
 		C9E6C1F225C86BFF00F07B3D /* CustomUploadCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomUploadCell.swift; sourceTree = "<group>"; };
@@ -200,6 +206,7 @@
 		731C984B252DE9DB008E8A75 /* MediaUploader */ = {
 			isa = PBXGroup;
 			children = (
+				C9DF48D425D59CF60016626F /* ALE Parser */,
 				C9E6C1F125C86B6A00F07B3D /* UI Utills */,
 				C9E6C1E725C17DCB00F07B3D /* IconViewSectionHeader.xib */,
 				C962D1A6258AA7000012F684 /* Utils */,
@@ -286,6 +293,16 @@
 				C917DDD025B2075F00B967B8 /* RightPaneToolPalette.xib */,
 			);
 			name = Resources;
+			sourceTree = "<group>";
+		};
+		C9DF48D425D59CF60016626F /* ALE Parser */ = {
+			isa = PBXGroup;
+			children = (
+				C9DF48DB25D59EF30016626F /* ALESelectionViewController.swift */,
+				C9DF48DC25D59EF30016626F /* ALESelectionViewController.xib */,
+				C9DF490725D717520016626F /* CustomALECell.swift */,
+			);
+			path = "ALE Parser";
 			sourceTree = "<group>";
 		};
 		C9E6C1F125C86B6A00F07B3D /* UI Utills */ = {
@@ -417,6 +434,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				C9E6C1DE25C17BFA00F07B3D /* azcopy in Resources */,
+				C9DF48DE25D59EF30016626F /* ALESelectionViewController.xib in Resources */,
 				C96173A72593AFA600F037EB /* azcopy in Resources */,
 				C9807E67257E8FD400488E46 /* ProgressViewController.xib in Resources */,
 				C96173A025911CAE00F037EB /* MediaUploader.plist in Resources */,
@@ -536,6 +554,7 @@
 				C96173A92593B4EF00F037EB /* SASToken.swift in Sources */,
 				731C9889252EF427008E8A75 /* WindowController.swift in Sources */,
 				C9807E69257F923A00488E46 /* Utils.swift in Sources */,
+				C9DF48DD25D59EF30016626F /* ALESelectionViewController.swift in Sources */,
 				C96173A425933C2A00F037EB /* URLRequests.swift in Sources */,
 				731C9881252E5216008E8A75 /* OutlineViewController+Helpers.swift in Sources */,
 				731C984F252DE9DB008E8A75 /* WindowViewController.swift in Sources */,
@@ -558,6 +577,7 @@
 				C987BB35253CC93E00A440A7 /* CustomTableCellView.swift in Sources */,
 				C95E74E7257ACEB80073410F /* AsyncOperation.swift in Sources */,
 				C961739C25910B5800F037EB /* CalculateChecksumOperation.swift in Sources */,
+				C9DF490825D717520016626F /* CustomALECell.swift in Sources */,
 				C917DDD325B226F500B967B8 /* RightPaneToolPalette.swift in Sources */,
 				C987BB37255BC97B00A440A7 /* LoginViewController.swift in Sources */,
 				C987BB292534CA9500A440A7 /* OutlineViewController+Delegate.swift in Sources */,

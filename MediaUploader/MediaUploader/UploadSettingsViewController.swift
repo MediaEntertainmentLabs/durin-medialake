@@ -7,6 +7,26 @@
 
 import Cocoa
 
+struct fileInfo {
+    var dirPath: String
+    var checksum: String
+    var filePath: String
+    var name: String
+    var type: String
+    var aleFileDetail : ALEFileDetails?
+}
+
+struct ALEFileDetails {
+    var SourceFile: Bool
+    var otherSourceFiles: [String]?
+    var selectedSourceFilesIndex: Int
+    var optionExactContains: [String]?
+    var selectedOptionIndex: Int
+    var charecterFromLeft: Int?
+    var charecterFromRight: Int?
+}
+
+var aleSelectionViewController : ALESelectionViewController!
 class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTableViewDataSource,FileBrowseDelegate {
     
     @IBOutlet weak var showNameField: NSTextField!
@@ -60,6 +80,7 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
     static let kStillsFileType = "Stills"
     static let kReportsFileType = "Reports"
     static let kOthersFileType = "Others"
+    static let kSourceFile = "Source File"
     
     static let strOK = "OK"
     static let strCancel = "Cancel"
@@ -74,12 +95,6 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
     var selectedArray:[String] = ["Camera RAW","LUT","CDL","Stills","Reports/Notes"]
     var selectedFilePathsArray = [[String:[[String:Any]]]]()
     
-    // [
-    //     textField_0: [dir:[[filename:meta]],
-    //     textField_1: [dir:[[filename:meta]],
-    //     ...
-    //     textField_n: [dir:[[filename:meta]]
-    // ]
     var selectedCameraFilePathsArray = [[String:[[String:Any]]]](repeating: [:], count:5)
     var selectedSoundFilePathsArray = [[String:[[String:Any]]]](repeating: [:], count: 2)
     var selectedScriptsFilePathsArray = [[String:[[String:Any]]]](repeating: [:], count: 1)
@@ -87,6 +102,11 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
     
     
     var showId : String!
+    
+    
+    
+    var uploadedFileList: [fileInfo] = []
+    var aleSouceFilesArray:[fileInfo] = []
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -146,6 +166,7 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
         tblUploadFiles.backgroundColor = .clear
         
         shootDayField.delegate = self
+        
     }
     
     override func viewDidAppear() {
@@ -298,87 +319,15 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
     }
     
     @IBAction func startUpload(_ sender: Any) {
-        
-        let dateformat: String = "yyyy-MM-dd"
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = dateformat
-        //let strdate = dateFormatter.string(from: shootDate.dateValue)
-        
-        // [show name]/[season name]/[block name]/[shootday]/[batch]/[unit ]/Camera RAW/browsed folder
-        let season = self.seasonsCombo.selectedCell()!.stringValue as String
-        let block = self.blocksCombo.selectedCell()!.stringValue as String
-        let episode = self.episodesCombo.selectedCell()!.stringValue as String
-        
-        var blockOrEpisode : (String,String)!
-        let isBlock : Bool = byBlockRadio.state == NSControl.StateValue.on
-        
-        if byBlockRadio.state == NSControl.StateValue.on {
-            if block.isEmpty {
-                showPopoverMessage(positioningView: blocksCombo, msg: "Invalid params for Block")
-                return
-            }
-            blockOrEpisode = getBlock(seasonName: season, blockName: block)
-        } else {
-            if episode.isEmpty {
-                showPopoverMessage(positioningView: episodesCombo, msg: "Invalid params for Episode")
-                return
-            }
-            blockOrEpisode = getEpisode(seasonName: season, episopeName: episode)
-        }
-        
-        var isEmpty: Bool = true
-        for item in selectedFilePathsArray {
-            if !item.isEmpty {
-                isEmpty = false
-                break
-            }
-        }
-        
-        if isEmpty {
-            showPopoverMessage(positioningView: teamPopup, msg: "Please specify path to media")
-            return
-        }
-        
-        if shootDayField.stringValue.isEmpty {
-            showPopoverMessage(positioningView: shootDayField, msg: "Please specify shoot Day")
-            return
-        } else {
-            if shootDayField.stringValue.isStringPatternMatch(withstring: shootDayFormat ?? " "){
-                print("shootDay string: \(shootDayField.stringValue)")
-            } else {
-                showPopoverMessage(positioningView: shootDayField, msg: "Please specify shoot day as shoot day format")
-                return
-            }
-        }
-        
-        if !emailField.stringValue.isEmpty && !isValidEmail(emailField.stringValue){
-            showPopoverMessage(positioningView: emailField, msg: "Wrong email format!")
-            return
-        }
-        
-        if blockOrEpisode == nil {
-            return
-        }
-        
-        let episodeId = isBlock ? "" : blockOrEpisode.1
-        let blockId = isBlock ? blockOrEpisode.1 : ""
-        
-        let json_main : [String:String] = [
-            "showId": self.showId,
-            "seasonId":getSeasonId(seasonName: season),
-            "episodeId":episodeId,
-            "blockId":blockId,
-            "batch":batchPopup.titleOfSelectedItem!,
-            "unit":unitPopup.titleOfSelectedItem!,
-            "team":teamPopup.titleOfSelectedItem!,
-            "shootDay":shootDayField.stringValue,
-            "info":infoField.stringValue,
-            "notificationEmail":emailField.stringValue,
-            "checksum":"md5",
-        ]
-        
+       
         var uploadFiles : [String:[[String:Any]]] = [:]
         var uploadDirs : [String:[String]] = [:]
+
+        
+        var arrExactContains = [String]()
+
+        arrExactContains.append("Exact")
+        arrExactContains.append("Contains")
         
         for i in 0 ..< selectedArray.count {
             uploadDirs[selectedArray[i]] = []
@@ -387,21 +336,202 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
                 uploadDirs[selectedArray[i]]?.append(key)
                 for f in value {
                     uploadFiles[selectedArray[i]]?.append(f)
+                    // print("files Data ::::::\(f)")
+                    for (key, value1) in f {
+                        
+                        //var dirPath: String
+                        //dirPath = key
+                        //print("dirPath ::::\(dirPath)")
+                        
+                        var fDict:[String:Any]
+                        fDict = value1 as! [String : Any]
+                        
+                        uploadedFileList.append(fileInfo(dirPath: key,
+                                                     checksum: fDict["checksum"] as! String,
+                                                     filePath: fDict["filePath"] as! String,
+                                                     name: fDict["name"] as! String ,
+                                                     type: fDict["type"] as! String,
+                                                     aleFileDetail: nil
+                        ))
+                    }
+                }
+            }
+        }
+        /*   // To Read JSON Data from Directory PAth
+         do {
+         let jsonData = try JSONSerialization.data(withJSONObject: uploadFiles, options: .prettyPrinted)
+         // here "jsonData" is the dictionary encoded in JSON data
+         let decoded = try JSONSerialization.jsonObject(with: jsonData, options: [])
+         // here "decoded" is of type `Any`, decoded from JSON data
+         print("f String ::\(decoded)");
+         } catch {
+         print(error.localizedDescription)
+         }
+         */
+     
+     
+        for i in 0 ..< uploadedFileList.count {
+            var fileStruct:fileInfo?
+            fileStruct = uploadedFileList[i]
+            
+            print("File Extension :\(fileStruct!.name)")
+            
+            if fileStruct?.name != nil{
+                let strArray = fileStruct?.name.components(separatedBy: ".")
+                if(strArray![1] == "ale"){
+                    
+                    let(sourceFile, columnArray) = parseALEFiles(dirPath: fileStruct!.dirPath)
+                    //    print("SourceFile :\(sourceFile) ::: columnArray :\(String(describing: columnArray))")
+                    if sourceFile{
+                        fileStruct?.aleFileDetail = ALEFileDetails(SourceFile: true,otherSourceFiles: nil,selectedSourceFilesIndex: 0,optionExactContains: nil,selectedOptionIndex: 0,charecterFromLeft: nil,charecterFromRight: nil)
+                        
+                    }else{
+                        fileStruct?.aleFileDetail = ALEFileDetails(SourceFile: false,otherSourceFiles: columnArray,selectedSourceFilesIndex: 0,optionExactContains: arrExactContains,selectedOptionIndex: 0,charecterFromLeft: nil,charecterFromRight: nil)
+                    }
+                    aleSouceFilesArray.append(fileStruct!)
                 }
             }
         }
         
-        NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.OnStartUploadShow),
-                                        object: nil,
-                                        userInfo: ["json_main":json_main,
-                                                   "showName": self.showNameField.stringValue,
-                                                   "season": (season, getSeasonId(seasonName: season)),
-                                                   "blockOrEpisode":blockOrEpisode!,
-                                                   "isBlock":isBlock,
-                                                   "files": uploadFiles,
-                                                   "srcDir": uploadDirs,
-                                        ])
-        window?.performClose(nil) // nil because I'm not return a message
+        print("Array count :\(aleSouceFilesArray.count) aleFiles :: \(aleSouceFilesArray)")
+        
+        
+        
+        if aleSouceFilesArray.isEmpty{
+            // To DO : Go to Upload files   //KUSH 12 Feb 2021
+        }else{
+            aleSelectionViewController = ALESelectionViewController()
+            let storyboard = NSStoryboard(name: "Main", bundle: nil)
+            guard let ALESelectionViewController = storyboard.instantiateController(withIdentifier: "ALESelectionWindow") as? NSWindowController else { return }
+            if let aleSelectionViewWindow = ALESelectionViewController.window {
+                //let application = NSApplication.shared
+                //application.runModal(for: downloadWindow)
+                aleSelectionViewWindow.level = NSWindow.Level.modalPanel
+ 
+                aleSelectionViewWindow.contentMinSize = NSSize(width: 1200, height: 591)
+                aleSelectionViewWindow.contentMaxSize = NSSize(width: 1115, height: 1115)
+                
+                let controller =  NSWindowController(window: aleSelectionViewWindow)
+                aleSelectionViewWindow.contentViewController = aleSelectionViewController
+                aleSelectionViewController.setStructDataReference(structDataReference:aleSouceFilesArray)
+                controller.showWindow(self)
+                
+                NotificationCenter.default.addObserver(
+                    self,
+                    selector: #selector(resetViewController(_:)),
+                    name: Notification.Name(WindowViewController.NotificationNames.DismissUploadSettingsDialog),
+                    object: nil)
+            }
+            
+          //  aleSelectionViewController.showNameField.stringValue = "ALE Selection"
+        }
+        
+        /*
+         let dateformat: String = "yyyy-MM-dd"
+         let dateFormatter = DateFormatter()
+         dateFormatter.dateFormat = dateformat
+         //let strdate = dateFormatter.string(from: shootDate.dateValue)
+         
+         // [show name]/[season name]/[block name]/[shootday]/[batch]/[unit ]/Camera RAW/browsed folder
+         let season = self.seasonsCombo.selectedCell()!.stringValue as String
+         let block = self.blocksCombo.selectedCell()!.stringValue as String
+         let episode = self.episodesCombo.selectedCell()!.stringValue as String
+         
+         var blockOrEpisode : (String,String)!
+         let isBlock : Bool = byBlockRadio.state == NSControl.StateValue.on
+         
+         if byBlockRadio.state == NSControl.StateValue.on {
+         if block.isEmpty {
+         showPopoverMessage(positioningView: blocksCombo, msg: "Invalid params for Block")
+         return
+         }
+         blockOrEpisode = getBlock(seasonName: season, blockName: block)
+         } else {
+         if episode.isEmpty {
+         showPopoverMessage(positioningView: episodesCombo, msg: "Invalid params for Episode")
+         return
+         }
+         blockOrEpisode = getEpisode(seasonName: season, episopeName: episode)
+         }
+         
+         var isEmpty: Bool = true
+         for item in selectedFilePathsArray {
+         if !item.isEmpty {
+         isEmpty = false
+         break
+         }
+         }
+         
+         if isEmpty {
+         showPopoverMessage(positioningView: teamPopup, msg: "Please specify path to media")
+         return
+         }
+         
+         if shootDayField.stringValue.isEmpty {
+         showPopoverMessage(positioningView: shootDayField, msg: "Please specify shoot Day")
+         return
+         } else {
+         if shootDayField.stringValue.isStringPatternMatch(withstring: shootDayFormat ?? " "){
+         print("shootDay string: \(shootDayField.stringValue)")
+         } else {
+         showPopoverMessage(positioningView: shootDayField, msg: "Please specify shoot day as shoot day format")
+         return
+         }
+         }
+         
+         if !emailField.stringValue.isEmpty && !isValidEmail(emailField.stringValue){
+         showPopoverMessage(positioningView: emailField, msg: "Wrong email format!")
+         return
+         }
+         
+         if blockOrEpisode == nil {
+         return
+         }
+         
+         let episodeId = isBlock ? "" : blockOrEpisode.1
+         let blockId = isBlock ? blockOrEpisode.1 : ""
+         
+         let json_main : [String:String] = [
+         "showId": self.showId,
+         "seasonId":getSeasonId(seasonName: season),
+         "episodeId":episodeId,
+         "blockId":blockId,
+         "batch":batchPopup.titleOfSelectedItem!,
+         "unit":unitPopup.titleOfSelectedItem!,
+         "team":teamPopup.titleOfSelectedItem!,
+         "shootDay":shootDayField.stringValue,
+         "info":infoField.stringValue,
+         "notificationEmail":emailField.stringValue,
+         "checksum":"md5",
+         ]
+         
+         var uploadFiles : [String:[[String:Any]]] = [:]
+         var uploadDirs : [String:[String]] = [:]
+         
+         for i in 0 ..< selectedArray.count {
+         uploadDirs[selectedArray[i]] = []
+         uploadFiles[selectedArray[i]] = []
+         for (key, value) in selectedFilePathsArray[i] {
+         uploadDirs[selectedArray[i]]?.append(key)
+         for f in value {
+         uploadFiles[selectedArray[i]]?.append(f)
+         }
+         }
+         }
+         
+         NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.OnStartUploadShow),
+         object: nil,
+         userInfo: ["json_main":json_main,
+         "showName": self.showNameField.stringValue,
+         "season": (season, getSeasonId(seasonName: season)),
+         "blockOrEpisode":blockOrEpisode!,
+         "isBlock":isBlock,
+         "files": uploadFiles,
+         "srcDir": uploadDirs,
+         ])
+         window?.performClose(nil) // nil because I'm not return a message
+         
+         */
     }
     
     func getSeasonId(seasonName: String) -> String {
@@ -661,6 +791,69 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
     func reloadTable() {
         tblUploadFiles.reloadData()
     }
+    
+    func openTSV(fileName:String, fileType: String)-> String!{
+        guard let filepath = Bundle.main.path(forResource: fileName, ofType: fileType)
+        else {
+            return nil
+        }
+        do {
+            let contents = try String(contentsOfFile: filepath, encoding: .utf8)
+            
+            return contents
+        } catch {
+            print("File Read Error for file \(filepath)")
+            return nil
+        }
+    }
+    
+    
+    func parseALEFiles(dirPath : String)-> (sourceFileExist: Bool, ColumnArray:[String]?){
+        
+        var columnArrayList = [String]()
+        // TO DO : Check dirpath variavble existance
+        let url = URL(fileURLWithPath: dirPath)
+        
+        do {
+            let data = try Data(contentsOf: url)
+            let tsvFile = String(decoding: data, as: UTF8.self)
+           // print("tsv Files :\(tsvFile)")
+            
+            let subStr = tsvFile.slice(from: "Column", to: "Data")
+            columnArrayList = (subStr?.components(separatedBy: "\t"))!
+           
+            for columnName in columnArrayList as [String]{
+               // print("columnName :\(columnName)")
+                
+                if columnName.caseInsensitiveCompare(UploadSettingsViewController.kSourceFile) == ComparisonResult.orderedSame
+                {
+                    return (true,nil)
+                }
+            }
+        } catch let error {
+            print(error.localizedDescription)
+        }
+        return(false,columnArrayList)
+    }
+    
+    
+    func controlTextDidEndEditing(_ obj: Notification) {
+        if let sender = obj.object as? NSTextField {
+            if sender.tag == 105 {
+                if shootDayField.stringValue.isStringPatternMatch(withstring: shootDayFormat ?? " ") {
+                    print("shootDay string: \(shootDayField.stringValue)")
+                } else {
+                    showPopoverMessage(positioningView: shootDayField, msg: "Kindly enter shoot day as shoot day format")
+                }
+            }
+        }
+    }
+    
+    @objc func resetViewController(_ sender: Any)
+    {
+        aleSelectionViewController = nil
+    }
+    
 }
 
 extension NSComboBox {
@@ -698,23 +891,41 @@ extension String{
         
         return retVal
     }
-}
-
-extension UploadSettingsViewController:NSTextFieldDelegate,NSControlTextEditingDelegate {
     
-    func controlTextDidEndEditing(_ obj: Notification) {
-        if let sender = obj.object as? NSTextField {
-            if sender.tag == 105 {
-                if shootDayField.stringValue.isStringPatternMatch(withstring: shootDayFormat ?? " ") {
-                    print("shootDay string: \(shootDayField.stringValue)")
-                } else {
-                    showPopoverMessage(positioningView: shootDayField, msg: "Kindly enter shoot day as shoot day format")
-                }
+    func slice(from: String, to: String) -> String? {
+        
+        return (range(of: from)?.upperBound).flatMap { substringFrom in
+            (range(of: to, range: substringFrom..<endIndex)?.lowerBound).map { substringTo in
+                String(self[substringFrom..<substringTo])
             }
         }
     }
 }
 
+
+extension StringProtocol {
+    func index<S: StringProtocol>(of string: S, options: String.CompareOptions = []) -> Index? {
+        range(of: string, options: options)?.lowerBound
+    }
+    func endIndex<S: StringProtocol>(of string: S, options: String.CompareOptions = []) -> Index? {
+        range(of: string, options: options)?.upperBound
+    }
+    func indices<S: StringProtocol>(of string: S, options: String.CompareOptions = []) -> [Index] {
+        ranges(of: string, options: options).map(\.lowerBound)
+    }
+    func ranges<S: StringProtocol>(of string: S, options: String.CompareOptions = []) -> [Range<Index>] {
+        var result: [Range<Index>] = []
+        var startIndex = self.startIndex
+        while startIndex < endIndex,
+              let range = self[startIndex...]
+                .range(of: string, options: options) {
+            result.append(range)
+            startIndex = range.lowerBound < range.upperBound ? range.upperBound :
+                index(range.lowerBound, offsetBy: 1, limitedBy: endIndex) ?? endIndex
+        }
+        return result
+    }
+}
 /*
  extension UploadSettingsViewController: NSControlTextEditingDelegate {
  func controlTextDidChange(_ notification: Notification) {
