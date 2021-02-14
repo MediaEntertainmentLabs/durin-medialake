@@ -393,7 +393,7 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
             }
         }
         
-        print("Array count :\(aleSouceFilesArray.count) aleFiles :: \(aleSouceFilesArray)")
+     //   print("Array count :\(aleSouceFilesArray.count) aleFiles :: \(aleSouceFilesArray)")
         
         
         
@@ -409,7 +409,7 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
                 aleSelectionViewWindow.level = NSWindow.Level.modalPanel
  
                 aleSelectionViewWindow.contentMinSize = NSSize(width: 1200, height: 591)
-                aleSelectionViewWindow.contentMaxSize = NSSize(width: 1115, height: 1115)
+                aleSelectionViewWindow.contentMaxSize = NSSize(width: 1200, height: 591)
                 
                 let controller =  NSWindowController(window: aleSelectionViewWindow)
                 aleSelectionViewWindow.contentViewController = aleSelectionViewController

@@ -22,10 +22,10 @@
                     <rect key="frame" x="0.0" y="0.0" width="1200" height="416"/>
                     <subviews>
                         <scrollView fixedFrame="YES" borderType="line" autohidesScrollers="YES" horizontalLineScroll="45" horizontalPageScroll="10" verticalLineScroll="45" verticalPageScroll="10" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="lMi-uf-4KZ">
-                            <rect key="frame" x="20" y="100" width="1161" height="296"/>
+                            <rect key="frame" x="20" y="100" width="1160" height="296"/>
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                             <clipView key="contentView" drawsBackground="NO" id="w0o-UD-LWC">
-                                <rect key="frame" x="1" y="1" width="1159" height="294"/>
+                                <rect key="frame" x="1" y="1" width="1158" height="294"/>
                                 <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                 <subviews>
                                     <tableView verticalHuggingPriority="750" allowsExpansionToolTips="YES" alternatingRowBackgroundColors="YES" columnSelection="YES" multipleSelection="NO" autosaveColumns="NO" rowHeight="40" headerView="PTS-7j-fF5" viewBased="YES" id="MDt-eV-WdP">
@@ -33,7 +33,7 @@
                                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                         <size key="intercellSpacing" width="5" height="5"/>
                                         <color key="backgroundColor" red="0.59216099980000003" green="0.59214955570000005" blue="0.59215730430000002" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
-                                        <tableViewGridLines key="gridStyleMask" vertical="YES" horizontal="YES"/>
+                                        <tableViewGridLines key="gridStyleMask" vertical="YES"/>
                                         <color key="gridColor" name="labelColor" catalog="System" colorSpace="catalog"/>
                                         <tableColumns>
                                             <tableColumn identifier="filePathCell" width="364" minWidth="40" maxWidth="1000" id="wAu-YL-Un8">
@@ -238,8 +238,8 @@
                                 </subviews>
                                 <nil key="backgroundColor"/>
                             </clipView>
-                            <scroller key="horizontalScroller" hidden="YES" wantsLayer="YES" verticalHuggingPriority="750" horizontal="YES" id="Jeu-ed-dYt">
-                                <rect key="frame" x="1" y="141" width="1158" height="16"/>
+                            <scroller key="horizontalScroller" wantsLayer="YES" verticalHuggingPriority="750" horizontal="YES" id="Jeu-ed-dYt">
+                                <rect key="frame" x="1" y="279" width="1158" height="16"/>
                                 <autoresizingMask key="autoresizingMask"/>
                             </scroller>
                             <scroller key="verticalScroller" hidden="YES" wantsLayer="YES" verticalHuggingPriority="750" horizontal="NO" id="NgK-Y8-a6E">
@@ -251,8 +251,8 @@
                                 <autoresizingMask key="autoresizingMask"/>
                             </tableHeaderView>
                         </scrollView>
-                        <button verticalHuggingPriority="750" ambiguous="YES" translatesAutoresizingMaskIntoConstraints="NO" id="KP9-cD-Pyc">
-                            <rect key="frame" x="459" y="28" width="82" height="36"/>
+                        <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="KP9-cD-Pyc">
+                            <rect key="frame" x="459" y="33" width="82" height="36"/>
                             <constraints>
                                 <constraint firstAttribute="width" constant="70" id="4we-th-1jK"/>
                                 <constraint firstAttribute="height" constant="25" id="io4-Rd-43J"/>
@@ -265,8 +265,8 @@
                                 <action selector="btnOKClicked:" target="-2" id="cfZ-Pw-EJ7"/>
                             </connections>
                         </button>
-                        <button verticalHuggingPriority="750" ambiguous="YES" translatesAutoresizingMaskIntoConstraints="NO" id="CGa-Hm-pkB">
-                            <rect key="frame" x="659" y="30" width="82" height="32"/>
+                        <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="CGa-Hm-pkB">
+                            <rect key="frame" x="659" y="35" width="82" height="32"/>
                             <constraints>
                                 <constraint firstAttribute="width" constant="70" id="M6T-1I-cr8"/>
                                 <constraint firstAttribute="height" constant="21" id="exs-dK-abu"/>
@@ -287,6 +287,7 @@ Gw
                         <constraint firstItem="CGa-Hm-pkB" firstAttribute="centerX" secondItem="G4c-Hy-R4U" secondAttribute="centerX" constant="100" id="KqS-Yg-nfe"/>
                         <constraint firstItem="CGa-Hm-pkB" firstAttribute="centerY" secondItem="KP9-cD-Pyc" secondAttribute="centerY" id="rwr-H3-Zei"/>
                         <constraint firstItem="KP9-cD-Pyc" firstAttribute="centerX" secondItem="G4c-Hy-R4U" secondAttribute="centerX" constant="-100" id="wJi-4b-wqX"/>
+                        <constraint firstAttribute="bottom" secondItem="KP9-cD-Pyc" secondAttribute="bottom" constant="40" id="z5p-gR-ond"/>
                     </constraints>
                 </customView>
             </subviews>

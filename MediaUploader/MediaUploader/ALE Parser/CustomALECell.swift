@@ -47,21 +47,5 @@ class CustomALECell: NSTableCellView,NSTextFieldDelegate {
         exactContainDelegate?.didExactContainColumnSelected(selectedRow: sender.tag, selectedSourceName: sender)
     }
 
-    func controlTextDidEndEditing(_ obj: Notification) {
-        
-        let object = obj.object as! NSTextField
-        
-        let lastChar = object.stringValue.count - 1
-        guard let typed = object.stringValue.last else { return }
-        if !"0123456789".contains(typed) {
-            if object.tag == 100 {
-                print("text : \(object.stringValue)")
-                //cellTextField!.stringValue = cellTextField!.stringValue[0..<lastChar]
-            }else{
-                print("text : \(object.stringValue)")
-            }
-            
-        }
-    }
     
 }
