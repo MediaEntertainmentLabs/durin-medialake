@@ -83,11 +83,11 @@ class ALESelectionViewController: NSViewController,SourceFileColumnSelectedDeleg
         }else{
             showPopoverMessage(positioningView: tblALEList, msg: errMsg)
         }
- }
+    }
     
     
     func validateAlEFiles() -> (errMessage : String , result : Bool) {
-       
+        
         let errMsg = ""
         let resultValue = true;
         
@@ -108,9 +108,7 @@ class ALESelectionViewController: NSViewController,SourceFileColumnSelectedDeleg
                     }
                 }
             }
-            
-        }
-        
+         }
         return(errMsg,resultValue)
     }
     
@@ -120,10 +118,8 @@ class ALESelectionViewController: NSViewController,SourceFileColumnSelectedDeleg
 extension ALESelectionViewController: NSTableViewDataSource {
     
     func numberOfRows(in tableView: NSTableView) -> Int {
-       // print("filesArray.count : \(filesArray.count)")
+        // print("filesArray.count : \(filesArray.count)")
         return filesArray.count
-        
-        
     }
     
 }
@@ -142,7 +138,7 @@ extension ALESelectionViewController: NSTableViewDelegate {
         guard let item = filesArray[row] else {
             return nil
         }
-       
+        
         
         if tableColumn == tableView.tableColumns[0] {
             text = item.dirPath
@@ -204,7 +200,7 @@ extension ALESelectionViewController: NSTableViewDelegate {
                 //  print("item.aleFileDetail!.selectedOptionIndex :\(item.aleFileDetail!.selectedOptionIndex)")
                 
                 if let chooseArray =  item.aleFileDetail?.optionExactContains {
-                  
+                    
                     cell.exactContainDelegate = self
                     cell.ExactCancelPopUp.removeAllItems()
                     cell.ExactCancelPopUp.insertItem(withTitle:ALESelectionViewController.kChooseOption, at: 0)
