@@ -77,14 +77,43 @@ class ALESelectionViewController: NSViewController,SourceFileColumnSelectedDeleg
     }
     
     @IBAction func btnOKClicked(_ sender: Any) {
+        let(errMsg,result) = self.validateAlEFiles()
+        if result {
+            // GO TO Upload Files
+        }else{
+            showPopoverMessage(positioningView: tblALEList, msg: errMsg)
+        }
+ }
+    
+    
+    func validateAlEFiles() -> (errMessage : String , result : Bool) {
+       
+        let errMsg = ""
+        let resultValue = true;
         
-        for info in filesArray {
+        for item in filesArray {
             
-            print("updated Info :\(info?.aleFileDetail)")
+            if (item?.aleFileDetail?.SourceFile == true) {
+                print("No thing to check")
+            }else{
+                if(item?.aleFileDetail?.selectedSourceFilesIndex  == 0){
+                    return ("Kindly select Column name",false)
+                }else{
+                    if(item?.aleFileDetail?.selectedOptionIndex  == 0){
+                        return ("Kindly select Exact or Cancel Option",false)
+                    }else{
+                        if(item?.aleFileDetail?.charecterFromLeft == nil || item?.aleFileDetail?.charecterFromRight == nil ){
+                            return ("Kindly enter number to remove charecter from left / right side ",false)
+                        }
+                    }
+                }
+            }
+            
         }
         
-        self.dismiss(self)
+        return(errMsg,resultValue)
     }
+    
 }
 
 
