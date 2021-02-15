@@ -36,15 +36,13 @@ class CustomALECell: NSTableCellView,NSTextFieldDelegate {
         // Drawing code here.
     }
     @IBAction func popUpSelectionDidChange(_ sender: NSPopUpButton) {
-        //print("sender.selected item :   \(String(describing: sender.selectedItem))")
-        //print("sender.selected tag :   \(String(describing: sender.tag))")
+       
         sourceFileDelegate?.didSourceFileColumnSelected(selectedRow: sender.tag, selectedSourceName: sender)
     }
     
     @IBAction func exactContainDidChange(_ sender: NSPopUpButton) {
-        //print("sender.selected item :   \(String(describing: sender.selectedItem))")
-        //print("sender.selected tag :   \(String(describing: sender.tag))")
-        exactContainDelegate?.didExactContainColumnSelected(selectedRow: sender.tag, selectedSourceName: sender)
+       
+      exactContainDelegate?.didExactContainColumnSelected(selectedRow: sender.tag, selectedSourceName: sender)
     }
 
     

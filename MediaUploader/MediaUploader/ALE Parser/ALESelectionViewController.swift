@@ -18,6 +18,11 @@ class ALESelectionViewController: NSViewController,SourceFileColumnSelectedDeleg
     static let kSelectColumn = "Select Column"
     static let kChooseOption = "Choose Option"
     
+    
+    // reference to a window
+    var window: NSWindow?
+    
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do view setup here.
@@ -30,6 +35,15 @@ class ALESelectionViewController: NSViewController,SourceFileColumnSelectedDeleg
         tblALEList.selectionHighlightStyle = .none
         tblALEList.backgroundColor = .clear
         
+    }
+    
+    
+    override func viewDidAppear() {
+        // After a window is displayed, get the handle to the new window.
+        window = self.view.window!
+        if window != nil {
+            window?.center()
+        }
     }
     
     func setStructDataReference(structDataReference:[fileInfo?])
@@ -51,6 +65,7 @@ class ALESelectionViewController: NSViewController,SourceFileColumnSelectedDeleg
         selectedRowIndex = selectedRow
         var updatedStruct = filesArray[selectedRow]?.aleFileDetail;
         updatedStruct?.selectedSourceFilesIndex = selectedSourceName.indexOfSelectedItem
+        updatedStruct?.selectedSourceFilesName = selectedSourceName.titleOfSelectedItem
         if selectedSourceName.indexOfSelectedItem == 0 {
             updatedStruct?.selectedOptionIndex = 0
             updatedStruct?.charecterFromRight = nil
@@ -68,6 +83,7 @@ class ALESelectionViewController: NSViewController,SourceFileColumnSelectedDeleg
         selectedRowIndex = selectedRow
         var updatedStruct = filesArray[selectedRowIndex]?.aleFileDetail;
         updatedStruct?.selectedOptionIndex = selectedSourceName.indexOfSelectedItem
+        updatedStruct?.optionExactName = selectedSourceName.titleOfSelectedItem
         
         var tempStruct = filesArray[selectedRowIndex]
         tempStruct?.aleFileDetail = updatedStruct
@@ -77,9 +93,33 @@ class ALESelectionViewController: NSViewController,SourceFileColumnSelectedDeleg
     }
     
     @IBAction func btnOKClicked(_ sender: Any) {
+        
+        
+        
         let(errMsg,result) = self.validateAlEFiles()
         if result {
             // GO TO Upload Files
+            
+            var dictToParsed = [String: Any]()
+            dictToParsed = convertToDictionary()
+            print("dictToParsed \(dictToParsed)")
+            
+           let jsonData = try? JSONSerialization.data(withJSONObject: dictToParsed, options:.prettyPrinted)
+           let jsonString = String(data: jsonData!, encoding: .utf8)
+           print("jsonString :\(jsonString)")
+            
+            
+//             do {
+//             let jsonData = try JSONSerialization.data(withJSONObject: convertToDictionary, options: .prettyPrinted)
+//             // here "jsonData" is the dictionary encoded in JSON data
+//             let decoded = try JSONSerialization.jsonObject(with: jsonData, options: [])
+//             // here "decoded" is of type `Any`, decoded from JSON data
+//             print("f String ::\(decoded)");
+//             } catch {
+//             print(error.localizedDescription)
+//             }
+             
+            
         }else{
             showPopoverMessage(positioningView: tblALEList, msg: errMsg)
         }
@@ -102,14 +142,60 @@ class ALESelectionViewController: NSViewController,SourceFileColumnSelectedDeleg
                     if(item?.aleFileDetail?.selectedOptionIndex  == 0){
                         return ("Kindly select Exact or Cancel Option",false)
                     }else{
-                        if(item?.aleFileDetail?.charecterFromLeft == nil || item?.aleFileDetail?.charecterFromRight == nil ){
-                            return ("Kindly enter number to remove charecter from left / right side ",false)
-                        }
+                        /*
+                         if(item?.aleFileDetail?.charecterFromLeft == nil || item?.aleFileDetail?.charecterFromRight == nil ){
+                         return ("Kindly enter number to remove charecter from left / right side ",false)
+                         }
+                         */
                     }
                 }
             }
-         }
+        }
         return(errMsg,resultValue)
+    }
+    
+    func convertToDictionary() -> [String : Any] {
+        
+        // TO DO File Size needs to be added in final JSON
+        
+        var filesDict = [String:Any]()
+        
+        var dictArray = [[String:Any]]()
+        dictArray.removeAll()
+        for item in filesArray {
+            
+            var dict: [String: Any] = ["checksum":item?.checksum.trimmingCharacters(in: .whitespacesAndNewlines) ?? "", "filePath":item?.filePath.trimmingCharacters(in: .whitespacesAndNewlines) ?? "", "name":item?.name.trimmingCharacters(in: .whitespacesAndNewlines) ?? "", "type":item?.type.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""]
+            
+            var miscDict = [String:Any]()
+            
+            if let aleFileDetail = item?.aleFileDetail{
+                miscDict["aleFileNameField"] = aleFileDetail.selectedSourceFilesName?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+                miscDict["matchType"] = aleFileDetail.optionExactName?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+                //                miscDict["truncateCharFromStart"] = aleFileDetail.charecterFromLeft
+                //                miscDict["truncateCharFromEnd"] = aleFileDetail.charecterFromRight
+                miscDict["truncateCharFromStart"] = "22"
+                miscDict["truncateCharFromEnd"] = "10"
+                
+            }
+            
+           if (miscDict.count > 0) {
+                dict["miscInfo"] = miscDict
+            }else{
+                dict["miscInfo"] = ""
+            }
+           dictArray.append(dict)
+        }
+        
+        if(dictArray.count > 0){
+            filesDict["files"] = dictArray
+        }
+        
+        return filesDict
+    }
+    
+    @IBAction func btnCancelClicked(_ sender: Any) {
+        
+        window?.performClose(nil)
     }
     
 }

@@ -173,7 +173,7 @@
                                                                         <constraints>
                                                                             <constraint firstAttribute="width" constant="170" id="Kqz-is-pwS"/>
                                                                         </constraints>
-                                                                        <textFieldCell key="cell" lineBreakMode="truncatingTail" alignment="left" title="Trimm character from right" id="Kob-pc-b7E">
+                                                                        <textFieldCell key="cell" lineBreakMode="truncatingTail" alignment="left" title="Trim character from right" id="Kob-pc-b7E">
                                                                             <font key="font" size="13" name="HelveticaNeue"/>
                                                                             <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
                                                                             <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
@@ -279,7 +279,7 @@ Gw
 </string>
                             </buttonCell>
                             <connections>
-                                <action selector="dismissWIndow:" target="-2" id="ym9-hH-IKb"/>
+                                <action selector="btnCancelClicked:" target="-2" id="Ut0-HJ-Gvc"/>
                             </connections>
                         </button>
                     </subviews>
