@@ -8,6 +8,12 @@
 
 import Cocoa
 
+protocol aleFileUpdatedDelegate: class {
+    func didALEFileUpdated(updatedALEFiles:[[String:Any]])
+}
+
+
+
 class ALESelectionViewController: NSViewController,SourceFileColumnSelectedDelegate,ExactContainColumnSelectedDelegate {
     
     @IBOutlet weak var tblALEList: NSTableView!
@@ -22,6 +28,7 @@ class ALESelectionViewController: NSViewController,SourceFileColumnSelectedDeleg
     // reference to a window
     var window: NSWindow?
     
+    weak var aleFileDelegate: aleFileUpdatedDelegate?
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -84,7 +91,12 @@ class ALESelectionViewController: NSViewController,SourceFileColumnSelectedDeleg
         var updatedStruct = filesArray[selectedRowIndex]?.aleFileDetail;
         updatedStruct?.selectedOptionIndex = selectedSourceName.indexOfSelectedItem
         updatedStruct?.optionExactName = selectedSourceName.titleOfSelectedItem
-        
+        if selectedSourceName.indexOfSelectedItem == 0 || selectedSourceName.indexOfSelectedItem == 1 {
+           
+            updatedStruct?.charecterFromRight = nil
+            updatedStruct?.charecterFromLeft = nil
+            
+        }
         var tempStruct = filesArray[selectedRowIndex]
         tempStruct?.aleFileDetail = updatedStruct
         
@@ -93,32 +105,17 @@ class ALESelectionViewController: NSViewController,SourceFileColumnSelectedDeleg
     }
     
     @IBAction func btnOKClicked(_ sender: Any) {
-        
-        
-        
+      
         let(errMsg,result) = self.validateAlEFiles()
         if result {
             // GO TO Upload Files
             
-            var dictToParsed = [String: Any]()
-            dictToParsed = convertToDictionary()
-            print("dictToParsed \(dictToParsed)")
+            var dataArray = [[String: Any]]()
+            dataArray = convertToDictionary()
+            print("file Data Array \(dataArray)")
             
-           let jsonData = try? JSONSerialization.data(withJSONObject: dictToParsed, options:.prettyPrinted)
-           let jsonString = String(data: jsonData!, encoding: .utf8)
-           print("jsonString :\(jsonString)")
-            
-            
-//             do {
-//             let jsonData = try JSONSerialization.data(withJSONObject: convertToDictionary, options: .prettyPrinted)
-//             // here "jsonData" is the dictionary encoded in JSON data
-//             let decoded = try JSONSerialization.jsonObject(with: jsonData, options: [])
-//             // here "decoded" is of type `Any`, decoded from JSON data
-//             print("f String ::\(decoded)");
-//             } catch {
-//             print(error.localizedDescription)
-//             }
-             
+            aleFileDelegate?.didALEFileUpdated(updatedALEFiles: dataArray)
+            window?.performClose(nil)
             
         }else{
             showPopoverMessage(positioningView: tblALEList, msg: errMsg)
@@ -154,29 +151,30 @@ class ALESelectionViewController: NSViewController,SourceFileColumnSelectedDeleg
         return(errMsg,resultValue)
     }
     
-    func convertToDictionary() -> [String : Any] {
-        
-        // TO DO File Size needs to be added in final JSON
-        
-        var filesDict = [String:Any]()
+    func convertToDictionary() -> [[String : Any]] {
         
         var dictArray = [[String:Any]]()
         dictArray.removeAll()
         for item in filesArray {
             
-            var dict: [String: Any] = ["checksum":item?.checksum.trimmingCharacters(in: .whitespacesAndNewlines) ?? "", "filePath":item?.filePath.trimmingCharacters(in: .whitespacesAndNewlines) ?? "", "name":item?.name.trimmingCharacters(in: .whitespacesAndNewlines) ?? "", "type":item?.type.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""]
+            var dict: [String: Any] = ["checksum":item?.checksum.trimmingCharacters(in: .whitespacesAndNewlines) ?? "", "filePath":item?.filePath.trimmingCharacters(in: .whitespacesAndNewlines) ?? "", "name":item?.name.trimmingCharacters(in: .whitespacesAndNewlines) ?? "", "type":item?.type.trimmingCharacters(in: .whitespacesAndNewlines) ?? "","filesize":item?.filesize ?? ""]
             
             var miscDict = [String:Any]()
             
             if let aleFileDetail = item?.aleFileDetail{
+                
+                if aleFileDetail.SourceFile{
+                // No need to add data in miscDict when SourceFile column is present in ale files
+                miscDict["aleFileNameField"] = UploadSettingsViewController.kSourceFile
+                }else{
                 miscDict["aleFileNameField"] = aleFileDetail.selectedSourceFilesName?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
                 miscDict["matchType"] = aleFileDetail.optionExactName?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-                //                miscDict["truncateCharFromStart"] = aleFileDetail.charecterFromLeft
-                //                miscDict["truncateCharFromEnd"] = aleFileDetail.charecterFromRight
+                // miscDict["truncateCharFromStart"] = aleFileDetail.charecterFromLeft
+                // miscDict["truncateCharFromEnd"] = aleFileDetail.charecterFromRight
                 miscDict["truncateCharFromStart"] = "22"
                 miscDict["truncateCharFromEnd"] = "10"
-                
-            }
+                }
+             }
             
            if (miscDict.count > 0) {
                 dict["miscInfo"] = miscDict
@@ -185,12 +183,7 @@ class ALESelectionViewController: NSViewController,SourceFileColumnSelectedDeleg
             }
            dictArray.append(dict)
         }
-        
-        if(dictArray.count > 0){
-            filesDict["files"] = dictArray
-        }
-        
-        return filesDict
+         return dictArray
     }
     
     @IBAction func btnCancelClicked(_ sender: Any) {
@@ -246,12 +239,16 @@ extension ALESelectionViewController: NSTableViewDelegate {
                 cell.txtRemoveLeft.delegate = self
                 if let value = item.aleFileDetail?.charecterFromLeft {
                     cell.txtRemoveLeft.stringValue = String(value)
+                }else{
+                    cell.txtRemoveLeft.stringValue = ""
                 }
                 cell.lblRemoveLeft.usesSingleLineMode = true
                 cell.txtRemoveRight.delegate = self
                 
                 if let value = item.aleFileDetail?.charecterFromRight {
                     cell.txtRemoveRight.stringValue = String(value)
+                }else{
+                    cell.txtRemoveRight.stringValue = ""
                 }
                 cell.lblRemoveRight.usesSingleLineMode = true
                 cell.bgView.isHidden =  false
@@ -263,7 +260,7 @@ extension ALESelectionViewController: NSTableViewDelegate {
                     cell.otherSourceFilesArray.insertItem(withTitle:ALESelectionViewController.kSelectColumn, at: 0)
                     cell.otherSourceFilesArray.addItems(withTitles: optionArray)
                     if cell.otherSourceFilesArray.numberOfItems > 0 {
-                        cell.otherSourceFilesArray.selectItem(at:item.aleFileDetail!.selectedSourceFilesIndex)
+                        cell.otherSourceFilesArray.selectItem(at:item.aleFileDetail!.selectedSourceFilesIndex!)
                     }else{
                         cell.otherSourceFilesArray.setTitle("No Items")
                     }
@@ -271,7 +268,7 @@ extension ALESelectionViewController: NSTableViewDelegate {
                     
                     //  print("item.aleFileDetail!.selectedSourceFilesIndex :\(item.aleFileDetail!.selectedSourceFilesIndex)")
                     
-                    if(item.aleFileDetail!.selectedSourceFilesIndex > 0){
+                    if(item.aleFileDetail!.selectedSourceFilesIndex! > 0){
                         showOption = true;
                     }else{
                         showOption = false;
@@ -327,6 +324,13 @@ extension ALESelectionViewController: NSTableViewDelegate {
     
 }
 extension ALESelectionViewController: NSTextFieldDelegate {
+    
+    func controlTextDidBeginEditing(_ obj: Notification) {
+        guard let textField = obj.object as? NSTextField else {
+            return
+        }
+    }
+    
     func controlTextDidEndEditing(_ obj: Notification) {
         
         guard let textField = obj.object as? NSTextField else {
@@ -338,15 +342,16 @@ extension ALESelectionViewController: NSTextFieldDelegate {
             var updatedStruct = filesArray[selectedRowIndex]?.aleFileDetail;
             updatedStruct?.charecterFromLeft = Int(textField.intValue)
             filesArray[selectedRowIndex]?.aleFileDetail = updatedStruct
-            print("updated charecterFromLeft :\(String(describing: filesArray[selectedRowIndex]?.aleFileDetail.map({ $0.charecterFromLeft })))")
+            print("updated charecterFromLeft :\(String(describing: filesArray[selectedRowIndex]?.aleFileDetail?.charecterFromLeft))")
             tblALEList.reloadData()
         }
         else  if(textField.tag == 101){
             var updatedStruct = filesArray[selectedRowIndex]?.aleFileDetail;
             updatedStruct?.charecterFromRight = Int(textField.intValue)
             filesArray[selectedRowIndex]?.aleFileDetail = updatedStruct
-            print("updated charecterFromRight :\(String(describing: filesArray[selectedRowIndex]?.aleFileDetail.map({ $0.charecterFromRight })))")
+            print("updated charecterFromRight :\(String(describing: filesArray[selectedRowIndex]?.aleFileDetail?.charecterFromRight))")
             tblALEList.reloadData()
+            
         }
     }
     
