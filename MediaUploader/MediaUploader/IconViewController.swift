@@ -85,7 +85,7 @@ class IconViewController: NSViewController {
                 //let application = NSApplication.shared
                 //application.runModal(for: downloadWindow)
                 uploadSettingsWindow.level = NSWindow.Level.modalPanel
- 
+                
                 uploadSettingsWindow.contentMinSize = NSSize(width: 650, height: 680)
                 uploadSettingsWindow.contentMaxSize = NSSize(width: 1115, height: 1115)
                 
@@ -124,7 +124,7 @@ class IconViewController: NSViewController {
         iconSections.removeAll()
         currentSelectionIndex = nil
         collectionView.reloadData()
-
+        
         LoginViewController.cdsUserId = LoginViewController.azureUserId!
         
         NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.ShowProgressViewControllerOnlyText),
@@ -185,7 +185,7 @@ class IconViewController: NSViewController {
                 self.listShows = result["data"] as! [[String : Any]]
                 self.iconSections.removeAll()
                 NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.ShowOutlineViewController), object: nil)
-                    
+                
                 var contentArray : [Node] = []
                 var elems : Int = 0
                 for value in self.listShows {
@@ -196,7 +196,7 @@ class IconViewController: NSViewController {
                     contentArray.append(node)
                     let studioName = value["studio"] as! String
                     
-                
+                    
                     var found : Bool = false
                     for (key,value) in self.iconSections {
                         if value.name == studioName {
@@ -213,11 +213,11 @@ class IconViewController: NSViewController {
                     }
                     
                     /*
-                    // disable background fetching of SAS Tokens, fetch SAS Token ONLY on demand
+                     // disable background fetching of SAS Tokens, fetch SAS Token ONLY on demand
                      
-                    let fetchSASTokenOperation = FetchSASTokenOperation(showName: show.key, cdsUserId: self.cdsUserId, showId: self.showId(showName: show.key))
-                    self.fetchSASTokenQueue.addOperations([fetchSASTokenOperation], waitUntilFinished: false)
-                    */
+                     let fetchSASTokenOperation = FetchSASTokenOperation(showName: show.key, cdsUserId: self.cdsUserId, showId: self.showId(showName: show.key))
+                     self.fetchSASTokenQueue.addOperations([fetchSASTokenOperation], waitUntilFinished: false)
+                     */
                 }
                 
                 if (self.iconSections.count != 0) {
@@ -257,12 +257,12 @@ class IconViewController: NSViewController {
     private func updateIcons(_ data: [Node]) {
         icons = data
         collectionView.reloadData()
-//        if (currentSelectionIndex != nil) {
-//            collectionView.selectItems(at: [currentSelectionIndex], scrollPosition: NSCollectionView.ScrollPosition.top)
-//            setHighlight(indexPath: currentSelectionIndex, select: true)
-//        }
+        //        if (currentSelectionIndex != nil) {
+        //            collectionView.selectItems(at: [currentSelectionIndex], scrollPosition: NSCollectionView.ScrollPosition.top)
+        //            setHighlight(indexPath: currentSelectionIndex, select: true)
+        //        }
     }
-
+    
     @objc func onUploadFailed(_ notification: NSNotification) throws {
         if let op = notification.userInfo?["failedOperation"] as? FileUploadOperation {
             failedOperations.insert(op)
@@ -299,7 +299,7 @@ class IconViewController: NSViewController {
         let shootDay = json_main["shootDay"]!
         let batch = json_main["batch"]!
         let unit = json_main["unit"]!
-     
+        
         let showName = notification.userInfo?["showName"] as! String
         let season = notification.userInfo?["season"] as! (String,String) // name:Id
         let blockOrEpisode = notification.userInfo?["blockOrEpisode"] as! (String,String) // name:Id
@@ -314,7 +314,7 @@ class IconViewController: NSViewController {
         let metadatafolderLayout = "\(season.0)/\(blockOrEpisode.0 as String)/\(shootDay)/\(batch)/\(unit)/"
         let metadataJsonFilename = NSUUID().uuidString + "_metadata.json"
         
-
+        
         var sasToken : String!
         
         if (pendingUploads == nil) {
@@ -336,13 +336,13 @@ class IconViewController: NSViewController {
         }
         
         let recoveryContext : [String : Any] = ["json_main": json_main,
-                                               "showName": showName,
-                                               "season": season,
-                                               "blockOrEpisode": blockOrEpisode,
-                                               "isBlock": isBlock,
-                                               "files": files,
-                                               "srcDir": srcDirs,
-                                               "pendingUploads": pendingUploads!]
+                                                "showName": showName,
+                                                "season": season,
+                                                "blockOrEpisode": blockOrEpisode,
+                                                "isBlock": isBlock,
+                                                "files": files,
+                                                "srcDir": srcDirs,
+                                                "pendingUploads": pendingUploads!]
         
         if let sas = AppDelegate.cacheSASTokens[showName]?.value() {
             // if SAS Token is already in cache just use it
@@ -386,16 +386,17 @@ class IconViewController: NSViewController {
             }
             // folderLayoutStr -> [season name]/[block name]/[shootday]/[batch]/[unit ]/[type]
             let folderLayoutStr = metadatafolderLayout + "\(type)/"
-
+            
             // metadata.json upload task is root task, all data tasks are subtasks
             // sasToken is unavailable here, will be filled in latter
             let op = self.createUploadDirTask(showName: showName, folderLayoutStr: folderLayoutStr, sasToken: sasToken, uploadRecords: pendingUploads![type]!)
             dataSubTasks.append(contentsOf: op)
-          
             
-            for item in value {
+            jsonFromArray(from: files)
+            
+            for item in value {    // Item is having array of dictionary
                 for (key, rec) in item {
-                    if let dict = rec as? [String:Any] {
+                    if let dict = rec as? [String:Any] {     //Updated by kush
                         if let filePathkey = dict["filePath"] as? String {
                             filesToUpload[filePathkey] = key
                             jsonRecords.append(rec)
@@ -407,6 +408,8 @@ class IconViewController: NSViewController {
         
         var json : [String:Any] = json_main
         json["files"] = jsonRecords
+        
+        jsonFromDict(from: json)
         
         guard let jsonData = try? JSONSerialization.data(withJSONObject: json, options: [.sortedKeys, .prettyPrinted]) else { return }
         
@@ -435,6 +438,43 @@ class IconViewController: NSViewController {
                                          recoveryContext : recoveryContext)
     }
     
+    func jsonFromArray(from object:Any){
+        
+        let retString = " "
+        do {
+            let jsonData = try JSONSerialization.data(withJSONObject: object, options: .prettyPrinted)
+            // here "jsonData" is the dictionary encoded in JSON data
+            let decoded = try JSONSerialization.jsonObject(with: jsonData, options: [])
+            // here "decoded" is of type `Any`, decoded from JSON data
+            
+            print("JSON Value String ::\(decoded)");
+            
+            //  return decoded
+        } catch {
+            print(error.localizedDescription)
+        }
+        
+        //  return  retString ;
+    }
+    
+    func jsonFromDict(from object:Any){
+        
+        let retString = " "
+        do {
+            let jsonData = try JSONSerialization.data(withJSONObject: object, options: .prettyPrinted)
+            // here "jsonData" is the dictionary encoded in JSON data
+            let decoded = try JSONSerialization.jsonObject(with: jsonData, options: [])
+            // here "decoded" is of type `Any`, decoded from JSON data
+            
+            print("metadata::\(decoded)");
+            
+            //  return decoded
+        } catch {
+            print(error.localizedDescription)
+        }
+        
+        //  return  retString ;
+    }
     
     func uploadMetadataJsonOperation(showName: String,
                                      sasToken: String,
@@ -538,7 +578,7 @@ extension IconViewController : NSCollectionViewDataSource {
     
     func numberOfSections(in collectionView: NSCollectionView) -> Int {
         return self.iconSections.count
-      }
+    }
     
     func collectionView(_ collectionView: NSCollectionView, numberOfItemsInSection section: Int) -> Int {
         if (self.iconSections.count == 0) {
@@ -555,7 +595,7 @@ extension IconViewController : NSCollectionViewDataSource {
         
         let data = icons[self.iconSections[indexPath.section]!.offset + indexPath.item]
         collectionViewItem.node = data
-
+        
         return item
     }
     
@@ -570,9 +610,9 @@ extension IconViewController : NSCollectionViewDataSource {
 }
 
 extension IconViewController : NSCollectionViewDelegateFlowLayout {
-  func collectionView(_ collectionView: NSCollectionView, layout collectionViewLayout: NSCollectionViewLayout, referenceSizeForHeaderInSection section: Int) -> NSSize {
-    return NSSize(width: 1000, height: 40)
-  }
+    func collectionView(_ collectionView: NSCollectionView, layout collectionViewLayout: NSCollectionViewLayout, referenceSizeForHeaderInSection section: Int) -> NSSize {
+        return NSSize(width: 1000, height: 40)
+    }
 }
 
 
@@ -604,7 +644,7 @@ extension IconViewController : NSCollectionViewDelegate {
     
     internal func collectionView(_ collectionView: NSCollectionView, didDeselectItemsAt indexPaths: Set<IndexPath>) {
         guard let indexPath = indexPaths.first else {return}
-
+        
         setHighlight(indexPath: indexPath, select: false)
     }
     

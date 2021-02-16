@@ -14,6 +14,7 @@ struct fileInfo {
     var name: String
     var type: String
     var filesize: UInt64?
+    var uniqueID: String
     var aleFileDetail : ALEFileDetails?
 }
 
@@ -66,15 +67,12 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
     // season_name : (season_id, [(episode_name,episode_id)], [(block_name,block_id)], lastShootDay, shootDayFormat)
     typealias SeasonsType = [String:(String, [(String,String)],[(String,String)], String, String)]
     
-    
-    
     var seasons: SeasonsType!
     var lastShootDay: String!
     var shootDayFormat: String!
     
     // reference to a window
     var window: NSWindow?
-    
     
     static let kCameraRAWFileType = "Camera RAW"
     static let kAudioFileType = "Audio"
@@ -85,6 +83,7 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
     static let kOthersFileType = "Others"
     static let kSourceFile = "Source File"
     static let kReportNotesFilePath = "Reports-Notes"
+    static let kReportNotesType = "Reports/Notes"
     
     static let strOK = "OK"
     static let strCancel = "Cancel"
@@ -96,7 +95,7 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
     
     fileprivate let batchItems = ["1st Batch", "2nd Batch","Lunch and Wrap"]
     
-    var selectedArray:[String] = [kCameraRAWFileType,kLUTFileType,kCDLFileType,kStillsFileType,"Reports/Notes"]
+    var selectedArray:[String] = [kCameraRAWFileType,kLUTFileType,kCDLFileType,kStillsFileType,kReportNotesType]
     var selectedFilePathsArray = [[String:[[String:Any]]]]()
     
     var selectedCameraFilePathsArray = [[String:[[String:Any]]]](repeating: [:], count:5)
@@ -232,6 +231,14 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
     // MARK: - FilePickerDialouge
     func filePickerDialog(fileType: String, completion: @escaping (_ result:[String:[[String:Any]]]) -> Void) {
         
+        var  fileDirPath = fileType
+        if !fileType.isEmpty{
+            
+            if fileType == UploadSettingsViewController.kReportNotesType{
+                fileDirPath = UploadSettingsViewController.kReportNotesFilePath
+            }
+        }
+        
         let dialog = NSOpenPanel();
         
         dialog.title                   = "Choose single directory | Our Code World"
@@ -275,17 +282,7 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
                     
                 }
                 let scanItems = filePaths
-                /*
-                 let scanItems = filePaths.filter{ fileName in
-                 let fileNameLower = fileName.lowercased()
-                 for keyword in [".mp4", ".mov", ".mxf", ".ari", ".ale", ".xml"] {
-                 if fileNameLower.contains(keyword) {
-                 return true
-                 }
-                 }
-                 return false
-                 }
-                 */
+                
                 var files = [[String:Any]]()
                 for scanItem in scanItems {
                     let filename = URL(fileURLWithPath: scanItem.key).lastPathComponent
@@ -297,7 +294,7 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
                     }
                     let filePath = parsed.isEmpty ? filename : parsed + "/" + filename
                     let item : [String : Any] = ["name": filename,
-                                                 "filePath": fileType + "/" + filePath,
+                                                 "filePath": fileDirPath + "/" + filePath,
                                                  "filesize":scanItem.value,
                                                  "checksum":fileType + "/" + filePath, //randomString(length: 32),/* will be replaced latter by real checksum value */
                                                  "type":fileType]
@@ -323,7 +320,7 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
     }
     
     @IBAction func startUpload(_ sender: Any) {
-       
+        
         let dateformat: String = "yyyy-MM-dd"
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = dateformat
@@ -369,7 +366,7 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
             return
         } else {
             if shootDayField.stringValue.isStringPatternMatch(withstring: shootDayFormat ?? " "){
-              //  print("shootDay string: \(shootDayField.stringValue)")
+                //  print("shootDay string: \(shootDayField.stringValue)")
             } else {
                 showPopoverMessage(positioningView: shootDayField, msg: "Please specify shoot day as shoot day format")
                 return
@@ -434,7 +431,7 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
                 return
             } else {
                 if shootDayField.stringValue.isStringPatternMatch(withstring: shootDayFormat ?? " "){
-                  //  print("shootDay string: \(shootDayField.stringValue)")
+                    //  print("shootDay string: \(shootDayField.stringValue)")
                 } else {
                     showPopoverMessage(positioningView: shootDayField, msg: "Please specify shoot day as shoot day format")
                     return
@@ -480,8 +477,6 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
                     }
                 }
             }
-            
-          //  print("uploadFiles <><>><><>:\(uploadFiles)")
             
             NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.OnStartUploadShow),
                                             object: nil,
@@ -561,7 +556,6 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
         guard let block = self.seasons[seasonName] else { return [] }
         return block.2
     }
-    
     
     private func fetchSeasonsAndEpisodes(showId: String) {
         
@@ -695,7 +689,7 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
             case 3:
                 fileType = UploadSettingsViewController.kStillsFileType
             case 4:
-                fileType = UploadSettingsViewController.kReportsFileType
+                fileType = UploadSettingsViewController.kReportNotesType
             default:
                 break
             }
@@ -704,14 +698,14 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
             case 0:
                 fileType = UploadSettingsViewController.kAudioFileType
             case 1:
-                fileType = UploadSettingsViewController.kReportsFileType
+                fileType = UploadSettingsViewController.kReportNotesType
             default:
                 break
             }
         } else if (index == 2) {
             switch btnTag {
             case 0:
-                fileType = UploadSettingsViewController.kReportsFileType
+                fileType = UploadSettingsViewController.kReportNotesType
             default:
                 break
             }
@@ -726,7 +720,7 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
         
         if (fileType == nil) { return }
         
-        filePickerDialog(fileType: fileType!) { (files) in
+        filePickerDialog(fileType: fileType!) { [self] (files) in
             if files.isEmpty {
                 return
             }
@@ -751,7 +745,7 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
     
     @IBAction func popUpSelectionDidChange(_ sender: NSPopUpButton) {
         
-      //  print("selected Item : ",teamPopup.titleOfSelectedItem!)
+        //  print("selected Item : ",teamPopup.titleOfSelectedItem!)
         
         let index = teamPopup.indexOfSelectedItem
         selectedArray.removeAll()
@@ -760,13 +754,14 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
             selectedArray.append(UploadSettingsViewController.kLUTFileType)
             selectedArray.append(UploadSettingsViewController.kCDLFileType)
             selectedArray.append(UploadSettingsViewController.kStillsFileType)
+            selectedArray.append(UploadSettingsViewController.kReportNotesType)
             selectedFilePathsArray = selectedCameraFilePathsArray
         } else if(index == 1) {
             selectedArray.append(UploadSettingsViewController.kAudioFileType)
-            selectedArray.append(UploadSettingsViewController.kReportNotesFilePath)
+            selectedArray.append(UploadSettingsViewController.kReportNotesType)
             selectedFilePathsArray = selectedSoundFilePathsArray
         } else if(index == 2) {
-            selectedArray.append(UploadSettingsViewController.kReportNotesFilePath)
+            selectedArray.append(UploadSettingsViewController.kReportNotesType)
             selectedFilePathsArray = selectedScriptsFilePathsArray
         } else if(index == 3) {
             selectedArray.append("Others")
@@ -829,7 +824,7 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
         if let sender = obj.object as? NSTextField {
             if sender.tag == 105 {
                 if shootDayField.stringValue.isStringPatternMatch(withstring: shootDayFormat ?? " ") {
-                  //  print("shootDay string: \(shootDayField.stringValue)")
+                    //  print("shootDay string: \(shootDayField.stringValue)")
                 } else {
                     showPopoverMessage(positioningView: shootDayField, msg: "Kindly enter shoot day as shoot day format")
                 }
@@ -859,34 +854,45 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
             uploadDirs[selectedArray[i]] = []
             uploadFiles[selectedArray[i]] = []
             totalFileStoUpload[selectedArray[i]] = []
-            for (key, value) in selectedFilePathsArray[i] {
-                uploadDirs[selectedArray[i]]?.append(key)
+            for (keyMain, value) in selectedFilePathsArray[i] {
+                uploadDirs[selectedArray[i]]?.append(keyMain)
                 for f in value {
                     uploadFiles[selectedArray[i]]?.append(f)
-                    totalFileStoUpload[selectedArray[i]]?.append(f)
-                    for (key, value1) in f {
+                    var fUpdatedDict = [String:Any]()
+                    var dictWithDirPath = [String:Any]()
+                    for (key, value1) in f {  //key means dir path
                         var fDict:[String:Any]
                         fDict = value1 as! [String : Any]
-                     //   print("file Dict :\(fDict)")
+                        let uniqueID = randomString(length: 32)
+                        
                         uploadedFileList.append(fileInfo(dirPath: key,
                                                          checksum: fDict["checksum"] as! String,
                                                          filePath: fDict["filePath"] as! String,
                                                          name: fDict["name"] as! String ,
                                                          type: fDict["type"] as! String,
                                                          filesize:(fDict["filesize"] as! UInt64),
+                                                         uniqueID: uniqueID,
                                                          aleFileDetail: nil
                         ))
+                        
+                        fUpdatedDict["checksum"] = fDict["checksum"] as! String
+                        fUpdatedDict["filePath"] = fDict["filePath"] as! String
+                        fUpdatedDict["name"] = fDict["name"] as! String
+                        fUpdatedDict["type"] = fDict["type"] as! String
+                        fUpdatedDict["filesize"] = (fDict["filesize"] as! UInt64)
+                        fUpdatedDict["uniqueID"] = uniqueID
+                        
+                        dictWithDirPath[key] = fUpdatedDict
                     }
+                    totalFileStoUpload[selectedArray[i]]?.append(dictWithDirPath)
                 }
             }
         }
         
-     //   print("uploadFiles :KUSH::::\(uploadFiles)")
-        
         for i in 0 ..< uploadedFileList.count {
             var fileStruct:fileInfo?
             fileStruct = uploadedFileList[i]
-           
+            
             if fileStruct?.name != nil{
                 let strArray = fileStruct?.name.components(separatedBy: ".")
                 if(strArray![1] == "ale"){
@@ -908,73 +914,65 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
         
         // Check ALE Files have source Name o/w goes to
         
-        
         var updatedDict = [String: Any]()
         var keyDictArray = [[String: Any]]()
         for (key, value1) in totalFileStoUpload {
             //value1   =  Audio array , key  = Audio
             // to Get all updated value for key = Audio
-            keyDictArray =  modifiedALEItem(sourceArray: value1, Key: key, fromArray: updatedALEFiles)  //array of having all item related to this key
+            keyDictArray =  modifiedALEItem(sourceArray: value1, keyFileType: key, fromArray: updatedALEFiles)  //array of having all item related to this key
             updatedDict[key] = keyDictArray
         }
-        print("updatedDict ::::: Hemakshi \(updatedDict)")
+        
+        do{
+            let jsonData = try JSONSerialization.data(withJSONObject: updatedDict, options: .prettyPrinted)
+            // here "jsonData" is the dictionary encoded in JSON data
+            let decoded = try JSONSerialization.jsonObject(with: jsonData, options: [])
+            // here "decoded" is of type `Any`, decoded from JSON data
+            
+            //print("files dict :::\(decoded)");
+            
+            //  return decoded
+        } catch {
+            print(error.localizedDescription)
+        }
+        
         startUploadWithALEParsing(uploadFilesWithALE: updatedDict)
     }
-   /*
-    func modifiedALEItem(sourceFile:fileInfo? , fromArray:[[String:Any]]) -> [String: Any]{
-        
-        var retDict = [String: Any]()
-        if sourceFile?.checksum != nil{
-              for item in fromArray {
-                if item["checksum"] as? String == sourceFile?.checksum{
-                    retDict["checksum"] = item["checksum"]
-                    retDict["filePath"] = item["filePath"]
-                    retDict["filesize"] = item["filesize"]
-                    retDict["name"] = item["name"]
-                    retDict["type"] = item["type"]
-                    retDict["miscInfo"] = item["miscInfo"]
-                    return retDict;
-                }
-            }
-        }
-        return retDict;
-    }
- */
-    func modifiedALEItem(sourceArray:[[String:Any]],Key:String , fromArray:[[String:Any]]) -> [[String: Any]]{
+    
+    func modifiedALEItem(sourceArray:[[String:Any]],keyFileType:String , fromArray:[[String:Any]]) -> [[String: Any]]{
         
         var retArray = [[String:Any]]()
         var retDict = [String: Any]()
         var tempDict = [String: Any]()
-        
+        var keyDict =  [String: Any]()
+        var dirPath = String ()
         for itemDict in sourceArray {
-            for(_,valueItem) in itemDict {
+            keyDict =  [String: Any]()
+            for(key,valueItem) in itemDict {
                 tempDict = valueItem as! [String : Any]
+                
                 if let fileName = tempDict["name"]{
                     let fileExtenssion = (fileName as! String).components(separatedBy: ".")
                     if fileExtenssion.count >= 2 {
+                        retDict = [String: Any]()
+                        dirPath = key
                         if fileExtenssion[1] == "ale"{
-                            retDict = updatedALEFile(sourceCheckSum: tempDict["checksum"] as Any, fromDictArray: fromArray)
+                            retDict = updatedALEFile(sourceCheckSum: tempDict["uniqueID"] as Any, fromDictArray: fromArray)
                         }else{
                             retDict["checksum"] = tempDict["checksum"]
                             retDict["filePath"] = tempDict["filePath"]
                             retDict["filesize"] = tempDict["filesize"]
                             retDict["name"] = tempDict["name"]
                             retDict["type"] = tempDict["type"]
-                            retDict["miscInfo"] = " "
-                            
-                            
-                           // print("retDict :::: Non ALE ::: \(retDict)")
+                            // retDict["miscInfo"] = " "
                         }
                     }
                 }
             }
             
-         //   print("retDict :::: Kush :::<><><><> \(retDict)")
-            retArray.append(retDict)
-                
-         }
-        
-        
+            keyDict[dirPath] = retDict
+            retArray.append(keyDict)
+        }
         return retArray;
     }
     
@@ -983,10 +981,10 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
         var retDict = [String: Any]()
         
         for item in fromDictArray{
-            if let itemValue = item["checksum"]{
+            if let itemValue = item["uniqueID"]{
                 if sourceCheckSum as? String == itemValue as? String{
                     
-                    print("sourceCheckSum ::::\(sourceCheckSum)  item ::: \(itemValue)")
+                    //print("uniqueID ::::\(sourceCheckSum)  item ::: \(itemValue)")
                     retDict["checksum"] = item["checksum"] as Any
                     retDict["filePath"] = item["filePath"]as Any
                     retDict["filesize"] = item["filesize"]as Any
@@ -994,7 +992,7 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
                     retDict["type"] = item["type"] as Any
                     retDict["miscInfo"] = item["miscInfo"] as Any
                     
-                    print("retDict ::::ALE ::: \(retDict)")
+                    //print("retDict ::::ALE ::: \(retDict)")
                     return retDict
                 }
             }
@@ -1004,30 +1002,9 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
         return retDict
     }
     
-    
-    func jsonFromArray(from object:Any) -> Any? {
-        
-        let retString = " "
-        do {
-            let jsonData = try JSONSerialization.data(withJSONObject: object, options: .prettyPrinted)
-            // here "jsonData" is the dictionary encoded in JSON data
-            let decoded = try JSONSerialization.jsonObject(with: jsonData, options: [])
-            // here "decoded" is of type `Any`, decoded from JSON data
-           
-            print("f String ::\(decoded)");
-            
-            return decoded
-        } catch {
-            print(error.localizedDescription)
-        }
-        
-        return  retString ;
-    }
-    
-    
     func randomString(length: Int) -> String {
-      let letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-      return String((0..<length).map{ _ in letters.randomElement()! })
+        let letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+        return String((0..<length).map{ _ in letters.randomElement()! })
     }
     
     
@@ -1125,8 +1102,6 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
                 }
             }
         }
-        
-      //  print("uploadFiles <><>><><>:\(uploadFiles)")
         
         NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.OnStartUploadShow),
                                         object: nil,

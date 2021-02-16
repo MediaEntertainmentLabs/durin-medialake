@@ -44,7 +44,6 @@ class ALESelectionViewController: NSViewController,SourceFileColumnSelectedDeleg
         
     }
     
-    
     override func viewDidAppear() {
         // After a window is displayed, get the handle to the new window.
         window = self.view.window!
@@ -67,7 +66,7 @@ class ALESelectionViewController: NSViewController,SourceFileColumnSelectedDeleg
     //MARK : NSPopMenu Item Delegate
     
     func didSourceFileColumnSelected(selectedRow:Int , selectedSourceName:NSPopUpButton){
-        print("selected Row  during FiLeOption : \(selectedRow)")
+        // print("selected Row  during FiLeOption : \(selectedRow)")
         
         selectedRowIndex = selectedRow
         var updatedStruct = filesArray[selectedRow]?.aleFileDetail;
@@ -86,13 +85,13 @@ class ALESelectionViewController: NSViewController,SourceFileColumnSelectedDeleg
     
     func didExactContainColumnSelected(selectedRow:Int , selectedSourceName:NSPopUpButton)
     {
-        print("selected Row  during Option selection : \(selectedRow)   indexOfOptionItem :\(selectedSourceName.indexOfSelectedItem)")
+        //print("selected Row  during Option selection : \(selectedRow)   indexOfOptionItem :\(selectedSourceName.indexOfSelectedItem)")
         selectedRowIndex = selectedRow
         var updatedStruct = filesArray[selectedRowIndex]?.aleFileDetail;
         updatedStruct?.selectedOptionIndex = selectedSourceName.indexOfSelectedItem
         updatedStruct?.optionExactName = selectedSourceName.titleOfSelectedItem
         if selectedSourceName.indexOfSelectedItem == 0 || selectedSourceName.indexOfSelectedItem == 1 {
-           
+            
             updatedStruct?.charecterFromRight = nil
             updatedStruct?.charecterFromLeft = nil
             
@@ -105,18 +104,14 @@ class ALESelectionViewController: NSViewController,SourceFileColumnSelectedDeleg
     }
     
     @IBAction func btnOKClicked(_ sender: Any) {
-      
         let(errMsg,result) = self.validateAlEFiles()
         if result {
             // GO TO Upload Files
-            
             var dataArray = [[String: Any]]()
             dataArray = convertToDictionary()
-            print("file Data Array \(dataArray)")
-            
+            //print("file Data Array \(dataArray)")
             aleFileDelegate?.didALEFileUpdated(updatedALEFiles: dataArray)
             window?.performClose(nil)
-            
         }else{
             showPopoverMessage(positioningView: tblALEList, msg: errMsg)
         }
@@ -157,33 +152,31 @@ class ALESelectionViewController: NSViewController,SourceFileColumnSelectedDeleg
         dictArray.removeAll()
         for item in filesArray {
             
-            var dict: [String: Any] = ["checksum":item?.checksum.trimmingCharacters(in: .whitespacesAndNewlines) ?? "", "filePath":item?.filePath.trimmingCharacters(in: .whitespacesAndNewlines) ?? "", "name":item?.name.trimmingCharacters(in: .whitespacesAndNewlines) ?? "", "type":item?.type.trimmingCharacters(in: .whitespacesAndNewlines) ?? "","filesize":item?.filesize ?? ""]
+            var dict: [String: Any] = ["checksum":item?.checksum.trimmingCharacters(in: .whitespacesAndNewlines) ?? "", "filePath":item?.filePath.trimmingCharacters(in: .whitespacesAndNewlines) ?? "", "name":item?.name.trimmingCharacters(in: .whitespacesAndNewlines) ?? "", "type":item?.type.trimmingCharacters(in: .whitespacesAndNewlines) ?? "","filesize":item?.filesize ?? "","uniqueID":item?.uniqueID ?? ""]
             
             var miscDict = [String:Any]()
             
             if let aleFileDetail = item?.aleFileDetail{
                 
                 if aleFileDetail.SourceFile{
-                // No need to add data in miscDict when SourceFile column is present in ale files
-                miscDict["aleFileNameField"] = UploadSettingsViewController.kSourceFile
+                    // No need to add data in miscDict when SourceFile column is present in ale files
+                    miscDict["aleFileNameField"] = UploadSettingsViewController.kSourceFile
                 }else{
-                miscDict["aleFileNameField"] = aleFileDetail.selectedSourceFilesName?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-                miscDict["matchType"] = aleFileDetail.optionExactName?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-                // miscDict["truncateCharFromStart"] = aleFileDetail.charecterFromLeft
-                // miscDict["truncateCharFromEnd"] = aleFileDetail.charecterFromRight
-                miscDict["truncateCharFromStart"] = "22"
-                miscDict["truncateCharFromEnd"] = "10"
+                    miscDict["aleFileNameField"] = aleFileDetail.selectedSourceFilesName?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+                    miscDict["matchType"] = aleFileDetail.optionExactName?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+                    miscDict["truncateCharFromStart"] = aleFileDetail.charecterFromLeft ?? 0
+                    miscDict["truncateCharFromEnd"] = aleFileDetail.charecterFromRight ?? 0
                 }
-             }
+            }
             
-           if (miscDict.count > 0) {
+            if (miscDict.count > 0) {
                 dict["miscInfo"] = miscDict
             }else{
                 dict["miscInfo"] = ""
             }
-           dictArray.append(dict)
+            dictArray.append(dict)
         }
-         return dictArray
+        return dictArray
     }
     
     @IBAction func btnCancelClicked(_ sender: Any) {
@@ -325,31 +318,22 @@ extension ALESelectionViewController: NSTableViewDelegate {
 }
 extension ALESelectionViewController: NSTextFieldDelegate {
     
-    func controlTextDidBeginEditing(_ obj: Notification) {
-        guard let textField = obj.object as? NSTextField else {
-            return
-        }
-    }
-    
     func controlTextDidEndEditing(_ obj: Notification) {
-        
         guard let textField = obj.object as? NSTextField else {
             return
         }
-        print("controlTextDidEndEditing :\(textField.stringValue) tag ;\(textField.tag)")
-        
         if(textField.tag == 100){
             var updatedStruct = filesArray[selectedRowIndex]?.aleFileDetail;
             updatedStruct?.charecterFromLeft = Int(textField.intValue)
             filesArray[selectedRowIndex]?.aleFileDetail = updatedStruct
-            print("updated charecterFromLeft :\(String(describing: filesArray[selectedRowIndex]?.aleFileDetail?.charecterFromLeft))")
+            //print("updated charecterFromLeft :\(String(describing: filesArray[selectedRowIndex]?.aleFileDetail?.charecterFromLeft))")
             tblALEList.reloadData()
         }
         else  if(textField.tag == 101){
             var updatedStruct = filesArray[selectedRowIndex]?.aleFileDetail;
             updatedStruct?.charecterFromRight = Int(textField.intValue)
             filesArray[selectedRowIndex]?.aleFileDetail = updatedStruct
-            print("updated charecterFromRight :\(String(describing: filesArray[selectedRowIndex]?.aleFileDetail?.charecterFromRight))")
+            //print("updated charecterFromRight :\(String(describing: filesArray[selectedRowIndex]?.aleFileDetail?.charecterFromRight))")
             tblALEList.reloadData()
             
         }
