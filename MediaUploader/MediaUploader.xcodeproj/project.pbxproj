@@ -22,6 +22,8 @@
 		C917DDCC25B01D7F00B967B8 /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C917DDCA25B01D6400B967B8 /* AppKit.framework */; };
 		C917DDD125B2075F00B967B8 /* RightPaneToolPalette.xib in Resources */ = {isa = PBXBuildFile; fileRef = C917DDD025B2075F00B967B8 /* RightPaneToolPalette.xib */; };
 		C917DDD325B226F500B967B8 /* RightPaneToolPalette.swift in Sources */ = {isa = PBXBuildFile; fileRef = C917DDD225B226F500B967B8 /* RightPaneToolPalette.swift */; };
+		C93C43B525D59F710032F417 /* CheckPathExistsOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = C93C43B425D59F710032F417 /* CheckPathExistsOperation.swift */; };
+		C93C43B725D687360032F417 /* XMLResponseParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = C93C43B625D687360032F417 /* XMLResponseParser.swift */; };
 		C95E74E7257ACEB80073410F /* AsyncOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = C95E74E6257ACEB80073410F /* AsyncOperation.swift */; };
 		C95F6C1A2580B8B20008D8A0 /* ErrorHandling.swift in Sources */ = {isa = PBXBuildFile; fileRef = C95F6C192580B8B20008D8A0 /* ErrorHandling.swift */; };
 		C95F6C1C2582B6EE0008D8A0 /* FileUploadOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = C95F6C1B2582B6EE0008D8A0 /* FileUploadOperation.swift */; };
@@ -101,6 +103,8 @@
 		C917DDCA25B01D6400B967B8 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
 		C917DDD025B2075F00B967B8 /* RightPaneToolPalette.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = RightPaneToolPalette.xib; sourceTree = "<group>"; };
 		C917DDD225B226F500B967B8 /* RightPaneToolPalette.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RightPaneToolPalette.swift; sourceTree = "<group>"; };
+		C93C43B425D59F710032F417 /* CheckPathExistsOperation.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CheckPathExistsOperation.swift; sourceTree = "<group>"; };
+		C93C43B625D687360032F417 /* XMLResponseParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = XMLResponseParser.swift; sourceTree = "<group>"; };
 		C95E74E6257ACEB80073410F /* AsyncOperation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncOperation.swift; sourceTree = "<group>"; };
 		C95F6C192580B8B20008D8A0 /* ErrorHandling.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorHandling.swift; sourceTree = "<group>"; };
 		C95F6C1B2582B6EE0008D8A0 /* FileUploadOperation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileUploadOperation.swift; sourceTree = "<group>"; };
@@ -267,6 +271,7 @@
 		C962D1A6258AA7000012F684 /* Utils */ = {
 			isa = PBXGroup;
 			children = (
+				C93C43B425D59F710032F417 /* CheckPathExistsOperation.swift */,
 				C95E74E6257ACEB80073410F /* AsyncOperation.swift */,
 				C961739B25910B5800F037EB /* CalculateChecksumOperation.swift */,
 				C95F6C192580B8B20008D8A0 /* ErrorHandling.swift */,
@@ -275,6 +280,7 @@
 				C9807E68257F923A00488E46 /* Utils.swift */,
 				C96173A325933C2A00F037EB /* URLRequests.swift */,
 				C96173A82593B4EF00F037EB /* SASToken.swift */,
+				C93C43B625D687360032F417 /* XMLResponseParser.swift */,
 			);
 			name = Utils;
 			sourceTree = "<group>";
@@ -572,7 +578,9 @@
 				C962D1A3258788420012F684 /* OutlineViewController+Expansion.swift in Sources */,
 				731C984D252DE9DB008E8A75 /* AppDelegate.swift in Sources */,
 				C962D1A5258AA3A40012F684 /* PopoverViewController.swift in Sources */,
+				C93C43B525D59F710032F417 /* CheckPathExistsOperation.swift in Sources */,
 				C97621D4256BA90900C48E15 /* CollectionViewItem.swift in Sources */,
+				C93C43B725D687360032F417 /* XMLResponseParser.swift in Sources */,
 				731C9885252EE911008E8A75 /* OutlineViewController+Restoration.swift in Sources */,
 				C987BB35253CC93E00A440A7 /* CustomTableCellView.swift in Sources */,
 				C95E74E7257ACEB80073410F /* AsyncOperation.swift in Sources */,
