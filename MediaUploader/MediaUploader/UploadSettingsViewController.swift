@@ -25,7 +25,7 @@ struct ALEFileDetails {
     var selectedSourceFilesName: String?
     var optionExactContains: [String]?
     var optionExactName: String?
-    var selectedOptionIndex: Int
+    var selectedOptionIndex: Int?
     var charecterFromLeft: Int?
     var charecterFromRight: Int?
 }
@@ -895,16 +895,18 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
             
             if fileStruct?.name != nil{
                 let strArray = fileStruct?.name.components(separatedBy: ".")
-                if(strArray![1] == "ale"){
-                    
-                    let(sourceFile, columnArray) = parseALEFiles(dirPath: fileStruct!.dirPath)
-                    if sourceFile{
-                        fileStruct?.aleFileDetail = ALEFileDetails(SourceFile: true,otherSourceFiles: nil,selectedSourceFilesIndex: nil,selectedSourceFilesName:nil,optionExactContains: nil,optionExactName:nil,selectedOptionIndex: 0,charecterFromLeft: nil,charecterFromRight: nil)
+                if ( strArray!.count > 1 ){
+                    if(strArray![1] == "ale"){
                         
-                    }else{
-                        fileStruct?.aleFileDetail = ALEFileDetails(SourceFile: false,otherSourceFiles: columnArray,selectedSourceFilesIndex: 0,selectedSourceFilesName: nil,optionExactContains: arrExactContains,optionExactName: nil,selectedOptionIndex: 0,charecterFromLeft: nil,charecterFromRight: nil)
+                        let(sourceFile, columnArray) = parseALEFiles(dirPath: fileStruct!.dirPath)
+                        if sourceFile{
+                            fileStruct?.aleFileDetail = ALEFileDetails(SourceFile: true,otherSourceFiles: nil,selectedSourceFilesIndex: nil,selectedSourceFilesName:nil,optionExactContains: nil,optionExactName:nil,selectedOptionIndex: 0,charecterFromLeft: nil,charecterFromRight: nil)
+                            
+                        }else{
+                            fileStruct?.aleFileDetail = ALEFileDetails(SourceFile: false,otherSourceFiles: columnArray,selectedSourceFilesIndex: 0,selectedSourceFilesName: nil,optionExactContains: arrExactContains,optionExactName: nil,selectedOptionIndex: 0,charecterFromLeft: nil,charecterFromRight: nil)
+                        }
+                        aleSouceFilesArray.append(fileStruct!)
                     }
-                    aleSouceFilesArray.append(fileStruct!)
                 }
             }
         }

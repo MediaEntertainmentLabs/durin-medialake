@@ -282,7 +282,7 @@ extension ALESelectionViewController: NSTableViewDelegate {
                     cell.ExactCancelPopUp.insertItem(withTitle:ALESelectionViewController.kChooseOption, at: 0)
                     cell.ExactCancelPopUp.addItems(withTitles: chooseArray)
                     if cell.ExactCancelPopUp.numberOfItems > 0 {
-                        cell.ExactCancelPopUp.selectItem(at: item.aleFileDetail!.selectedOptionIndex)
+                        cell.ExactCancelPopUp.selectItem(at: item.aleFileDetail!.selectedOptionIndex!)
                     }else{
                         cell.ExactCancelPopUp.setTitle("No Items")
                     }
