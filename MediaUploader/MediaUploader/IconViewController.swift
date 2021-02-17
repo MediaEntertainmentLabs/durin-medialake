@@ -323,7 +323,14 @@ class IconViewController: NSViewController {
                 pendingUploads![type] = []
                 for dir in value {
                     // folderLayoutStr -> [season name]/[block name]/[shootday]/[batch]/[unit ]/[type]
-                    let folderLayoutStr = metadatafolderLayout + "\(type)/"
+                    var folderLayoutStr : String
+                    
+                    if  type == UploadSettingsViewController.kReportNotesType{
+                        folderLayoutStr = metadatafolderLayout + "\(UploadSettingsViewController.kReportNotesFilePath)/"
+                    }else{
+                        folderLayoutStr = metadatafolderLayout + "\(type)/"
+                    }
+                    
                     
                     // create UI row in TableView (one per each folder being upload) before all upload tasks will be created
                     let uploadRecord = UploadTableRow(showName: showName, uploadParams: json_main, srcPath: dir, dstPath: folderLayoutStr)
@@ -385,7 +392,13 @@ class IconViewController: NSViewController {
                 continue
             }
             // folderLayoutStr -> [season name]/[block name]/[shootday]/[batch]/[unit ]/[type]
-            let folderLayoutStr = metadatafolderLayout + "\(type)/"
+            //  let folderLayoutStr = metadatafolderLayout + "\(type)/"
+            var folderLayoutStr : String
+            if  type == UploadSettingsViewController.kReportNotesType{
+                folderLayoutStr = metadatafolderLayout + "\(UploadSettingsViewController.kReportNotesFilePath)/"
+            }else{
+                folderLayoutStr = metadatafolderLayout + "\(type)/"
+            }
             
             // metadata.json upload task is root task, all data tasks are subtasks
             // sasToken is unavailable here, will be filled in latter

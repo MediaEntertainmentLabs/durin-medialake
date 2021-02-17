@@ -296,7 +296,7 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
                     let item : [String : Any] = ["name": filename,
                                                  "filePath": fileDirPath + "/" + filePath,
                                                  "filesize":scanItem.value,
-                                                 "checksum":fileType + "/" + filePath, //randomString(length: 32),/* will be replaced latter by real checksum value */
+                                                 "checksum":fileDirPath + "/" + filePath, //randomString(length: 32),/* will be replaced latter by real checksum value */  // fileType updaed by FieleDirPath to update  "Reports/Notes replace with Reports-Notes"
                                                  "type":fileType]
                     files.append([scanItem.key : item])
                     
