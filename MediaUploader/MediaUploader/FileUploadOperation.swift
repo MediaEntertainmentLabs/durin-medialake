@@ -13,6 +13,7 @@ final class FileUploadOperation: AsyncOperation {
     enum UploadType {
         case kMetadataJsonUpload
         case kDataUpload
+        case kDataRemove
     }
     
     private let showId: String
@@ -45,10 +46,10 @@ final class FileUploadOperation: AsyncOperation {
     override func main() {
         let (_, error, status) = runAzCopyCommand(cmd: LoginViewController.azcopyPath.path, args: self.args)
         
- 
         if status == 0 {
-            
-            if self.step == UploadType.kMetadataJsonUpload {
+            if self.step == UploadType.kDataRemove {
+                print ("------------  Remove of data completed successfully!")
+            } else if self.step == UploadType.kMetadataJsonUpload {
                 print ("------------  Completed successfully: \(sasToken) ")
                 print ("------------  Cleanup of ", self.args[1])
                 removeFile(path: self.args[1])

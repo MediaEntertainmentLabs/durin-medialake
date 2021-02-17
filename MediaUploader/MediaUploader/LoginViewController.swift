@@ -597,7 +597,7 @@ class LoginViewController: NSViewController {
                     self.window?.makeKeyAndOrderFront(self)
                 }
                 
-                if (AppDelegate.appDelegate.mainWindowController.contentViewController != nil) {
+                if ((AppDelegate.appDelegate.mainWindowController != nil) && AppDelegate.appDelegate.mainWindowController.contentViewController != nil) {
                     AppDelegate.appDelegate.mainWindowController.contentViewController?.removeFromParent()
                     AppDelegate.appDelegate.mainWindowController.contentViewController = nil
                 }

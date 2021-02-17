@@ -315,8 +315,7 @@ class IconViewController: NSViewController {
         let metadataJsonFilename = NSUUID().uuidString + "_metadata.json"
         
 
-        var sasToken : String!
-        
+
         if (pendingUploads == nil) {
             pendingUploads = [:]
             for (type, value) in srcDirs {
@@ -326,7 +325,7 @@ class IconViewController: NSViewController {
                     let folderLayoutStr = metadatafolderLayout + "\(type)/"
                     
                     // create UI row in TableView (one per each folder being upload) before all upload tasks will be created
-                    let uploadRecord = UploadTableRow(showName: showName, uploadParams: json_main, srcPath: dir, dstPath: folderLayoutStr)
+                    let uploadRecord = UploadTableRow(showName: showName, uploadParams: json_main, srcPath: dir, dstPath: folderLayoutStr, isExistRemotely: false)
                     pendingUploads![type]!.append(uploadRecord)
                     NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.AddUploadTask),
                                                     object: nil,
@@ -344,20 +343,15 @@ class IconViewController: NSViewController {
                                                "srcDir": srcDirs,
                                                "pendingUploads": pendingUploads!]
         
-        if let sas = AppDelegate.cacheSASTokens[showName]?.value() {
-            // if SAS Token is already in cache just use it
-            sasToken = sas
-        } else {
-            fetchSASTokenURLTask(showId : self.showId(showName: showName), synchronous: false) { (result) in
-                
-                if (result["error"] as? String) != nil {
-                    uploadShowFetchSASTokenErrorAndNotify(error: OutlineViewController.NameConstants.kUploadShowFailedStr, recoveryContext: recoveryContext)
-                    return
-                }
-                
-                sasToken = result["data"] as? String
-                AppDelegate.cacheSASTokens[showName]=SASToken(showId : self.showId(showName: showName), sasToken: sasToken)
-                
+        var sasToken : String!
+        
+        fetchSASToken(showName: showName, showId: self.showId(showName: showName), synchronous: false) { (result,state) in
+            switch state {
+            case .pending:
+                return
+            case .cached:
+                sasToken = result
+            case .completed:
                 NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.OnStartUploadShow),
                                                 object: nil,
                                                 userInfo: ["json_main": json_main,
@@ -424,17 +418,81 @@ class IconViewController: NSViewController {
             }
         }
         
-        //dialogOverwrite(question: "Path already exist", text: "Please choose "override" or "Ignore" to proceed.")
-        
         if metadataPath == nil { return }
         
-        self.uploadMetadataJsonOperation(showName: showName,
-                                         sasToken: sasToken,
-                                         dataFiles: filesToUpload,
-                                         metadataFilePath: metadataPath.path,
-                                         dstPath: metadatafolderLayout + "metadata.json",
-                                         dependens : dataSubTasks,
-                                         recoveryContext : recoveryContext)
+        DispatchQueue.global(qos: .background).async {
+            
+            var dialogMessage : String = ""
+            var isExistRemotely: Bool = false
+            for (type, value) in files {
+                if value.isEmpty {
+                    continue
+                }
+                
+                for v in pendingUploads![type]! {
+                    let pathElements = v.srcPath.components(separatedBy: "/")
+                    let tail : String = pathElements.last!
+                    if let dst = "\(v.dstPath)\(tail)".addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) {
+                        let checkPathOperation = CheckPathExistsOperation(showName: showName, showId: self.showId(showName: showName), srcDir: dst) { (result) in
+                            if result == true {
+                                v.isExistRemotely = result
+                                isExistRemotely = true
+                                dialogMessage += "\r\n\(v.dstPath)\(tail)"
+                            }
+                        }
+                        self.uploadQueue.addOperations([checkPathOperation], waitUntilFinished: false)
+                    }
+                }
+            }
+            
+            self.uploadQueue.waitUntilAllOperationsAreFinished()
+            
+            // default just fallback to upload step
+            var modalResult: NSApplication.ModalResponse = NSApplication.ModalResponse.alertSecondButtonReturn
+            
+            DispatchQueue.main.async {
+                
+                // show dilaog only if at least one remote directory exists
+                if isExistRemotely {
+                    dialogMessage += "\r\n\r\nPlease choose \"Override\" or \"Ignore\" to proceed."
+                    modalResult = dialogOverwrite(question: "Path already exists!", text: dialogMessage)
+                }
+                    
+                DispatchQueue.global(qos: .background).async {
+                    switch modalResult {
+                    case NSApplication.ModalResponse.alertFirstButtonReturn:
+                        for (type, value) in files {
+                            if value.isEmpty {
+                                continue
+                            }
+                            // folderLayoutStr -> [season name]/[block name]/[shootday]/[batch]/[unit ]/[type]
+                            let folderLayoutStr = metadatafolderLayout + "\(type)/"
+                            
+                            let result = self.removeDirTask(showName: showName, folderLayoutStr: folderLayoutStr, sasToken: sasToken, uploadRecords: pendingUploads![type]!)
+                            if result == false {
+                                uploadShowFetchSASTokenErrorAndNotify(error: OutlineViewController.NameConstants.kUploadShowFailedStr, recoveryContext: recoveryContext)
+                                return
+                            }
+                        }
+                        // trigger upload operation
+                        fallthrough
+                        
+                    case NSApplication.ModalResponse.alertSecondButtonReturn:
+                        self.uploadMetadataJsonOperation(showName: showName,
+                                                         sasToken: sasToken,
+                                                         dataFiles: filesToUpload,
+                                                         metadataFilePath: metadataPath.path,
+                                                         dstPath: metadatafolderLayout + "metadata.json",
+                                                         dependens : dataSubTasks,
+                                                         recoveryContext : recoveryContext)
+                    case NSApplication.ModalResponse.alertThirdButtonReturn:
+                        break
+                    default:
+                        break
+                    }
+                }
+            }
+        }
     }
     
     
@@ -509,6 +567,47 @@ class IconViewController: NSViewController {
                                                         args: ["copy", uploadRecord.srcPath, sasTokenWithDestPath, "--recursive", "--put-md5"]))
         }
         return uploadOperations
+    }
+    
+    func removeDirTask(showName: String, folderLayoutStr: String, sasToken: String, uploadRecords : [UploadTableRow]) -> Bool {
+
+        let removeQueue = OperationQueue()
+        var result: Bool = true
+        for uploadRecord in uploadRecords {
+            if uploadRecord.isExistRemotely == false {
+                continue
+            }
+            let sasSplit = sasToken.components(separatedBy: "?")
+            guard let dstPath = uploadRecord.dstPath.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)  else { return false }
+            guard let srcPath = uploadRecord.srcPath.components(separatedBy: "/").last!.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else { return false }
+            let sasTokenWithDestPath = sasSplit[0] + "/\(dstPath)\(srcPath)" + "?" + sasSplit[1]
+            
+            print("------------ remove DIR:", sasTokenWithDestPath)
+              
+            let removeOperation = FileUploadOperation(showId: self.showId(showName: showName),
+                                                        cdsUserId: LoginViewController.cdsUserId!,
+                                                        sasToken: sasToken,
+                                                        step: FileUploadOperation.UploadType.kDataRemove,
+                                                        uploadRecord : uploadRecord,
+                                                        dependens: [],
+                                                        args: ["rm", sasTokenWithDestPath, "--recursive=true"])
+            removeOperation.completionBlock = {
+                if removeOperation.isCancelled {
+                    return
+                }
+                
+                if (removeOperation.completionStatus != 0) {
+                    result = false
+                    print("--------- Remove operation failed for ", uploadRecord.dstPath)
+                    return
+                }
+            }
+            
+            removeQueue.addOperation(removeOperation)
+            
+        }
+        removeQueue.waitUntilAllOperationsAreFinished()
+        return result
     }
     
     deinit {

@@ -80,8 +80,10 @@ func dialogOKCancel(question: String, text: String) -> Bool {
     return alert.runModal() == NSApplication.ModalResponse.alertFirstButtonReturn
 }
 
-func dialogOverwrite(question: String, text: String) {
+func dialogOverwrite(question: String, text: String) -> NSApplication.ModalResponse {
     let alert = NSAlert()
+    alert.accessoryView = NSView(frame: NSMakeRect(0, 0, 500.0, 0))
+    
     alert.messageText = question
     alert.informativeText = text
     alert.alertStyle = NSAlert.Style.critical
@@ -89,16 +91,7 @@ func dialogOverwrite(question: String, text: String) {
     alert.addButton(withTitle: "Append")
     let modalResult = alert.runModal()
 
-    switch modalResult {
-    case .alertFirstButtonReturn: // NSApplication.ModalResponse.alertFirstButtonReturn
-        print("First button clicked")
-    case .alertSecondButtonReturn:
-        print("Second button clicked")
-    case .alertThirdButtonReturn:
-        print("Third button clicked")
-    default:
-        print("Fourth button clicked")
-    }
+    return modalResult
 }
 
 func showPopoverMessage(positioningView: NSView, msg: String) {

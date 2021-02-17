@@ -201,6 +201,33 @@ func fetchSASTokenURLTask(showId: String, synchronous: Bool, completion: @escapi
     }
 }
 
+enum FetchSASTokenState {
+  case pending, cached, completed
+}
+func fetchSASToken(showName : String, showId : String, synchronous: Bool, completion: @escaping (_ data: (String,FetchSASTokenState)) -> Void) {
+    
+    var sasToken : String!
+    if let cachedSasToken = AppDelegate.cacheSASTokens[showName] {
+        if let value = cachedSasToken.value() {
+            completion((value, FetchSASTokenState.cached))
+        }
+    } else {
+        fetchSASTokenURLTask(showId: showId, synchronous: synchronous) { (result) in
+            if let error = result["error"] as? String {
+                fetchShowContentErrorAndNotify(error: error, showName: showName, showId: showId)
+                return
+            }
+            
+            if let value = result["data"] as? String {
+                sasToken = value
+                AppDelegate.cacheSASTokens[showName]=SASToken(showId : showId, sasToken: value)
+                
+                completion((sasToken,FetchSASTokenState.completed))
+            }
+        }
+    }
+}
+
 func fetchListOfShowsTask(completion: @escaping (_ shows: [String:Any]) -> Void) {
 
     let json: [String: String] = ["userId" : LoginViewController.cdsUserId!]
