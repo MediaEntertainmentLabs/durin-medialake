@@ -794,6 +794,7 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
     func parseALEFiles(dirPath : String)-> (sourceFileExist: Bool, ColumnArray:[String]?){
         
         var columnArrayList = [String]()
+        var colArray = [String]()
         // TO DO : Check dirpath variavble existance
         let url = URL(fileURLWithPath: dirPath)
         
@@ -804,11 +805,17 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
             
             let subStr = tsvFile.slice(from: "Column", to: "Data")
             columnArrayList = (subStr?.components(separatedBy: "\t"))!
+           
+            colArray.removeAll()
+            var strTitle:String
+            for str in columnArrayList{
+                strTitle = String(str.filter { !"\r".contains($0) })
+                strTitle = strTitle.components(separatedBy: .whitespacesAndNewlines).joined()
+                colArray.append(strTitle)
+            }
             
-            for columnName in columnArrayList as [String]{
-                // print("columnName :\(columnName)")
-                
-                if columnName.caseInsensitiveCompare(UploadSettingsViewController.kSourceFile) == ComparisonResult.orderedSame
+            for columnName in colArray as [String]{
+                 if columnName.caseInsensitiveCompare(UploadSettingsViewController.kSourceFile) == ComparisonResult.orderedSame
                 {
                     return (true,nil)
                 }
@@ -816,7 +823,7 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
         } catch let error {
             print(error.localizedDescription)
         }
-        return(false,columnArrayList)
+        return(false,colArray)
     }
     
     
@@ -899,6 +906,7 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
                     if(strArray![1] == "ale"){
                         
                         let(sourceFile, columnArray) = parseALEFiles(dirPath: fileStruct!.dirPath)
+                        
                         if sourceFile{
                             fileStruct?.aleFileDetail = ALEFileDetails(SourceFile: true,otherSourceFiles: nil,selectedSourceFilesIndex: nil,selectedSourceFilesName:nil,optionExactContains: nil,optionExactName:nil,selectedOptionIndex: 0,charecterFromLeft: nil,charecterFromRight: nil)
                             
