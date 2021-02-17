@@ -57,6 +57,9 @@ class ClickedCollectionView: NSCollectionView {
                 //let application = NSApplication.shared
                 //application.runModal(for: downloadWindow)
                 uploadSettingsWindow.level = NSWindow.Level.modalPanel
+                
+                uploadSettingsWindow.contentMinSize = NSSize(width: 650, height: 680)
+                uploadSettingsWindow.contentMaxSize = NSSize(width: 1115, height: 1115)
                 let controller =  NSWindowController(window: uploadSettingsWindow)
                 uploadSettingsWindow.contentViewController = uploadSettingsViewController
                 controller.showWindow(self)
