@@ -314,11 +314,6 @@ class IconViewController: NSViewController {
         let metadatafolderLayout = "\(season.0)/\(blockOrEpisode.0 as String)/\(shootDay)/\(batch)/\(unit)/"
         let metadataJsonFilename = NSUUID().uuidString + "_metadata.json"
         
-
-
-        
-        var sasToken : String!
-        
         if (pendingUploads == nil) {
             pendingUploads = [:]
             for (type, value) in srcDirs {
