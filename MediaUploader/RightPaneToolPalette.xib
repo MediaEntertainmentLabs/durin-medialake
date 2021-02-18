@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="17147" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" customObjectInstantitationMethod="direct">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="17701" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" customObjectInstantitationMethod="direct">
     <dependencies>
         <deployment identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="17147"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="17701"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
@@ -18,7 +18,7 @@
             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
             <subviews>
                 <button toolTip="Refresh show content" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="Vm6-D7-osw">
-                    <rect key="frame" x="34" y="1" width="19" height="30"/>
+                    <rect key="frame" x="5" y="1" width="19" height="30"/>
                     <constraints>
                         <constraint firstAttribute="width" constant="19" id="28y-Wo-suU"/>
                         <constraint firstAttribute="height" constant="30" id="Rph-TX-aOf"/>
@@ -31,35 +31,17 @@
                         <action selector="onRefreshShowContent:" target="-2" id="R4x-BH-0vR"/>
                     </connections>
                 </button>
-                <button toolTip="Refresh list of shows" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="4uq-a4-IqI">
-                    <rect key="frame" x="7" y="1" width="20" height="30"/>
-                    <constraints>
-                        <constraint firstAttribute="width" constant="20" id="uLc-hL-oE4"/>
-                    </constraints>
-                    <buttonCell key="cell" type="bevel" bezelStyle="regularSquare" image="NSIconViewTemplate" imagePosition="overlaps" alignment="center" imageScaling="proportionallyUpOrDown" inset="2" id="VgZ-lA-4I3">
-                        <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
-                        <font key="font" metaFont="system"/>
-                    </buttonCell>
-                    <connections>
-                        <action selector="onRefreshListShowButtonClick:" target="-2" id="i99-Jj-PaI"/>
-                    </connections>
-                </button>
             </subviews>
             <constraints>
-                <constraint firstItem="4uq-a4-IqI" firstAttribute="leading" secondItem="c22-O7-iKe" secondAttribute="leading" constant="7" id="Blt-hT-EcY"/>
                 <constraint firstItem="Vm6-D7-osw" firstAttribute="top" secondItem="c22-O7-iKe" secondAttribute="top" constant="1" id="U7j-iY-FDE"/>
-                <constraint firstItem="4uq-a4-IqI" firstAttribute="top" secondItem="c22-O7-iKe" secondAttribute="top" constant="1" id="XAd-wN-4xZ"/>
-                <constraint firstItem="4uq-a4-IqI" firstAttribute="centerY" secondItem="c22-O7-iKe" secondAttribute="centerY" id="Z5h-G6-S5m"/>
                 <constraint firstAttribute="bottom" secondItem="Vm6-D7-osw" secondAttribute="bottom" constant="1" id="ZOt-Io-Ia0"/>
-                <constraint firstAttribute="bottom" secondItem="4uq-a4-IqI" secondAttribute="bottom" constant="1" id="bJK-bW-jTB"/>
                 <constraint firstItem="Vm6-D7-osw" firstAttribute="centerY" secondItem="c22-O7-iKe" secondAttribute="centerY" id="kYM-Cx-ddV"/>
-                <constraint firstItem="Vm6-D7-osw" firstAttribute="leading" secondItem="4uq-a4-IqI" secondAttribute="trailing" constant="7" id="mnW-Bh-gvo"/>
+                <constraint firstItem="Vm6-D7-osw" firstAttribute="leading" secondItem="c22-O7-iKe" secondAttribute="leading" constant="5" id="l77-kl-ekM"/>
             </constraints>
             <point key="canvasLocation" x="114" y="154"/>
         </customView>
     </objects>
     <resources>
-        <image name="NSIconViewTemplate" width="14" height="10"/>
         <image name="NSTouchBarRefreshTemplate" width="19" height="30"/>
     </resources>
 </document>

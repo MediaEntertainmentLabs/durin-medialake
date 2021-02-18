@@ -683,6 +683,13 @@ class IconViewController: NSViewController {
             name: Notification.Name(WindowViewController.NotificationNames.OnUploadFailed),
             object: nil)
     }
+    
+    
+    
+    @IBAction func onRefreshListShowButtonClick(_ sender: Any) {
+        NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.LoginSuccessfull), object: nil)
+        NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.ClearShowContent), object: nil)
+    }
 }
 
 

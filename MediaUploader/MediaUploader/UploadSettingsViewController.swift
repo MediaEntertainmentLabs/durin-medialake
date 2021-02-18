@@ -810,7 +810,7 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
             var strTitle:String
             for str in columnArrayList{
                 strTitle = String(str.filter { !"\r".contains($0) })
-                strTitle = strTitle.components(separatedBy: .whitespacesAndNewlines).joined()
+                strTitle = strTitle.trimmingCharacters(in: .whitespacesAndNewlines)
                 colArray.append(strTitle)
             }
             
