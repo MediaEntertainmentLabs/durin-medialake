@@ -232,6 +232,8 @@ extension ALESelectionViewController: NSTableViewDelegate {
                 cell.lblPresent.stringValue = "   Present"
             }else{
                 cell.txtRemoveLeft.delegate = self
+                let onlyIntFormatter = TextFiledTypeFormatter()
+                cell.txtRemoveLeft.formatter = onlyIntFormatter
                 
                 let leftTag = (row*1000)+1
                 let rightTag = (row*1000)+2
@@ -242,6 +244,8 @@ extension ALESelectionViewController: NSTableViewDelegate {
                 }else{
                     cell.txtRemoveLeft.stringValue = ""
                 }
+                
+                cell.txtRemoveLeft.formatter = onlyIntFormatter
                 cell.lblRemoveLeft.usesSingleLineMode = true
                 cell.txtRemoveRight.delegate = self
                 cell.txtRemoveRight.tag = rightTag
@@ -250,6 +254,8 @@ extension ALESelectionViewController: NSTableViewDelegate {
                 }else{
                     cell.txtRemoveRight.stringValue = ""
                 }
+                cell.txtRemoveRight.formatter = onlyIntFormatter
+                
                 cell.lblRemoveRight.usesSingleLineMode = true
                 cell.bgView.isHidden =  false
                 cell.lblPresent.isHidden = true
