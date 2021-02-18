@@ -134,11 +134,11 @@ class ALESelectionViewController: NSViewController,SourceFileColumnSelectedDeleg
                     if(item?.aleFileDetail?.selectedOptionIndex  == 0){
                         return ("Kindly select Exact or Cancel Option",false)
                     }else{
-                        /*
+                        
                          if(item?.aleFileDetail?.charecterFromLeft == nil || item?.aleFileDetail?.charecterFromRight == nil ){
-                         return ("Kindly enter number to remove charecter from left / right side ",false)
+                         return ("Kindly enter number to remove charecter from left / right side",false)
                          }
-                         */
+                         
                     }
                 }
             }
@@ -204,6 +204,8 @@ extension ALESelectionViewController: NSTableViewDelegate {
     
     func tableView(_ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int) -> NSView? {
         
+        print("row ::::::\(row)")
+        
         var text: String = ""
         var cellIdentifier: String = ""
         
@@ -230,6 +232,11 @@ extension ALESelectionViewController: NSTableViewDelegate {
                 cell.lblPresent.stringValue = "   Present"
             }else{
                 cell.txtRemoveLeft.delegate = self
+                
+                let leftTag = (row*1000)+1
+                let rightTag = (row*1000)+2
+                cell.txtRemoveLeft.tag = leftTag
+                
                 if let value = item.aleFileDetail?.charecterFromLeft {
                     cell.txtRemoveLeft.stringValue = String(value)
                 }else{
@@ -237,7 +244,7 @@ extension ALESelectionViewController: NSTableViewDelegate {
                 }
                 cell.lblRemoveLeft.usesSingleLineMode = true
                 cell.txtRemoveRight.delegate = self
-                
+                cell.txtRemoveRight.tag = rightTag
                 if let value = item.aleFileDetail?.charecterFromRight {
                     cell.txtRemoveRight.stringValue = String(value)
                 }else{
@@ -318,22 +325,34 @@ extension ALESelectionViewController: NSTableViewDelegate {
 }
 extension ALESelectionViewController: NSTextFieldDelegate {
     
+    
+    func controlTextDidBeginEditing(_ obj: Notification) {
+       
+        guard let textField = obj.object as? NSTextField else {
+            return
+        }
+        
+        let tagIndex = textField.tag
+        selectedRowIndex = tagIndex/1000
+    }
+    
     func controlTextDidEndEditing(_ obj: Notification) {
         guard let textField = obj.object as? NSTextField else {
             return
         }
-        if(textField.tag == 100){
+        var tagIndex = textField.tag
+        tagIndex = tagIndex % 1000
+        
+        if(tagIndex == 1){
             var updatedStruct = filesArray[selectedRowIndex]?.aleFileDetail;
             updatedStruct?.charecterFromLeft = Int(textField.intValue)
             filesArray[selectedRowIndex]?.aleFileDetail = updatedStruct
-            //print("updated charecterFromLeft :\(String(describing: filesArray[selectedRowIndex]?.aleFileDetail?.charecterFromLeft))")
             tblALEList.reloadData()
         }
-        else  if(textField.tag == 101){
+        else  if(tagIndex == 2){
             var updatedStruct = filesArray[selectedRowIndex]?.aleFileDetail;
             updatedStruct?.charecterFromRight = Int(textField.intValue)
             filesArray[selectedRowIndex]?.aleFileDetail = updatedStruct
-            //print("updated charecterFromRight :\(String(describing: filesArray[selectedRowIndex]?.aleFileDetail?.charecterFromRight))")
             tblALEList.reloadData()
             
         }

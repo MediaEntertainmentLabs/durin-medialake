@@ -468,7 +468,7 @@ class IconViewController: NSViewController {
                 
                 // show dilaog only if at least one remote directory exists
                 if isExistRemotely {
-                    dialogMessage += "\r\n\r\nPlease choose \"Override\" or \"Ignore\" to proceed."
+                    dialogMessage += "\r\n\r\nPlease choose \"Overwrite\" or \"Append\" to proceed."
                     modalResult = dialogOverwrite(question: "Path already exists!", text: dialogMessage)
                 }
                     
