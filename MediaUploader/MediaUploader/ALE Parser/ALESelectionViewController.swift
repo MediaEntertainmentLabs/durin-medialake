@@ -160,7 +160,10 @@ class ALESelectionViewController: NSViewController,SourceFileColumnSelectedDeleg
                 
                 if aleFileDetail.SourceFile{
                     // No need to add data in miscDict when SourceFile column is present in ale files
-                    miscDict["aleFileNameField"] = UploadSettingsViewController.kSourceFile
+                    miscDict["aleFileNameField"] = UploadSettingsViewController.strMatchTypeExact
+                    miscDict["matchType"] = UploadSettingsViewController.strMatchTypeExact
+                    miscDict["truncateCharFromStart"] = 0
+                    miscDict["truncateCharFromEnd"] = 0
                 }else{
                     miscDict["aleFileNameField"] = aleFileDetail.selectedSourceFilesName?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
                     miscDict["matchType"] = aleFileDetail.optionExactName?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
@@ -203,9 +206,7 @@ extension ALESelectionViewController: NSTableViewDelegate {
     }
     
     func tableView(_ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int) -> NSView? {
-        
-        print("row ::::::\(row)")
-        
+       
         var text: String = ""
         var cellIdentifier: String = ""
         
