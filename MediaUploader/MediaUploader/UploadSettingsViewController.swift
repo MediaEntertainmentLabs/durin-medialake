@@ -992,19 +992,6 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
             updatedDict[key] = keyDictArray
         }
         
-        do{
-            let jsonData = try JSONSerialization.data(withJSONObject: updatedDict, options: .prettyPrinted)
-            // here "jsonData" is the dictionary encoded in JSON data
-            let decoded = try JSONSerialization.jsonObject(with: jsonData, options: [])
-            // here "decoded" is of type `Any`, decoded from JSON data
-            
-            //print("files dict :::\(decoded)");
-            
-            //  return decoded
-        } catch {
-            print(error.localizedDescription)
-        }
-        
         startUploadWithALEParsing(uploadFilesWithALE: updatedDict)
     }
     

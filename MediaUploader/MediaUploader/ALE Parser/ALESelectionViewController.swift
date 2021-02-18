@@ -187,6 +187,13 @@ class ALESelectionViewController: NSViewController,SourceFileColumnSelectedDeleg
         window?.performClose(nil)
     }
     
+    override func keyUp(with event: NSEvent) {
+        print("key code :\(event.keyCode)")
+        if (event.keyCode > 17 && event.keyCode < 30) {
+            tblALEList.reloadData()
+        }
+    }
+    
 }
 
 
