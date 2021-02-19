@@ -134,11 +134,12 @@ class ALESelectionViewController: NSViewController,SourceFileColumnSelectedDeleg
                     if(item?.aleFileDetail?.selectedOptionIndex  == 0){
                         return (StringConstant().selectMatchtype,false)
                     }else{
-                        
-                         if(item?.aleFileDetail?.charecterFromLeft == nil || item?.aleFileDetail?.charecterFromRight == nil ){
-                            return (StringConstant().enterNumberToRemove,false)
-                         }
-                         
+                        if((item?.aleFileDetail?.selectedOptionIndex)!  > 1){
+                            
+                            if(item?.aleFileDetail?.charecterFromLeft == nil || item?.aleFileDetail?.charecterFromRight == nil ){
+                                return (StringConstant().enterNumberToRemove,false)
+                            }
+                        }
                     }
                 }
             }

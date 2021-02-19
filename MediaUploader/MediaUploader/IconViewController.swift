@@ -413,7 +413,7 @@ class IconViewController: NSViewController {
         var json : [String:Any] = json_main
         json["files"] = jsonRecords
         
-        //jsonFromDict(from: json)
+        jsonFromDict(from: json)
         
         guard let jsonData = try? JSONSerialization.data(withJSONObject: json, options: [.sortedKeys, .prettyPrinted]) else { return }
         
