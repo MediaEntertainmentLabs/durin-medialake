@@ -53,6 +53,8 @@
 		C987BB2B2534CF5400A440A7 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = C987BB2A2534CF5400A440A7 /* Localizable.strings */; };
 		C987BB35253CC93E00A440A7 /* CustomTableCellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C987BB34253CC93E00A440A7 /* CustomTableCellView.swift */; };
 		C987BB37255BC97B00A440A7 /* LoginViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C987BB36255BC97B00A440A7 /* LoginViewController.swift */; };
+		C9C5362A25DE74D7006AF531 /* TextFiledTypeFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9C5362925DE74D7006AF531 /* TextFiledTypeFormatter.swift */; };
+		C9C5364825DFB2C0006AF531 /* StringConstant.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9C5364725DFB2C0006AF531 /* StringConstant.swift */; };
 		C9DF48DD25D59EF30016626F /* ALESelectionViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9DF48DB25D59EF30016626F /* ALESelectionViewController.swift */; };
 		C9DF48DE25D59EF30016626F /* ALESelectionViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = C9DF48DC25D59EF30016626F /* ALESelectionViewController.xib */; };
 		C9DF490825D717520016626F /* CustomALECell.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9DF490725D717520016626F /* CustomALECell.swift */; };
@@ -137,6 +139,8 @@
 		C987BB2A2534CF5400A440A7 /* Localizable.strings */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; path = Localizable.strings; sourceTree = "<group>"; };
 		C987BB34253CC93E00A440A7 /* CustomTableCellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomTableCellView.swift; sourceTree = "<group>"; };
 		C987BB36255BC97B00A440A7 /* LoginViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginViewController.swift; sourceTree = "<group>"; };
+		C9C5362925DE74D7006AF531 /* TextFiledTypeFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextFiledTypeFormatter.swift; sourceTree = "<group>"; };
+		C9C5364725DFB2C0006AF531 /* StringConstant.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StringConstant.swift; sourceTree = "<group>"; };
 		C9DF48DB25D59EF30016626F /* ALESelectionViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ALESelectionViewController.swift; sourceTree = "<group>"; };
 		C9DF48DC25D59EF30016626F /* ALESelectionViewController.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = ALESelectionViewController.xib; sourceTree = "<group>"; };
 		C9DF490725D717520016626F /* CustomALECell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomALECell.swift; sourceTree = "<group>"; };
@@ -281,6 +285,8 @@
 				C96173A325933C2A00F037EB /* URLRequests.swift */,
 				C96173A82593B4EF00F037EB /* SASToken.swift */,
 				C93C43B625D687360032F417 /* XMLResponseParser.swift */,
+				C9C5362925DE74D7006AF531 /* TextFiledTypeFormatter.swift */,
+				C9C5364725DFB2C0006AF531 /* StringConstant.swift */,
 			);
 			name = Utils;
 			sourceTree = "<group>";
@@ -566,6 +572,7 @@
 				731C984F252DE9DB008E8A75 /* WindowViewController.swift in Sources */,
 				731C9879252E4D1A008E8A75 /* OutlineViewController.swift in Sources */,
 				C95F6C1F2583748B0008D8A0 /* UploadWindowViewController.swift in Sources */,
+				C9C5362A25DE74D7006AF531 /* TextFiledTypeFormatter.swift in Sources */,
 				731C987F252E4FF3008E8A75 /* Node.swift in Sources */,
 				C95F6C22258388650008D8A0 /* HorizontalSplitViewController.swift in Sources */,
 				C95F6C202583748B0008D8A0 /* UploadWindowViewController+Delegate.swift in Sources */,
@@ -573,6 +580,7 @@
 				C97621CF25682C3500C48E15 /* IconViewController.swift in Sources */,
 				C97A62D825AF93950062A3D9 /* IconViewSectionHeader.swift in Sources */,
 				C984960425948C3E00A1FED5 /* StartupPopupViewController.swift in Sources */,
+				C9C5364825DFB2C0006AF531 /* StringConstant.swift in Sources */,
 				731C9887252EEAE0008E8A75 /* SplitViewController.swift in Sources */,
 				C95F6C1C2582B6EE0008D8A0 /* FileUploadOperation.swift in Sources */,
 				C962D1A3258788420012F684 /* OutlineViewController+Expansion.swift in Sources */,
@@ -774,7 +782,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = durin.MediaUploader2;
+				PRODUCT_BUNDLE_IDENTIFIER = durin.MediaUploader3;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_VERSION = 5.0;
@@ -800,7 +808,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = durin.MediaUploader2;
+				PRODUCT_BUNDLE_IDENTIFIER = durin.MediaUploader3;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_VERSION = 5.0;

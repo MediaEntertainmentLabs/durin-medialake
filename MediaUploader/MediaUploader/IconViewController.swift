@@ -322,8 +322,8 @@ class IconViewController: NSViewController {
                     // folderLayoutStr -> [season name]/[block name]/[shootday]/[batch]/[unit ]/[type]
                     var folderLayoutStr : String
                     
-                    if  type == UploadSettingsViewController.kReportNotesType{
-                        folderLayoutStr = metadatafolderLayout + "\(UploadSettingsViewController.kReportNotesFilePath)/"
+                    if  type == StringConstant().reportNotesType{
+                        folderLayoutStr = metadatafolderLayout + "\(StringConstant().reportNotesFilePath)/"
                     }else{
                         folderLayoutStr = metadatafolderLayout + "\(type)/"
                     }
@@ -386,8 +386,8 @@ class IconViewController: NSViewController {
             // folderLayoutStr -> [season name]/[block name]/[shootday]/[batch]/[unit ]/[type]
             //  let folderLayoutStr = metadatafolderLayout + "\(type)/"
             var folderLayoutStr : String
-            if  type == UploadSettingsViewController.kReportNotesType{
-                folderLayoutStr = metadatafolderLayout + "\(UploadSettingsViewController.kReportNotesFilePath)/"
+            if  type == StringConstant().reportNotesType{
+                folderLayoutStr = metadatafolderLayout + "\(StringConstant().reportNotesFilePath)/"
             }else{
                 folderLayoutStr = metadatafolderLayout + "\(type)/"
             }
@@ -468,8 +468,8 @@ class IconViewController: NSViewController {
                 
                 // show dilaog only if at least one remote directory exists
                 if isExistRemotely {
-                    dialogMessage += "\r\n\r\nPlease choose \"Overwrite\" or \"Append\" to proceed."
-                    modalResult = dialogOverwrite(question: "Path already exists!", text: dialogMessage)
+                    dialogMessage += "\r\n\r\nPlease choose \"\(StringConstant().append)\" or \"\(StringConstant().replace)\" to proceed."
+                    modalResult = dialogOverwrite(question:StringConstant().pathExist, text: dialogMessage)
                 }
                     
                 DispatchQueue.global(qos: .background).async {

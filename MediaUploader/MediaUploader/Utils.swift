@@ -76,7 +76,7 @@ func dialogOKCancel(question: String, text: String) -> Bool {
     alert.messageText = question
     alert.informativeText = text
     alert.alertStyle = NSAlert.Style.critical
-    alert.addButton(withTitle: "OK")
+    alert.addButton(withTitle:StringConstant().strOk)
     return alert.runModal() == NSApplication.ModalResponse.alertFirstButtonReturn
 }
 
@@ -87,8 +87,8 @@ func dialogOverwrite(question: String, text: String) -> NSApplication.ModalRespo
     alert.messageText = question
     alert.informativeText = text
     alert.alertStyle = NSAlert.Style.critical
-    alert.addButton(withTitle: "Overwrite")
-    alert.addButton(withTitle: "Append")
+    alert.addButton(withTitle:StringConstant().replace)
+    alert.addButton(withTitle:StringConstant().append)
     let modalResult = alert.runModal()
 
     return modalResult

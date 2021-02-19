@@ -81,15 +81,9 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
     static let kStillsFileType = "Stills"
     static let kReportsFileType = "Reports"
     static let kOthersFileType = "Others"
-    static let kSourceFile = "Source File"
-    static let kReportNotesFilePath = "Reports-Notes"
+   
     static let kReportNotesType = "Reports/Notes"
-    
-    static let strOK = "OK"
-    static let strCancel = "Cancel"
-    
-    static let strMatchTypeExact = "Exact"
-    static let strMatchTypeContain = "Contains"
+   
     
     fileprivate let teamItems = ["Camera", "Sound","Scripts","Others"]
     
@@ -237,8 +231,8 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
         var  fileDirPath = fileType
         if !fileType.isEmpty{
             
-            if fileType == UploadSettingsViewController.kReportNotesType{
-                fileDirPath = UploadSettingsViewController.kReportNotesFilePath
+            if fileType == StringConstant().reportNotesType{
+                fileDirPath = StringConstant().reportNotesFilePath
             }
         }
         
@@ -360,24 +354,24 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
         }
         
         if isEmpty {
-            showPopoverMessage(positioningView: teamPopup, msg: "Please specify path to media")
+            showPopoverMessage(positioningView: teamPopup, msg: StringConstant().specifyPathMedia)
             return
         }
         
         if shootDayField.stringValue.isEmpty {
-            showPopoverMessage(positioningView: shootDayField, msg: "Please specify shoot Day")
+            showPopoverMessage(positioningView: shootDayField, msg:StringConstant().specifyShootDay)
             return
         } else {
             if shootDayField.stringValue.isStringPatternMatch(withstring: shootDayFormat ?? " "){
                 //  print("shootDay string: \(shootDayField.stringValue)")
             } else {
-                showPopoverMessage(positioningView: shootDayField, msg: "Please specify shoot day as shoot day format")
+                showPopoverMessage(positioningView: shootDayField, msg:StringConstant().invalidShootday )
                 return
             }
         }
         
         if !emailField.stringValue.isEmpty && !isValidEmail(emailField.stringValue){
-            showPopoverMessage(positioningView: emailField, msg: "Wrong email format!")
+            showPopoverMessage(positioningView: emailField, msg:StringConstant().wrongEmailFormat)
             return
         }
         
@@ -459,24 +453,24 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
         }
         
         if isEmpty {
-            showPopoverMessage(positioningView: teamPopup, msg: "Please specify path to media")
+            showPopoverMessage(positioningView: teamPopup, msg: StringConstant().specifyPathMedia)
             return
         }
         
         if shootDayField.stringValue.isEmpty {
-            showPopoverMessage(positioningView: shootDayField, msg: "Please specify shoot Day")
+            showPopoverMessage(positioningView: shootDayField, msg:StringConstant().specifyShootDay)
             return
         } else {
             if shootDayField.stringValue.isStringPatternMatch(withstring: shootDayFormat ?? " "){
                 //  print("shootDay string: \(shootDayField.stringValue)")
             } else {
-                showPopoverMessage(positioningView: shootDayField, msg: "Please specify shoot day as shoot day format")
+                showPopoverMessage(positioningView: shootDayField, msg: StringConstant().invalidShootday)
                 return
             }
         }
         
         if !emailField.stringValue.isEmpty && !isValidEmail(emailField.stringValue){
-            showPopoverMessage(positioningView: emailField, msg: "Wrong email format!")
+            showPopoverMessage(positioningView: emailField, msg:StringConstant().wrongEmailFormat)
             return
         }
         
@@ -545,7 +539,7 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
                                     fDict["name"] = fDict["name"] as! String
                                     fDict["type"] = fDict["type"] as! String
                                     fDict["filesize"] = (fDict["filesize"] as! UInt64)
-                                    fDict["misc"] = miscDict
+                                    fDict["miscInfo"] = miscDict
                                 }
                             }
                         }
@@ -747,7 +741,7 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
             case 3:
                 fileType = UploadSettingsViewController.kStillsFileType
             case 4:
-                fileType = UploadSettingsViewController.kReportNotesType
+                fileType = StringConstant().reportNotesType
             default:
                 break
             }
@@ -756,14 +750,14 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
             case 0:
                 fileType = UploadSettingsViewController.kAudioFileType
             case 1:
-                fileType = UploadSettingsViewController.kReportNotesType
+                fileType = StringConstant().reportNotesType
             default:
                 break
             }
         } else if (index == 2) {
             switch btnTag {
             case 0:
-                fileType = UploadSettingsViewController.kReportNotesType
+                fileType = StringConstant().reportNotesType
             default:
                 break
             }
@@ -812,14 +806,14 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
             selectedArray.append(UploadSettingsViewController.kLUTFileType)
             selectedArray.append(UploadSettingsViewController.kCDLFileType)
             selectedArray.append(UploadSettingsViewController.kStillsFileType)
-            selectedArray.append(UploadSettingsViewController.kReportNotesType)
+            selectedArray.append(StringConstant().reportNotesType)
             selectedFilePathsArray = selectedCameraFilePathsArray
         } else if(index == 1) {
             selectedArray.append(UploadSettingsViewController.kAudioFileType)
-            selectedArray.append(UploadSettingsViewController.kReportNotesType)
+            selectedArray.append(StringConstant().reportNotesType)
             selectedFilePathsArray = selectedSoundFilePathsArray
         } else if(index == 2) {
-            selectedArray.append(UploadSettingsViewController.kReportNotesType)
+            selectedArray.append(StringConstant().reportNotesType)
             selectedFilePathsArray = selectedScriptsFilePathsArray
         } else if(index == 3) {
             selectedArray.append("Others")
@@ -873,7 +867,7 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
             }
             
             for columnName in colArray as [String]{
-                if columnName.caseInsensitiveCompare(UploadSettingsViewController.kSourceFile) == ComparisonResult.orderedSame
+                if columnName.caseInsensitiveCompare(StringConstant().sourceFile) == ComparisonResult.orderedSame
                 {
                     return (true,nil)
                 }
@@ -891,7 +885,7 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
                 if shootDayField.stringValue.isStringPatternMatch(withstring: shootDayFormat ?? " ") {
                     //  print("shootDay string: \(shootDayField.stringValue)")
                 } else {
-                    showPopoverMessage(positioningView: shootDayField, msg: "Kindly enter shoot day as shoot day format")
+                    showPopoverMessage(positioningView: shootDayField, msg: StringConstant().invalidShootday)
                 }
             }
         }
@@ -912,8 +906,8 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
         var uploadDirs : [String:[String]] = [:]
         var arrExactContains = [String]()
         
-        arrExactContains.append(UploadSettingsViewController.strMatchTypeExact)
-        arrExactContains.append(UploadSettingsViewController.strMatchTypeContain)
+        arrExactContains.append(StringConstant().strMatchTypeExact)
+        arrExactContains.append(StringConstant().strMatchTypeContains)
         
         for i in 0 ..< selectedArray.count {
             uploadDirs[selectedArray[i]] = []
@@ -1103,24 +1097,24 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
         }
         
         if isEmpty {
-            showPopoverMessage(positioningView: teamPopup, msg: "Please specify path to media")
+            showPopoverMessage(positioningView: teamPopup, msg: StringConstant().specifyPathMedia)
             return
         }
         
         if shootDayField.stringValue.isEmpty {
-            showPopoverMessage(positioningView: shootDayField, msg: "Please specify shoot Day")
+            showPopoverMessage(positioningView: shootDayField, msg:StringConstant().specifyShootDay)
             return
         } else {
             if shootDayField.stringValue.isStringPatternMatch(withstring: shootDayFormat ?? " "){
                 print("shootDay string: \(shootDayField.stringValue)")
             } else {
-                showPopoverMessage(positioningView: shootDayField, msg: "Please specify shoot day as shoot day format")
+                showPopoverMessage(positioningView: shootDayField, msg: StringConstant().invalidShootday)
                 return
             }
         }
         
         if !emailField.stringValue.isEmpty && !isValidEmail(emailField.stringValue){
-            showPopoverMessage(positioningView: emailField, msg: "Wrong email format!")
+            showPopoverMessage(positioningView: emailField, msg:StringConstant().wrongEmailFormat)
             return
         }
         
@@ -1177,8 +1171,8 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
     
     func defaultMiscDict()-> [String : Any]{
         var retDict = [String: Any]()
-        retDict["aleFileNameField"] = UploadSettingsViewController.kSourceFile
-        retDict["matchType"] = UploadSettingsViewController.strMatchTypeExact
+        retDict["aleFileNameField"] = StringConstant().sourceFile
+        retDict["matchType"] = StringConstant().strMatchTypeExact
         retDict["truncateCharFromStart"] = 0
         retDict["truncateCharFromEnd"] = 0
         return retDict;

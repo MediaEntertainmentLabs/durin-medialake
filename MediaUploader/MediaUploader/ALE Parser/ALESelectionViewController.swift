@@ -129,14 +129,14 @@ class ALESelectionViewController: NSViewController,SourceFileColumnSelectedDeleg
                 print("No thing to check")
             }else{
                 if(item?.aleFileDetail?.selectedSourceFilesIndex  == 0){
-                    return ("Kindly select Column name",false)
+                    return (StringConstant().selectColumn,false)
                 }else{
                     if(item?.aleFileDetail?.selectedOptionIndex  == 0){
-                        return ("Kindly select Exact or Cancel Option",false)
+                        return (StringConstant().selectMatchtype,false)
                     }else{
                         
                          if(item?.aleFileDetail?.charecterFromLeft == nil || item?.aleFileDetail?.charecterFromRight == nil ){
-                         return ("Kindly enter number to remove charecter from left / right side",false)
+                            return (StringConstant().enterNumberToRemove,false)
                          }
                          
                     }
@@ -160,8 +160,8 @@ class ALESelectionViewController: NSViewController,SourceFileColumnSelectedDeleg
                 
                 if aleFileDetail.SourceFile{
                     // No need to add data in miscDict when SourceFile column is present in ale files
-                    miscDict["aleFileNameField"] = UploadSettingsViewController.strMatchTypeExact
-                    miscDict["matchType"] = UploadSettingsViewController.strMatchTypeExact
+                    miscDict["aleFileNameField"] = StringConstant().sourceFile
+                    miscDict["matchType"] = StringConstant().strMatchTypeExact
                     miscDict["truncateCharFromStart"] = 0
                     miscDict["truncateCharFromEnd"] = 0
                 }else{
@@ -237,7 +237,7 @@ extension ALESelectionViewController: NSTableViewDelegate {
             if (item.aleFileDetail?.SourceFile == true) {
                 cell.bgView.isHidden =  true
                 cell.lblPresent.isHidden = false
-                cell.lblPresent.stringValue = "   Present"
+                cell.lblPresent.stringValue = StringConstant().lblPresent
             }else{
                 cell.txtRemoveLeft.delegate = self
                 let onlyIntFormatter = TextFiledTypeFormatter()
@@ -276,7 +276,7 @@ extension ALESelectionViewController: NSTableViewDelegate {
                     if cell.otherSourceFilesArray.numberOfItems > 0 {
                         cell.otherSourceFilesArray.selectItem(at:item.aleFileDetail!.selectedSourceFilesIndex!)
                     }else{
-                        cell.otherSourceFilesArray.setTitle("No Items")
+                        cell.otherSourceFilesArray.setTitle(StringConstant().noItem)
                     }
                     cell.otherSourceFilesArray.tag = row
                     
@@ -305,7 +305,7 @@ extension ALESelectionViewController: NSTableViewDelegate {
                     if cell.ExactCancelPopUp.numberOfItems > 0 {
                         cell.ExactCancelPopUp.selectItem(at: item.aleFileDetail!.selectedOptionIndex!)
                     }else{
-                        cell.ExactCancelPopUp.setTitle("No Items")
+                        cell.ExactCancelPopUp.setTitle(StringConstant().noItem)
                     }
                     cell.ExactCancelPopUp.tag = row
                     
