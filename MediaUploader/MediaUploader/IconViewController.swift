@@ -321,7 +321,6 @@ class IconViewController: NSViewController {
                 for dir in value {
                     // folderLayoutStr -> [season name]/[block name]/[shootday]/[batch]/[unit ]/[type]
                     var folderLayoutStr : String
-                    
                     if  type == StringConstant().reportNotesType{
                         folderLayoutStr = metadatafolderLayout + "\(StringConstant().reportNotesFilePath)/"
                     }else{
@@ -384,8 +383,8 @@ class IconViewController: NSViewController {
                 continue
             }
             // folderLayoutStr -> [season name]/[block name]/[shootday]/[batch]/[unit ]/[type]
-            //  let folderLayoutStr = metadatafolderLayout + "\(type)/"
             var folderLayoutStr : String
+
             if  type == StringConstant().reportNotesType{
                 folderLayoutStr = metadatafolderLayout + "\(StringConstant().reportNotesFilePath)/"
             }else{
@@ -397,7 +396,7 @@ class IconViewController: NSViewController {
             let op = self.createUploadDirTask(showName: showName, folderLayoutStr: folderLayoutStr, sasToken: sasToken, uploadRecords: pendingUploads![type]!)
             dataSubTasks.append(contentsOf: op)
             
-            jsonFromArray(from: files)
+            //jsonFromArray(from: files)
             
             for item in value {    // Item is having array of dictionary
                 for (key, rec) in item {
@@ -414,7 +413,7 @@ class IconViewController: NSViewController {
         var json : [String:Any] = json_main
         json["files"] = jsonRecords
         
-        jsonFromDict(from: json)
+        //jsonFromDict(from: json)
         
         guard let jsonData = try? JSONSerialization.data(withJSONObject: json, options: [.sortedKeys, .prettyPrinted]) else { return }
         
@@ -465,7 +464,7 @@ class IconViewController: NSViewController {
             var modalResult: NSApplication.ModalResponse = NSApplication.ModalResponse.alertSecondButtonReturn
             
             DispatchQueue.main.async {
-                
+                var appendOnly: Bool = false
                 // show dilaog only if at least one remote directory exists
                 if isExistRemotely {
                     dialogMessage += "\r\n\r\nPlease choose \"\(StringConstant().append)\" or \"\(StringConstant().replace)\" to proceed."
@@ -492,16 +491,18 @@ class IconViewController: NSViewController {
                         fallthrough
                         
                     case NSApplication.ModalResponse.alertSecondButtonReturn:
+                        appendOnly = true
+                        fallthrough
+                        
+                    default:
                         self.uploadMetadataJsonOperation(showName: showName,
                                                          sasToken: sasToken,
                                                          dataFiles: filesToUpload,
                                                          metadataFilePath: metadataPath.path,
                                                          dstPath: metadatafolderLayout + "metadata.json",
                                                          dependens : dataSubTasks,
+                                                         appendOnly : appendOnly,
                                                          recoveryContext : recoveryContext)
-                    case NSApplication.ModalResponse.alertThirdButtonReturn:
-                        break
-                    default:
                         break
                     }
                 }
@@ -509,9 +510,9 @@ class IconViewController: NSViewController {
         }
     }
     
-    func jsonFromArray(from object:Any){
+    func jsonFromArray(from object:Any) -> String {
         
-        let retString = " "
+        let retString = ""
         do {
             let jsonData = try JSONSerialization.data(withJSONObject: object, options: .prettyPrinted)
             // here "jsonData" is the dictionary encoded in JSON data
@@ -525,10 +526,10 @@ class IconViewController: NSViewController {
             print(error.localizedDescription)
         }
         
-        //  return  retString ;
+        return retString;
     }
     
-    func jsonFromDict(from object:Any){
+    func jsonFromDict(from object:Any) -> String {
         
         let retString = " "
         do {
@@ -544,7 +545,7 @@ class IconViewController: NSViewController {
             print(error.localizedDescription)
         }
         
-        //  return  retString ;
+        return retString;
     }
     
     func uploadMetadataJsonOperation(showName: String,
@@ -553,7 +554,14 @@ class IconViewController: NSViewController {
                                      metadataFilePath: String,
                                      dstPath: String,
                                      dependens : [FileUploadOperation],
+                                     appendOnly: Bool,
                                      recoveryContext : [String : Any]) {
+        
+        if appendOnly == true {
+            for op in dependens {
+                op.args.append("--overwrite=false")
+            }
+        }
         
         let sasSplit = sasToken.components(separatedBy: "?")
         let sasTokenWithDestPath = sasSplit[0] + "/" + dstPath + "?" + sasSplit[1]
