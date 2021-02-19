@@ -59,6 +59,7 @@
 		C9E6C1DE25C17BFA00F07B3D /* azcopy in Resources */ = {isa = PBXBuildFile; fileRef = C9E6C1DD25C17BFA00F07B3D /* azcopy */; };
 		C9E6C1E825C17DCB00F07B3D /* IconViewSectionHeader.xib in Resources */ = {isa = PBXBuildFile; fileRef = C9E6C1E725C17DCB00F07B3D /* IconViewSectionHeader.xib */; };
 		C9E6C1F325C86BFF00F07B3D /* CustomUploadCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9E6C1F225C86BFF00F07B3D /* CustomUploadCell.swift */; };
+		C9EBD23125DFDCED00C26041 /* TextFiledTypeFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9EBD23025DFDCED00C26041 /* TextFiledTypeFormatter.swift */; };
 		E27783F0928EA7F319BDE5D4 /* Pods_MediaUploader.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 78F0B96BC353C152F8ADDF9A /* Pods_MediaUploader.framework */; };
 /* End PBXBuildFile section */
 
@@ -143,6 +144,7 @@
 		C9E6C1DD25C17BFA00F07B3D /* azcopy */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = azcopy; sourceTree = "<group>"; };
 		C9E6C1E725C17DCB00F07B3D /* IconViewSectionHeader.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = IconViewSectionHeader.xib; sourceTree = SOURCE_ROOT; };
 		C9E6C1F225C86BFF00F07B3D /* CustomUploadCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomUploadCell.swift; sourceTree = "<group>"; };
+		C9EBD23025DFDCED00C26041 /* TextFiledTypeFormatter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TextFiledTypeFormatter.swift; sourceTree = "<group>"; };
 		D31C6861B88CE631791592C4 /* Pods-MediaUploader.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MediaUploader.debug.xcconfig"; path = "Target Support Files/Pods-MediaUploader/Pods-MediaUploader.debug.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -210,6 +212,7 @@
 		731C984B252DE9DB008E8A75 /* MediaUploader */ = {
 			isa = PBXGroup;
 			children = (
+				C9EBD23025DFDCED00C26041 /* TextFiledTypeFormatter.swift */,
 				C9DF48D425D59CF60016626F /* ALE Parser */,
 				C9E6C1F125C86B6A00F07B3D /* UI Utills */,
 				C9E6C1E725C17DCB00F07B3D /* IconViewSectionHeader.xib */,
@@ -566,6 +569,7 @@
 				731C984F252DE9DB008E8A75 /* WindowViewController.swift in Sources */,
 				731C9879252E4D1A008E8A75 /* OutlineViewController.swift in Sources */,
 				C95F6C1F2583748B0008D8A0 /* UploadWindowViewController.swift in Sources */,
+				C9EBD23125DFDCED00C26041 /* TextFiledTypeFormatter.swift in Sources */,
 				731C987F252E4FF3008E8A75 /* Node.swift in Sources */,
 				C95F6C22258388650008D8A0 /* HorizontalSplitViewController.swift in Sources */,
 				C95F6C202583748B0008D8A0 /* UploadWindowViewController+Delegate.swift in Sources */,

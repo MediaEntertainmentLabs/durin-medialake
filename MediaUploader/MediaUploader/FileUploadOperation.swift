@@ -23,7 +23,7 @@ final class FileUploadOperation: AsyncOperation {
     var uploadRecord : UploadTableRow?
     var completionStatus : Int
 
-    private let args: [String]
+    var args: [String]
     private let step: FileUploadOperation.UploadType
     
     // upload being performed in two steps:
@@ -253,7 +253,8 @@ final class FileUploadOperation: AsyncOperation {
         let resultString = getCompletionStatusString(inputString: inputString)
         if !resultString.isEmpty {
             
-            if resultString != "Completed" {
+            // CompletedWithSkipped will occur if dir remotely exist but we choose Append mode at start of Upload
+            if resultString != "Completed" && resultString != "CompletedWithSkipped" {
                 if self.step == UploadType.kMetadataJsonUpload {
                     for dep in self.dependens {
                         guard let uploadRecord = dep.uploadRecord else { continue }
