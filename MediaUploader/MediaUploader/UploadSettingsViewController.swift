@@ -491,20 +491,7 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
                 uploadDirs[selectedArray[i]]?.append(key)
                 for f in value {
                     //uploadFiles[selectedArray[i]]?.append(f)   // Kush
-                    
-                    do {
-                        let jsonData = try JSONSerialization.data(withJSONObject: f, options: .prettyPrinted)
-                        // here "jsonData" is the dictionary encoded in JSON data
-                        let decoded = try JSONSerialization.jsonObject(with: jsonData, options: [])
-                        // here "decoded" is of type `Any`, decoded from JSON data
-                        
-                        print("f :::: ::\(decoded)");
-                        
-                        //  return decoded
-                    } catch {
-                        print(error.localizedDescription)
-                    }
-                    
+                
                     //f is an dictionary
                     var dictWithDirPath = [String:Any]()
                     for (key, value1) in f {  //key means dir path
@@ -533,9 +520,7 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
                 }
             }
         }
-        
-        print("uploadFiles <> <> \(uploadFiles)")
-        
+       
         NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.OnStartUploadShow),
                                         object: nil,
                                         userInfo: ["json_main":json_main,
@@ -1019,16 +1004,13 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
             if let itemValue = item["uniqueID"]{
                 if sourceCheckSum as? String == itemValue as? String{
                     
-                    //print("uniqueID ::::\(sourceCheckSum)  item ::: \(itemValue)")
                     retDict["checksum"] = item["checksum"] as Any
                     retDict["filePath"] = item["filePath"]as Any
                     retDict["filesize"] = item["filesize"]as Any
                     retDict["name"] = item["name"] as Any
                     retDict["type"] = item["type"] as Any
                     retDict["miscInfo"] = item["miscInfo"] as Any
-                    
-                    //print("retDict ::::ALE ::: \(retDict)")
-                    return retDict
+                     return retDict
                 }
             }
             
@@ -1091,7 +1073,7 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
             return
         } else {
             if shootDayField.stringValue.isStringPatternMatch(withstring: shootDayFormat ?? " "){
-                print("shootDay string: \(shootDayField.stringValue)")
+               // print("shootDay string: \(shootDayField.stringValue)")
             } else {
                 showPopoverMessage(positioningView: shootDayField, msg: StringConstant().invalidShootday)
                 return

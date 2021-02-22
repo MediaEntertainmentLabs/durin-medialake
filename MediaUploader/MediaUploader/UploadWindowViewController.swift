@@ -102,7 +102,8 @@ class UploadWindowViewController: NSViewController {
     @objc private func onAddUploadTask(_ notification: Notification) {
         let uploadTableRecord  = notification.userInfo?["uploadRecord"] as! UploadTableRow
         DispatchQueue.main.async {
-            self.uploadContent.addObject(uploadTableRecord)
+          //  self.uploadContent.addObject(uploadTableRecord)
+            self.uploadContent.insert(uploadTableRecord, atArrangedObjectIndex: 0)  // updated due to sorted by new uploaded files comes top
         }
     }
     

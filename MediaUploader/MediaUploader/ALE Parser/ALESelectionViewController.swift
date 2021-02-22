@@ -66,7 +66,6 @@ class ALESelectionViewController: NSViewController,SourceFileColumnSelectedDeleg
     //MARK : NSPopMenu Item Delegate
     
     func didSourceFileColumnSelected(selectedRow:Int , selectedSourceName:NSPopUpButton){
-        // print("selected Row  during FiLeOption : \(selectedRow)")
         
         selectedRowIndex = selectedRow
         var updatedStruct = filesArray[selectedRow]?.aleFileDetail;

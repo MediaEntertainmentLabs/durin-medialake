@@ -195,19 +195,6 @@ class IconViewController: NSViewController {
                 // self.listShows = result["data"] as! [[String : Any]]
                 self.listShows = itemTest
                 
-                do {
-                    let jsonData = try JSONSerialization.data(withJSONObject: self.listShows, options: .prettyPrinted)
-                    // here "jsonData" is the dictionary encoded in JSON data
-                    let decoded = try JSONSerialization.jsonObject(with: jsonData, options: [])
-                    // here "decoded" is of type `Any`, decoded from JSON data
-                    
-                    print("Sorted Array  :::: ::\(decoded)");
-                    
-                    //  return decoded
-                } catch {
-                    print(error.localizedDescription)
-                }
-                
                 self.iconSections.removeAll()
                 NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.ShowOutlineViewController), object: nil)
                 
@@ -420,9 +407,7 @@ class IconViewController: NSViewController {
             // sasToken is unavailable here, will be filled in latter
             let op = self.createUploadDirTask(showName: showName, folderLayoutStr: folderLayoutStr, sasToken: sasToken, uploadRecords: pendingUploads![type]!)
             dataSubTasks.append(contentsOf: op)
-            
-            //jsonFromArray(from: files)
-            
+           
             for item in value {    // Item is having array of dictionary
                 for (key, rec) in item {
                     if let dict = rec as? [String:Any] {     //Updated by kush
@@ -533,25 +518,6 @@ class IconViewController: NSViewController {
                 }
             }
         }
-    }
-    
-    func jsonFromArray(from object:Any) -> String {
-        
-        let retString = ""
-        do {
-            let jsonData = try JSONSerialization.data(withJSONObject: object, options: .prettyPrinted)
-            // here "jsonData" is the dictionary encoded in JSON data
-            let decoded = try JSONSerialization.jsonObject(with: jsonData, options: [])
-            // here "decoded" is of type `Any`, decoded from JSON data
-            
-            print("JSON Value String ::\(decoded)");
-            
-            //  return decoded
-        } catch {
-            print(error.localizedDescription)
-        }
-        
-        return retString;
     }
     
     func jsonFromDict(from object:Any) -> String {
