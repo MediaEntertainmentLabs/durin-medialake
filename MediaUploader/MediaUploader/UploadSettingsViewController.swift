@@ -353,10 +353,7 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
             }
         }
         
-        if isEmpty {
-            showPopoverMessage(positioningView: teamPopup, msg: StringConstant().specifyPathMedia)
-            return
-        }
+       
         
         if shootDayField.stringValue.isEmpty {
             showPopoverMessage(positioningView: shootDayField, msg:StringConstant().specifyShootDay)
@@ -374,6 +371,12 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
             showPopoverMessage(positioningView: emailField, msg:StringConstant().wrongEmailFormat)
             return
         }
+        
+        if isEmpty {
+            showPopoverMessage(positioningView: teamPopup, msg: StringConstant().specifyPathMedia)
+            return
+        }
+        
         
         if blockOrEpisode == nil {
             return
@@ -432,13 +435,13 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
         
         if byBlockRadio.state == NSControl.StateValue.on {
             if block.isEmpty {
-                showPopoverMessage(positioningView: blocksCombo, msg: "Invalid params for Block")
+          //      showPopoverMessage(positioningView: blocksCombo, msg: "Invalid params for Block")
                 return
             }
             blockOrEpisode = getBlock(seasonName: season, blockName: block)
         } else {
             if episode.isEmpty {
-                showPopoverMessage(positioningView: episodesCombo, msg: "Invalid params for Episode")
+            //    showPopoverMessage(positioningView: episodesCombo, msg: "Invalid params for Episode")
                 return
             }
             blockOrEpisode = getEpisode(seasonName: season, episopeName: episode)
@@ -451,28 +454,7 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
                 break
             }
         }
-        
-        if isEmpty {
-            showPopoverMessage(positioningView: teamPopup, msg: StringConstant().specifyPathMedia)
-            return
-        }
-        
-        if shootDayField.stringValue.isEmpty {
-            showPopoverMessage(positioningView: shootDayField, msg:StringConstant().specifyShootDay)
-            return
-        } else {
-            if shootDayField.stringValue.isStringPatternMatch(withstring: shootDayFormat ?? " "){
-                //  print("shootDay string: \(shootDayField.stringValue)")
-            } else {
-                showPopoverMessage(positioningView: shootDayField, msg: StringConstant().invalidShootday)
-                return
-            }
-        }
-        
-        if !emailField.stringValue.isEmpty && !isValidEmail(emailField.stringValue){
-            showPopoverMessage(positioningView: emailField, msg:StringConstant().wrongEmailFormat)
-            return
-        }
+    
         
         if blockOrEpisode == nil {
             return
@@ -882,7 +864,10 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
     func controlTextDidEndEditing(_ obj: Notification) {
         if let sender = obj.object as? NSTextField {
             if sender.tag == 105 {
-                if shootDayField.stringValue.isStringPatternMatch(withstring: shootDayFormat ?? " ") {
+                if shootDayField.stringValue.isEmpty{
+                    showPopoverMessage(positioningView: shootDayField, msg: StringConstant().specifyShootDay)
+                }
+                else  if shootDayField.stringValue.isStringPatternMatch(withstring: shootDayFormat ?? " ") {
                     //  print("shootDay string: \(shootDayField.stringValue)")
                 } else {
                     showPopoverMessage(positioningView: shootDayField, msg: StringConstant().invalidShootday)
