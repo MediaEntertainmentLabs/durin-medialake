@@ -193,7 +193,7 @@ class IconViewController: NSViewController {
                 })
                 
                 // self.listShows = result["data"] as! [[String : Any]]
-                self.listShows = itemTest
+                self.listShows = itemTest   // Alphabetically Sort by Shows Name
                 
                 self.iconSections.removeAll()
                 NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.ShowOutlineViewController), object: nil)
@@ -236,6 +236,26 @@ class IconViewController: NSViewController {
                     for i in 1 ..< self.iconSections.count {
                         self.iconSections[i]!.offset = self.iconSections[i-1]!.offset + self.iconSections[i-1]!.length
                     }
+                }
+                
+            
+                let itemResult = self.iconSections.sorted { (first: (key: Int, value: SectionAttributes), second: (key: Int, value: SectionAttributes)) -> Bool in
+                    return ((first.value.name ).localizedCaseInsensitiveCompare(second.value.name) == .orderedAscending)
+                }
+                
+                self.iconSections.removeAll()
+                self.iconSections = [:]
+                
+                var tempIconSecionDict : [Int:SectionAttributes] = [:]
+                
+                for i in 0..<itemResult.count {
+                    
+                    tempIconSecionDict[i] = itemResult[i].value
+                }
+                
+                self.iconSections.merge(tempIconSecionDict) { (oldValue, newValue) -> IconViewController.SectionAttributes in
+                    // This closure return what value to consider if repeated keys are found
+                    return newValue
                 }
                 
                 if contentArray.count != 0 {
@@ -407,7 +427,7 @@ class IconViewController: NSViewController {
             // sasToken is unavailable here, will be filled in latter
             let op = self.createUploadDirTask(showName: showName, folderLayoutStr: folderLayoutStr, sasToken: sasToken, uploadRecords: pendingUploads![type]!)
             dataSubTasks.append(contentsOf: op)
-           
+            
             for item in value {    // Item is having array of dictionary
                 for (key, rec) in item {
                     if let dict = rec as? [String:Any] {     //Updated by kush
@@ -480,7 +500,7 @@ class IconViewController: NSViewController {
                     dialogMessage += "\r\n\r\nPlease choose \"\(StringConstant().append)\" or \"\(StringConstant().replace)\" to proceed."
                     modalResult = dialogOverwrite(question:StringConstant().pathExist, text: dialogMessage)
                 }
-                    
+                
                 DispatchQueue.global(qos: .background).async {
                     switch modalResult {
                     case NSApplication.ModalResponse.alertFirstButtonReturn:
@@ -620,7 +640,7 @@ class IconViewController: NSViewController {
     }
     
     func removeDirTask(showName: String, folderLayoutStr: String, sasToken: String, uploadRecords : [UploadTableRow]) -> Bool {
-
+        
         let removeQueue = OperationQueue()
         var result: Bool = true
         for uploadRecord in uploadRecords {
@@ -633,14 +653,14 @@ class IconViewController: NSViewController {
             let sasTokenWithDestPath = sasSplit[0] + "/\(dstPath)\(srcPath)" + "?" + sasSplit[1]
             
             print("------------ remove DIR:", sasTokenWithDestPath)
-              
+            
             let removeOperation = FileUploadOperation(showId: self.showId(showName: showName),
-                                                        cdsUserId: LoginViewController.cdsUserId!,
-                                                        sasToken: sasToken,
-                                                        step: FileUploadOperation.UploadType.kDataRemove,
-                                                        uploadRecord : uploadRecord,
-                                                        dependens: [],
-                                                        args: ["rm", sasTokenWithDestPath, "--recursive=true"])
+                                                      cdsUserId: LoginViewController.cdsUserId!,
+                                                      sasToken: sasToken,
+                                                      step: FileUploadOperation.UploadType.kDataRemove,
+                                                      uploadRecord : uploadRecord,
+                                                      dependens: [],
+                                                      args: ["rm", sasTokenWithDestPath, "--recursive=true"])
             removeOperation.completionBlock = {
                 if removeOperation.isCancelled {
                     return
