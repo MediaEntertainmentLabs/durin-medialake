@@ -182,7 +182,32 @@ class IconViewController: NSViewController {
                                                                "enableButton" : OutlineViewController.NameConstants.kRetryStr])
                     return
                 }
-                self.listShows = result["data"] as! [[String : Any]]
+                
+                var itemTest : [[String:Any]] = [[:]]
+                itemTest = result["data"] as! [[String : Any]]
+                
+                itemTest = itemTest.sorted(by: { (Obj1, Obj2) -> Bool in
+                    let Obj1_Name = Obj1["showName"] ?? ""
+                    let Obj2_Name = Obj2["showName"] ?? ""
+                    return ((Obj1_Name as AnyObject).localizedCaseInsensitiveCompare(Obj2_Name as! String) == .orderedAscending)
+                })
+                
+                // self.listShows = result["data"] as! [[String : Any]]
+                self.listShows = itemTest
+                
+                do {
+                    let jsonData = try JSONSerialization.data(withJSONObject: self.listShows, options: .prettyPrinted)
+                    // here "jsonData" is the dictionary encoded in JSON data
+                    let decoded = try JSONSerialization.jsonObject(with: jsonData, options: [])
+                    // here "decoded" is of type `Any`, decoded from JSON data
+                    
+                    print("Sorted Array  :::: ::\(decoded)");
+                    
+                    //  return decoded
+                } catch {
+                    print(error.localizedDescription)
+                }
+                
                 self.iconSections.removeAll()
                 NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.ShowOutlineViewController), object: nil)
                 
@@ -384,7 +409,7 @@ class IconViewController: NSViewController {
             }
             // folderLayoutStr -> [season name]/[block name]/[shootday]/[batch]/[unit ]/[type]
             var folderLayoutStr : String
-
+            
             if  type == StringConstant().reportNotesType{
                 folderLayoutStr = metadatafolderLayout + "\(StringConstant().reportNotesFilePath)/"
             }else{
