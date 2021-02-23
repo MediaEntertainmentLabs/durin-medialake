@@ -7,6 +7,11 @@
 
 import Cocoa
 
+enum pauseResumeStatus {
+    case none
+    case pause
+    case resume
+}
 
 class UploadTableRow : NSObject {
     
@@ -16,6 +21,7 @@ class UploadTableRow : NSObject {
     var isExistRemotely: Bool
     var uploadProgress: Double
     var completionStatusString: String
+    var pauseResumeStatus : pauseResumeStatus
     
     // metadata
     var uploadParams: [String:String] // we need to keep JSON params to send error report in case of failure occured
@@ -29,6 +35,7 @@ class UploadTableRow : NSObject {
         
         self.uploadParams = [:]
         self.isExistRemotely = false
+        self.pauseResumeStatus = .pause
         
         super.init()
     }
@@ -42,6 +49,7 @@ class UploadTableRow : NSObject {
         
         self.uploadParams = uploadParams
         self.isExistRemotely = isExistRemotely
+        self.pauseResumeStatus = .none
         
         super.init()
     }
@@ -50,6 +58,7 @@ class UploadTableRow : NSObject {
 class UploadWindowViewController: NSViewController,PauseResumeDelegate {
     func didPauseResumeTapped(_ sender: NSButton) {
         print("did pause resume clicked ::: Row : \(sender.tag)")
+        
     }
     
 

@@ -126,7 +126,17 @@ extension UploadWindowViewController: NSTableViewDelegate {
                     cell.btnPauseResume?.isHidden = false;
                     
                 }
-                cell.btnPauseResume?.image = NSImage(named:"resume")
+                switch item.pauseResumeStatus {
+                case .none:
+                    cell.btnPauseResume?.isHidden = true;
+                case .pause:
+                    cell.btnPauseResume?.isHidden = false;
+                    cell.btnPauseResume?.image = NSImage(named:"pause")
+                case .resume:
+                    cell.btnPauseResume?.isHidden = false;
+                    cell.btnPauseResume?.image = NSImage(named:"resume")
+                }
+               
                 return cell
             }
         }
