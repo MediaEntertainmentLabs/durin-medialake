@@ -61,7 +61,7 @@
 		C9E6C1DE25C17BFA00F07B3D /* azcopy in Resources */ = {isa = PBXBuildFile; fileRef = C9E6C1DD25C17BFA00F07B3D /* azcopy */; };
 		C9E6C1E825C17DCB00F07B3D /* IconViewSectionHeader.xib in Resources */ = {isa = PBXBuildFile; fileRef = C9E6C1E725C17DCB00F07B3D /* IconViewSectionHeader.xib */; };
 		C9E6C1F325C86BFF00F07B3D /* CustomUploadCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9E6C1F225C86BFF00F07B3D /* CustomUploadCell.swift */; };
-		C9EBD23125DFDCED00C26041 /* TextFiledTypeFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9EBD23025DFDCED00C26041 /* TextFiledTypeFormatter.swift */; };
+		C9FCF94825E3D740009335CF /* uploadsModelData.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = C9FCF94625E3D740009335CF /* uploadsModelData.xcdatamodeld */; };
 		E27783F0928EA7F319BDE5D4 /* Pods_MediaUploader.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 78F0B96BC353C152F8ADDF9A /* Pods_MediaUploader.framework */; };
 /* End PBXBuildFile section */
 
@@ -149,6 +149,7 @@
 		C9E6C1E725C17DCB00F07B3D /* IconViewSectionHeader.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = IconViewSectionHeader.xib; sourceTree = SOURCE_ROOT; };
 		C9E6C1F225C86BFF00F07B3D /* CustomUploadCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomUploadCell.swift; sourceTree = "<group>"; };
 		C9EBD23025DFDCED00C26041 /* TextFiledTypeFormatter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TextFiledTypeFormatter.swift; sourceTree = "<group>"; };
+		C9FCF94725E3D740009335CF /* uploadsModelData.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = uploadsModelData.xcdatamodel; sourceTree = "<group>"; };
 		D31C6861B88CE631791592C4 /* Pods-MediaUploader.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MediaUploader.debug.xcconfig"; path = "Target Support Files/Pods-MediaUploader/Pods-MediaUploader.debug.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -298,6 +299,7 @@
 			isa = PBXGroup;
 			children = (
 				C96173A62593AFA600F037EB /* azcopy */,
+				C9FCF94625E3D740009335CF /* uploadsModelData.xcdatamodeld */,
 				731C9852252DE9DC008E8A75 /* Main.storyboard */,
 				C97621D3256BA90900C48E15 /* CollectionViewItem.xib */,
 				C97621DC256C1C4400C48E15 /* UploadSettingsViewController.xib */,
@@ -575,6 +577,7 @@
 				731C984F252DE9DB008E8A75 /* WindowViewController.swift in Sources */,
 				731C9879252E4D1A008E8A75 /* OutlineViewController.swift in Sources */,
 				C95F6C1F2583748B0008D8A0 /* UploadWindowViewController.swift in Sources */,
+				C9FCF94825E3D740009335CF /* uploadsModelData.xcdatamodeld in Sources */,
 				C9C5362A25DE74D7006AF531 /* TextFiledTypeFormatter.swift in Sources */,
 				731C987F252E4FF3008E8A75 /* Node.swift in Sources */,
 				C95F6C22258388650008D8A0 /* HorizontalSplitViewController.swift in Sources */,
@@ -775,7 +778,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
-				DEVELOPMENT_TEAM = DLJ2Y8U6J5;
+				DEVELOPMENT_TEAM = 2CN2WP7M2D;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/ThirdPartyFrameworks",
@@ -785,7 +788,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = durin.MediaUploader3;
+				PRODUCT_BUNDLE_IDENTIFIER = durin.MediaUploader2;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_VERSION = 5.0;
@@ -801,7 +804,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				DEVELOPMENT_TEAM = DLJ2Y8U6J5;
+				DEVELOPMENT_TEAM = 2CN2WP7M2D;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/ThirdPartyFrameworks",
@@ -811,7 +814,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = durin.MediaUploader3;
+				PRODUCT_BUNDLE_IDENTIFIER = durin.MediaUploader2;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_VERSION = 5.0;
@@ -936,6 +939,19 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCVersionGroup section */
+		C9FCF94625E3D740009335CF /* uploadsModelData.xcdatamodeld */ = {
+			isa = XCVersionGroup;
+			children = (
+				C9FCF94725E3D740009335CF /* uploadsModelData.xcdatamodel */,
+			);
+			currentVersion = C9FCF94725E3D740009335CF /* uploadsModelData.xcdatamodel */;
+			path = uploadsModelData.xcdatamodeld;
+			sourceTree = "<group>";
+			versionGroupType = wrapper.xcdatamodel;
+		};
+/* End XCVersionGroup section */
 	};
 	rootObject = 731C9841252DE9DB008E8A75 /* Project object */;
 }
