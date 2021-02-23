@@ -151,5 +151,38 @@ class UploadWindowViewController: NSViewController,PauseResumeDelegate {
             object: nil)
         
     }
+    
+    override func rightMouseDown(with theEvent: NSEvent) {
+        let point = tableView.convert(theEvent.locationInWindow, from: nil)
+        let row = tableView.row(at: point)
+        print("right click :\(row)")
+        let theMenu = popupMenuForValue(selectedRow: row)
+        NSMenu.popUpContextMenu(theMenu, with: theEvent, for: tableView) // returns a selected value
+    }
+    
+    func popupMenuForValue(selectedRow:Int) -> NSMenu {
+        
+        let menu = NSMenu()
+        menu.autoenablesItems = false
+        let restart = NSMenuItem(title:StringConstant().restart,
+                                 action: #selector(restartUpload(_:)), keyEquivalent: "")
+        restart.representedObject = selectedRow
+        
+        //        let pause = NSMenuItem(title:StringConstant().pause,
+        //                               action: #selector(restartUpload(_:)), keyEquivalent: "")
+        //        let resume = NSMenuItem(title:StringConstant().resume,
+        //                                action: #selector(restartUpload(_:)), keyEquivalent: "")
+        
+        menu.addItem(restart)
+        //        menu.addItem(pause)
+        //        menu.addItem(resume)
+        return menu
+    }
+    
+    @objc func restartUpload(_ item: NSMenuItem) {
+        guard let selectedRow = item.representedObject as? Int else { return }
+        
+        print("selectedItem :\(item.title) , selectedRow :\(selectedRow)")
+    }
 }
 

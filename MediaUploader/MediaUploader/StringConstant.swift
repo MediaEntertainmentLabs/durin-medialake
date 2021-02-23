@@ -27,4 +27,8 @@ class StringConstant {
     var enterNumberToRemove = "Kindly enter number to remove charecter from left / right side"
     var lblPresent = "   Present"
     var noItem = "No Items"
+    var restart = "Restart"
+    var pause = "Pause"
+    var resume = "Resume"
+
 }
