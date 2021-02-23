@@ -62,6 +62,7 @@
 		C9E6C1E825C17DCB00F07B3D /* IconViewSectionHeader.xib in Resources */ = {isa = PBXBuildFile; fileRef = C9E6C1E725C17DCB00F07B3D /* IconViewSectionHeader.xib */; };
 		C9E6C1F325C86BFF00F07B3D /* CustomUploadCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9E6C1F225C86BFF00F07B3D /* CustomUploadCell.swift */; };
 		C9FCF94825E3D740009335CF /* uploadsModelData.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = C9FCF94625E3D740009335CF /* uploadsModelData.xcdatamodeld */; };
+		C9FCF94A25E4E4F3009335CF /* Persist.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9FCF94925E4E4F3009335CF /* Persist.swift */; };
 		E27783F0928EA7F319BDE5D4 /* Pods_MediaUploader.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 78F0B96BC353C152F8ADDF9A /* Pods_MediaUploader.framework */; };
 /* End PBXBuildFile section */
 
@@ -150,6 +151,7 @@
 		C9E6C1F225C86BFF00F07B3D /* CustomUploadCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomUploadCell.swift; sourceTree = "<group>"; };
 		C9EBD23025DFDCED00C26041 /* TextFiledTypeFormatter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TextFiledTypeFormatter.swift; sourceTree = "<group>"; };
 		C9FCF94725E3D740009335CF /* uploadsModelData.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = uploadsModelData.xcdatamodel; sourceTree = "<group>"; };
+		C9FCF94925E4E4F3009335CF /* Persist.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Persist.swift; sourceTree = "<group>"; };
 		D31C6861B88CE631791592C4 /* Pods-MediaUploader.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MediaUploader.debug.xcconfig"; path = "Target Support Files/Pods-MediaUploader/Pods-MediaUploader.debug.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -291,6 +293,7 @@
 				C93C43B625D687360032F417 /* XMLResponseParser.swift */,
 				C9C5362925DE74D7006AF531 /* TextFiledTypeFormatter.swift */,
 				C9C5364725DFB2C0006AF531 /* StringConstant.swift */,
+				C9FCF94925E4E4F3009335CF /* Persist.swift */,
 			);
 			name = Utils;
 			sourceTree = "<group>";
@@ -593,6 +596,7 @@
 				731C984D252DE9DB008E8A75 /* AppDelegate.swift in Sources */,
 				C962D1A5258AA3A40012F684 /* PopoverViewController.swift in Sources */,
 				C93C43B525D59F710032F417 /* CheckPathExistsOperation.swift in Sources */,
+				C9FCF94A25E4E4F3009335CF /* Persist.swift in Sources */,
 				C97621D4256BA90900C48E15 /* CollectionViewItem.swift in Sources */,
 				C93C43B725D687360032F417 /* XMLResponseParser.swift in Sources */,
 				731C9885252EE911008E8A75 /* OutlineViewController+Restoration.swift in Sources */,
