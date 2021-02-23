@@ -107,19 +107,26 @@ extension UploadWindowViewController: NSTableViewDelegate {
                 return cell
             }
         } else if tableColumn?.identifier == NSUserInterfaceItemIdentifier(rawValue: ColumnIdentifiers.StatusColumn) {
-            if let cell = tableView.makeView(withIdentifier: tableColumn!.identifier, owner: self) as? NSTableCellView {
-                cell.textField?.stringValue = item.completionStatusString
+            if let cell : UploadStatusTableCellView = tableView.makeView(withIdentifier: tableColumn!.identifier, owner: self) as? UploadStatusTableCellView {
+                cell.pauseResumeDelegate = self
+                cell.lblStatus?.stringValue = item.completionStatusString
+                cell.btnPauseResume.tag = row
                
                 if doubleEqual(item.uploadProgress, 100.0) {
-                    cell.imageView?.isHidden = false
+                    cell.imgStatus?.isHidden = false
+                    cell.btnPauseResume?.isHidden = true;
                     if item.completionStatusString == "Completed" {
-                        cell.imageView?.image = NSImage(named: NSImage.statusAvailableName)
+                       
+                        cell.imgStatus?.image = NSImage(named: NSImage.statusAvailableName)
                     } else {
-                        cell.imageView?.image = NSImage(named: NSImage.statusUnavailableName)
+                        cell.imgStatus?.image = NSImage(named: NSImage.statusUnavailableName)
                     }
                 } else {
-                    cell.imageView?.isHidden = true
+                    cell.imgStatus?.isHidden = true
+                    cell.btnPauseResume?.isHidden = false;
+                    
                 }
+                cell.btnPauseResume?.image = NSImage(named:"resume")
                 return cell
             }
         }

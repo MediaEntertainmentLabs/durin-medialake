@@ -47,7 +47,11 @@ class UploadTableRow : NSObject {
     }
 }
 
-class UploadWindowViewController: NSViewController {
+class UploadWindowViewController: NSViewController,PauseResumeDelegate {
+    func didPauseResumeTapped(_ sender: NSButton) {
+        print("did pause resume clicked ::: Row : \(sender.tag)")
+    }
+    
 
     // Key values for the icon view dictionary.
     struct IconViewKeys {
