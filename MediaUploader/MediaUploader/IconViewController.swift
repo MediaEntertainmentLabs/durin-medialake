@@ -15,13 +15,14 @@ class IconViewController: NSViewController {
     private var uploadQueue = OperationQueue()
     private var listShows : [[String:Any]] = [[:]]
     var currentSelectionIndex : IndexPath!
+    var sortedKeys:[String]=[]
     
     struct SectionAttributes {
         var name: String
         var offset: Int  // the index of the first image of this section in the imageFiles array
         var length: Int  // number of images in the section
     }
-    
+    var studioDict:[String:[Node]] = [:]
     private var iconSections : [Int:SectionAttributes] = [:]
     private var failedOperations = Set<FileUploadOperation>()
     var uploadSettingsViewController : UploadSettingsViewController!
@@ -183,17 +184,7 @@ class IconViewController: NSViewController {
                     return
                 }
                 
-                var itemTest : [[String:Any]] = [[:]]
-                itemTest = result["data"] as! [[String : Any]]
-                
-                itemTest = itemTest.sorted(by: { (Obj1, Obj2) -> Bool in
-                    let Obj1_Name = Obj1["showName"] ?? ""
-                    let Obj2_Name = Obj2["showName"] ?? ""
-                    return ((Obj1_Name as AnyObject).localizedCaseInsensitiveCompare(Obj2_Name as! String) == .orderedAscending)
-                })
-                
-                // self.listShows = result["data"] as! [[String : Any]]
-                self.listShows = itemTest   // Alphabetically Sort by Shows Name
+                self.listShows = result["data"] as! [[String : Any]]
                 
                 self.iconSections.removeAll()
                 NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.ShowOutlineViewController), object: nil)
@@ -201,13 +192,12 @@ class IconViewController: NSViewController {
                 var contentArray : [Node] = []
                 var elems : Int = 0
                 for value in self.listShows {
-                    
+                    let studioName = value["studio"] as! String
                     let node = OutlineViewController.fileSystemNode(from: value["showName"] as! String, isFolder: true)
                     node.identifier = value["showId"] as! String
                     node.is_upload_allowed = value["allowed"] as! Bool
+                    node.studioName = studioName
                     contentArray.append(node)
-                    let studioName = value["studio"] as! String
-                    
                     
                     var found : Bool = false
                     for (key,value) in self.iconSections {
@@ -238,29 +228,34 @@ class IconViewController: NSViewController {
                     }
                 }
                 
-            
-                let itemResult = self.iconSections.sorted { (first: (key: Int, value: SectionAttributes), second: (key: Int, value: SectionAttributes)) -> Bool in
-                    return ((first.value.name ).localizedCaseInsensitiveCompare(second.value.name) == .orderedAscending)
+                if contentArray.count != 0 {
+                    self.updateIcons(contentArray)
                 }
                 
-                self.iconSections.removeAll()
-                self.iconSections = [:]
+                self.studioDict = Dictionary(grouping: self.icons, by: { $0.studioName})
+                var itemDict:[String:[Node]] = [:]
                 
-                var tempIconSecionDict : [Int:SectionAttributes] = [:]
+                var tempArr : [Node] = []
                 
-                for i in 0..<itemResult.count {
-                    
-                    tempIconSecionDict[i] = itemResult[i].value
+                for (key,value) in self.studioDict {
+                    if !value.isEmpty{
+                        tempArr = value.sorted(by: { (Obj1, Obj2) -> Bool in
+                            let Obj1_Name = Obj1.title
+                            let Obj2_Name = Obj2.title
+                            return (Obj1_Name.localizedCaseInsensitiveCompare(Obj2_Name ) == .orderedAscending)
+                        })
+                    }
+                    itemDict[key] = tempArr
                 }
-                
-                self.iconSections.merge(tempIconSecionDict) { (oldValue, newValue) -> IconViewController.SectionAttributes in
+                // This merge is required to updated Dict w.r.t key sorting
+                self.studioDict.merge(itemDict) { (oldValue, newValue) -> [Node] in
                     // This closure return what value to consider if repeated keys are found
                     return newValue
                 }
                 
-                if contentArray.count != 0 {
-                    self.updateIcons(contentArray)
-                }
+                //   self.sortedKeys = Array(itemDict.keys).sorted(by: < )   // For case sensitive
+                self.sortedKeys  = Array(itemDict.keys).sorted { $0.localizedStandardCompare($1) == .orderedAscending }   // For case Insensitive
+                print("sortedKeys :\(self.sortedKeys)")
                 
                 if FileManager.default.fileExists(atPath: LoginViewController.azcopyPath.path) == false {
                     _ = dialogOKCancel(question: "Warning", text: "AzCopy is not found by path \(LoginViewController.azcopyPath.path).")
@@ -722,17 +717,19 @@ extension IconViewController : NSCollectionViewDataSource {
         if (self.iconSections.count == 0) {
             return 0
         }
-        
-        return self.iconSections[section]!.length
+        let key = sortedKeys[section]
+        return self.studioDict[key]?.count ?? 0    // Updated due to Sorting w.r.t. Alphabetically
+        //   return self.iconSections[section]!.length
     }
     
     func collectionView(_ collectionView: NSCollectionView, itemForRepresentedObjectAt indexPath: IndexPath) -> NSCollectionViewItem {
         
         let item = collectionView.makeItem(withIdentifier: NSUserInterfaceItemIdentifier("CollectionViewItem"), for: indexPath)
         guard let collectionViewItem = item as? CollectionViewItem else {return item}
-        
-        let data = icons[self.iconSections[indexPath.section]!.offset + indexPath.item]
-        collectionViewItem.node = data
+        //  let data = icons[self.iconSections[indexPath.section]!.offset + indexPath.item]  // Updated due to Sorting w.r.t. Alphabetically
+        let key = sortedKeys[indexPath.section]
+        let dataNode = self.studioDict[key]?[indexPath.item]
+        collectionViewItem.node = dataNode
         
         return item
     }
@@ -742,7 +739,8 @@ extension IconViewController : NSCollectionViewDataSource {
         let view = collectionView.makeSupplementaryView(ofKind: NSCollectionView.elementKindSectionHeader,
                                                         withIdentifier: NSUserInterfaceItemIdentifier(rawValue: "IconViewSectionHeader"),
                                                         for: indexPath) as! IconViewSectionHeader
-        view.sectionTitle.stringValue = self.iconSections[indexPath.section]!.name
+        //  view.sectionTitle.stringValue = self.iconSections[indexPath.section]!.name
+        view.sectionTitle.stringValue = sortedKeys[indexPath.section]   // Updated due to Sorting w.r.t. Alphabetically
         return view
     }
 }
