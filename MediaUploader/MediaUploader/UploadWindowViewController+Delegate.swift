@@ -96,7 +96,7 @@ extension UploadWindowViewController: NSTableViewDelegate {
                 cell.progress.doubleValue = item.uploadProgress
                 cell.progressCompletionStatus.isHidden = true
 
-                if doubleEqual(item.uploadProgress, 100.0) {
+                if equal(item.uploadProgress, 100.0) {
                     cell.progress.controlTint = .graphiteControlTint
                     //cell.subviews.remove(at:0)
                     cell.progress.isHidden = true
@@ -112,7 +112,7 @@ extension UploadWindowViewController: NSTableViewDelegate {
                 cell.lblStatus?.stringValue = item.completionStatusString
                 cell.btnPauseResume.tag = row
                
-                if doubleEqual(item.uploadProgress, 100.0) {
+                if equal(item.uploadProgress, 100.0) {
                     cell.imgStatus?.isHidden = false
                     cell.btnPauseResume?.isHidden = true;
                     if item.completionStatusString == "Completed" {
@@ -125,16 +125,16 @@ extension UploadWindowViewController: NSTableViewDelegate {
                     cell.imgStatus?.isHidden = true
                     cell.btnPauseResume?.isHidden = false;
                     
-                }
-                switch item.pauseResumeStatus {
-                case .none:
-                    cell.btnPauseResume?.isHidden = true;
-                case .pause:
-                    cell.btnPauseResume?.isHidden = false;
-                    cell.btnPauseResume?.image = NSImage(named:"pause")
-                case .resume:
-                    cell.btnPauseResume?.isHidden = false;
-                    cell.btnPauseResume?.image = NSImage(named:"resume")
+                    switch item.pauseResumeStatus {
+                    case .none:
+                        cell.btnPauseResume?.isHidden = true;
+                    case .pause:
+                        cell.btnPauseResume?.isHidden = false;
+                        cell.btnPauseResume?.image = NSImage(named:"pause")
+                    case .resume:
+                        cell.btnPauseResume?.isHidden = false;
+                        cell.btnPauseResume?.image = NSImage(named:"resume")
+                    }
                 }
                
                 return cell
@@ -146,9 +146,5 @@ extension UploadWindowViewController: NSTableViewDelegate {
         }
         
         return nil
-    }
-    
-    func doubleEqual(_ a: Double, _ b: Double) -> Bool {
-        return fabs(a - b) < Double.ulpOfOne
     }
 }

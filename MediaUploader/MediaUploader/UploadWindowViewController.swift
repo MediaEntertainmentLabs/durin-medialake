@@ -15,10 +15,12 @@ enum pauseResumeStatus {
 
 class UploadTableRow : NSObject {
     
+    var uniqueIndex: Int // should be unique through all deletes and appends
     var showName: String
     var srcPath: String
     var dstPath: String
     var isExistRemotely: Bool
+    var resumeProgress: Double
     var uploadProgress: Double
     var completionStatusString: String
     var pauseResumeStatus : pauseResumeStatus
@@ -27,38 +29,71 @@ class UploadTableRow : NSObject {
     var uploadParams: [String:String] // we need to keep JSON params to send error report in case of failure occured
     
     override init() {
+        self.uniqueIndex = 0
         self.showName = ""
         self.srcPath = ""
         self.dstPath = ""
         self.uploadProgress = 0.0
-        self.completionStatusString = "In progress"
+        self.resumeProgress = 0.0
+        self.completionStatusString = OutlineViewController.NameConstants.kInProgressStr
         
         self.uploadParams = [:]
         self.isExistRemotely = false
-        self.pauseResumeStatus = .pause
+        self.pauseResumeStatus = .resume
         
         super.init()
     }
     
     init(showName: String, uploadParams: [String:String], srcPath: String, dstPath: String, isExistRemotely: Bool) {
+        self.uniqueIndex = 0
         self.showName = showName
         self.srcPath = srcPath
         self.dstPath = dstPath
         self.uploadProgress = 0.0
-        self.completionStatusString = "In progress"
+        self.resumeProgress = 0.0
+        self.completionStatusString = OutlineViewController.NameConstants.kInProgressStr
         
         self.uploadParams = uploadParams
         self.isExistRemotely = isExistRemotely
-        self.pauseResumeStatus = .none
+        self.pauseResumeStatus = .resume
         
         super.init()
     }
 }
 
 class UploadWindowViewController: NSViewController,PauseResumeDelegate {
+    
     func didPauseResumeTapped(_ sender: NSButton) {
         print("did pause resume clicked ::: Row : \(sender.tag)")
         
+        let row = sender.tag
+        let uploads : [UploadTableRow] = self.uploadContent.arrangedObjects as! [UploadTableRow]
+        
+        if uploads[row].pauseResumeStatus == .resume {
+            uploads[row].pauseResumeStatus = .pause
+            uploads[row].completionStatusString = OutlineViewController.NameConstants.kPausedStr
+            tableView.reloadData()
+            updateData(uploads: uploads)
+            NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.OnPauseUploadShow),
+                                            object: nil,
+                                            userInfo: ["pauseUpload" : uploads[row]])
+            
+        } else if uploads[row].pauseResumeStatus == .pause {
+
+            retrieveData() { (record) in
+                if record.uniqueIndex == uploads[row].uniqueIndex {
+                    uploads[row].pauseResumeStatus = .resume
+                    uploads[row].completionStatusString = OutlineViewController.NameConstants.kInProgressStr
+                    uploads[row].uploadProgress = record.resumeProgress
+                    uploads[row].resumeProgress = record.resumeProgress
+                }
+            }
+            let record = uploads[row]
+            tableView.reloadData()
+            NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.OnResumeUploadShow),
+                                            object: nil,
+                                            userInfo: ["resumeUpload" : record])
+        }
     }
     
 
@@ -103,7 +138,7 @@ class UploadWindowViewController: NSViewController,PauseResumeDelegate {
             
             //               // Optional: you can change title color also jsut by adding NSForegroundColorAttributeName
         }
-        
+        //deleteAllData()
         retrieveData() { (record) in
             self.uploadContent.insert(record, atArrangedObjectIndex: 0)
         }
@@ -119,6 +154,12 @@ class UploadWindowViewController: NSViewController,PauseResumeDelegate {
             selector: #selector(updateProgress(_:)),
             name: Notification.Name(WindowViewController.NotificationNames.UpdateShowUploadProgress),
             object: nil)
+        
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(onShowUploadCompleted(_:)),
+            name: Notification.Name(WindowViewController.NotificationNames.ShowUploadCompleted),
+            object: nil)
     }
 
     override var representedObject: Any? {
@@ -130,13 +171,52 @@ class UploadWindowViewController: NSViewController,PauseResumeDelegate {
     @objc private func onAddUploadTask(_ notification: Notification) {
         let uploadTableRecord  = notification.userInfo?["uploadRecord"] as! UploadTableRow
         DispatchQueue.main.async {
-            createData(index: (self.uploadContent.arrangedObjects as! [Any]).count, uploadTableRecord: uploadTableRecord)
+            let numRows = (self.uploadContent.arrangedObjects as! [Any]).count
+            uploadTableRecord.uniqueIndex = numRows
+            createData(index: numRows, uploadTableRecord: uploadTableRecord)
             self.uploadContent.insert(uploadTableRecord, atArrangedObjectIndex: 0)
         }
     }
     
     @objc private func updateProgress(_ notification: Notification) {
         tableView.reloadData()
+    }
+    
+    @objc private func onShowUploadCompleted(_ notification: Notification) {
+        let uploadTableRecord  = notification.userInfo?["uploadRecord"] as! UploadTableRow
+        tableView.reloadData()
+        updateData(uploads: [uploadTableRecord])
+    }
+    
+    func updateData(uploads: [UploadTableRow]) {
+ 
+        let managedContext = AppDelegate.appDelegate.persistentContainer.viewContext
+        
+        for record in uploads {
+            let fetchRequest: NSFetchRequest<NSFetchRequestResult> = NSFetchRequest.init(entityName: "ShowEntity")
+            fetchRequest.predicate = NSPredicate(format: "sn = %@", String(record.uniqueIndex))
+            
+            print (" ------- updateData for row: \(record.uniqueIndex), status: \(record.completionStatusString)")
+            
+            do
+            {
+                let test = try managedContext.fetch(fetchRequest)
+                
+                let objectUpdate = test[0] as! NSManagedObject
+                objectUpdate.setValue(record.uploadProgress, forKey: "progress")
+                objectUpdate.setValue(record.completionStatusString, forKey: "status")
+                
+                do {
+                    try managedContext.save()
+                    
+                } catch {
+                    print(" ------- updateData \(error)")
+                }
+                
+            } catch {
+                print(" ------- updateData \(error)")
+            }
+        }
     }
     
     deinit {
@@ -150,6 +230,10 @@ class UploadWindowViewController: NSViewController,PauseResumeDelegate {
             name: Notification.Name(WindowViewController.NotificationNames.UpdateShowUploadProgress),
             object: nil)
         
+        NotificationCenter.default.removeObserver(
+            self,
+            name: Notification.Name(WindowViewController.NotificationNames.ShowUploadCompleted),
+            object: nil)
     }
     
     override func rightMouseDown(with theEvent: NSEvent) {
@@ -183,6 +267,11 @@ class UploadWindowViewController: NSViewController,PauseResumeDelegate {
         guard let selectedRow = item.representedObject as? Int else { return }
         
         print("selectedItem :\(item.title) , selectedRow :\(selectedRow)")
+        let record = (uploadContent.arrangedObjects as! [Any])[selectedRow] as! UploadTableRow
+        
+        NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.ShowUploadSettings),
+                                        object: nil,
+                                        userInfo: ["record" : record])
     }
 }
 

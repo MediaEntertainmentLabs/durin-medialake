@@ -107,6 +107,10 @@ class WindowViewController: NSViewController {
         
         static let OnStartUploadShow = "OnStartUploadShow"
         
+        static let OnResumeUploadShow = "OnResumeUploadShow"
+        
+        static let OnPauseUploadShow = "OnPauseUploadShow"
+        
         static let OnUploadFailed = "OnStartUploadFailed"
         
         static let IconSelectionChanged = "IconSelectionChanged"
@@ -126,6 +130,8 @@ class WindowViewController: NSViewController {
         static let ShowUploadSettings = "ShowUploadSettings"
         
         static let UpdateShowUploadProgress = "UpdateShowUploadProgress"
+        
+        static let ShowUploadCompleted = "ShowUploadCompleted"
         
         static let ToggleUploadProgressWindow = "ToggleUploadProgressWindow"
         

@@ -102,6 +102,10 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
     
     var isAllFileHaveSourceFile = true
     var showId : String!
+    var showName : String!
+    
+    var populated : UploadTableRow! // if we restore from CoreData
+    
     
     var uploadedFileList: [fileInfo] = []
     var aleSouceFilesArray:[fileInfo] = []
@@ -167,6 +171,57 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
         
         shootDayField.delegate = self
         
+        if showName != nil {
+            showNameField.stringValue = showName
+        }
+        populateAfterRestore()
+        
+    }
+    
+    func populateAfterRestore() {
+        
+        guard let populated = self.populated else { return }
+        
+        if let shootDay = populated.uploadParams["shootDay"] {
+            shootDayField.stringValue = shootDay
+        }
+        
+        if let info = populated.uploadParams["info"] {
+            infoField.stringValue = info
+        }
+        
+        if let notificationEmail = populated.uploadParams["notificationEmail"] {
+            emailField.stringValue = notificationEmail
+        }
+        
+        if let batch = populated.uploadParams["batch"] {
+            batchPopup.selectItem(withTitle: batch)
+        }
+        
+        if let unit = populated.uploadParams["unit"] {
+            unitPopup.selectItem(withTitle: unit)
+        }
+        
+        if let team = populated.uploadParams["team"] {
+            teamPopup.selectItem(withTitle: team)
+            popUpSelectionDidChange(teamPopup)
+            var str = populated.dstPath
+            if str.last == "/" {
+                str = String(str.dropLast())
+            }
+            var selectedDir = str.components(separatedBy: "/").last
+            if  selectedDir == StringConstant().reportNotesFilePath {
+                selectedDir = StringConstant().reportNotesType
+            }
+            for i in 0 ..< selectedArray.count where selectedArray[i] == selectedDir {
+                
+                guard let fileType = deduceFileType(forRow: i) else { return }
+                let urlDir = URL(string: populated.srcPath)!
+                let outputFiles = prepareUploadFiles(fileType: fileType, inputDirs: [urlDir])
+                populateSelectedArray(forRow: i, files: outputFiles)
+                break
+            }
+        }
     }
     
     override func viewDidAppear() {
@@ -228,14 +283,6 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
     // MARK: - FilePickerDialouge
     func filePickerDialog(fileType: String, completion: @escaping (_ result:[String:[[String:Any]]]) -> Void) {
         
-        var  fileDirPath = fileType
-        if !fileType.isEmpty{
-            
-            if fileType == StringConstant().reportNotesType{
-                fileDirPath = StringConstant().reportNotesFilePath
-            }
-        }
-        
         let dialog = NSOpenPanel();
         
         dialog.title                   = "Choose single directory | Our Code World"
@@ -248,58 +295,7 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
         if (dialog.runModal() ==  NSApplication.ModalResponse.OK) {
             let results = dialog.urls
             
-            var outputFiles: [String: [[String:Any]]] = [:]
-            
-            for result in results {
-                
-                let pathURL = NSURL(fileURLWithPath: result.path, isDirectory: true)
-                var filePaths : [String : UInt64] = [:]
-                
-                let enumerator = FileManager.default.enumerator(atPath: result.path)
-                while let element = enumerator?.nextObject() as? String {
-                    let filename = URL(fileURLWithPath: element).lastPathComponent
-                    if filename == ".DS_Store" {
-                        continue
-                    }
-                    if let fType = enumerator?.fileAttributes?[FileAttributeKey.type] as? FileAttributeType {
-                        
-                        switch fType{
-                        case .typeRegular:
-                            let path = NSURL(fileURLWithPath: element, relativeTo: pathURL as URL).path
-                            if let fSize = enumerator?.fileAttributes?[FileAttributeKey.size] as? UInt64 {
-                                filePaths[path!]=fSize
-                            }
-                            
-                        case .typeDirectory:
-                            print("a dir")
-                        default:
-                            continue
-                        }
-                    }
-                    
-                }
-                let scanItems = filePaths
-                
-                var files = [[String:Any]]()
-                for scanItem in scanItems {
-                    let filename = URL(fileURLWithPath: scanItem.key).lastPathComponent
-                    let filefolder = URL(fileURLWithPath: scanItem.key).deletingLastPathComponent()
-                    
-                    var parsed = filefolder.path.replacingOccurrences(of: pathURL.deletingLastPathComponent!.path, with: "")
-                    if parsed.hasPrefix("/") {
-                        parsed = String(parsed.dropFirst())
-                    }
-                    let filePath = parsed.isEmpty ? filename : parsed + "/" + filename
-                    let item : [String : Any] = ["name": filename,
-                                                 "filePath": fileDirPath + "/" + filePath,
-                                                 "filesize":scanItem.value,
-                                                 "checksum":fileDirPath + "/" + filePath, //randomString(length: 32),/* will be replaced latter by real checksum value */  // fileType updaed by FieleDirPath to update  "Reports/Notes replace with Reports-Notes"
-                                                 "type":fileType]
-                    files.append([scanItem.key : item])
-                    
-                }
-                outputFiles[result.path] = files
-            }
+            let outputFiles = prepareUploadFiles(fileType: fileType, inputDirs: results)
             completion(outputFiles)
             
         } else {
@@ -308,6 +304,70 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
         }
     }
     
+    func prepareUploadFiles(fileType: String, inputDirs: [URL]) -> [String : [[String:Any]]] {
+        var outputFiles: [String: [[String:Any]]] = [:]
+        
+        if fileType.isEmpty {
+            return [:]
+        }
+        
+        var fileDirPath = fileType
+        if fileType == StringConstant().reportNotesType {
+            fileDirPath = StringConstant().reportNotesFilePath
+        }
+        
+        for result in inputDirs {
+            
+            let pathURL = NSURL(fileURLWithPath: result.path, isDirectory: true)
+            var filePaths : [String : UInt64]    = [:]
+            
+            let enumerator = FileManager.default.enumerator(atPath: result.path)
+            while let element = enumerator?.nextObject() as? String {
+                let filename = URL(fileURLWithPath: element).lastPathComponent
+                if filename == ".DS_Store" {
+                    continue
+                }
+                if let fType = enumerator?.fileAttributes?[FileAttributeKey.type] as? FileAttributeType {
+                    
+                    switch fType{
+                    case .typeRegular:
+                        let path = NSURL(fileURLWithPath: element, relativeTo: pathURL as URL).path
+                        if let fSize = enumerator?.fileAttributes?[FileAttributeKey.size] as? UInt64 {
+                            filePaths[path!]=fSize
+                        }
+                        
+                    case .typeDirectory:
+                        print("a dir")
+                    default:
+                        continue
+                    }
+                }
+                
+            }
+            let scanItems = filePaths
+            
+            var files = [[String:Any]]()
+            for scanItem in scanItems {
+                let filename = URL(fileURLWithPath: scanItem.key).lastPathComponent
+                let filefolder = URL(fileURLWithPath: scanItem.key).deletingLastPathComponent()
+                
+                var parsed = filefolder.path.replacingOccurrences(of: pathURL.deletingLastPathComponent!.path, with: "")
+                if parsed.hasPrefix("/") {
+                    parsed = String(parsed.dropFirst())
+                }
+                let filePath = parsed.isEmpty ? filename : parsed + "/" + filename
+                let item : [String : Any] = ["name":filename,
+                                             "filePath":fileDirPath + "/" + filePath,
+                                             "filesize":scanItem.value,
+                                             "checksum":fileDirPath + "/" + filePath, //randomString(length: 32),/* will be replaced latter by real checksum value */
+                                             "type":fileType]
+                files.append([scanItem.key : item])
+                
+            }
+            outputFiles[result.path] = files
+        }
+        return outputFiles
+    }
     
     func isValidEmail(_ email: String) -> Bool {
         let emailRegEx = "[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,64}"
@@ -384,35 +444,31 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
         
         checkAllFilesForSourceName()
         
-        if aleSouceFilesArray.isEmpty{
+        if aleSouceFilesArray.isEmpty || isAllFileHaveSourceFile {
             startUploadNonALEFile()
-        }else{
-            if isAllFileHaveSourceFile {
-                startUploadNonALEFile()
-            }else {
-                aleSelectionViewController = ALESelectionViewController()
-                let storyboard = NSStoryboard(name: "Main", bundle: nil)
-                guard let ALESelectionViewController = storyboard.instantiateController(withIdentifier: "ALESelectionWindow") as? NSWindowController else { return }
-                if let aleSelectionViewWindow = ALESelectionViewController.window {
-                    //let application = NSApplication.shared
-                    //application.runModal(for: downloadWindow)
-                    aleSelectionViewWindow.level = NSWindow.Level.modalPanel
-                    
-                    aleSelectionViewWindow.contentMinSize = NSSize(width: 1200, height: 591)
-                    aleSelectionViewWindow.contentMaxSize = NSSize(width: 1200, height: 591)
-                    
-                    let controller =  NSWindowController(window: aleSelectionViewWindow)
-                    aleSelectionViewWindow.contentViewController = aleSelectionViewController
-                    aleSelectionViewController.aleFileDelegate = self
-                    aleSelectionViewController.setStructDataReference(structDataReference:aleSouceFilesArray)
-                    controller.showWindow(self)
-                    
-                    NotificationCenter.default.addObserver(
-                        self,
-                        selector: #selector(resetViewController(_:)),
-                        name: Notification.Name(WindowViewController.NotificationNames.DismissUploadSettingsDialog),
-                        object: nil)
-                }
+        } else {
+            aleSelectionViewController = ALESelectionViewController()
+            let storyboard = NSStoryboard(name: "Main", bundle: nil)
+            guard let ALESelectionViewController = storyboard.instantiateController(withIdentifier: "ALESelectionWindow") as? NSWindowController else { return }
+            if let aleSelectionViewWindow = ALESelectionViewController.window {
+                //let application = NSApplication.shared
+                //application.runModal(for: downloadWindow)
+                aleSelectionViewWindow.level = NSWindow.Level.modalPanel
+                
+                aleSelectionViewWindow.contentMinSize = NSSize(width: 1200, height: 591)
+                aleSelectionViewWindow.contentMaxSize = NSSize(width: 1200, height: 591)
+                
+                let controller =  NSWindowController(window: aleSelectionViewWindow)
+                aleSelectionViewWindow.contentViewController = aleSelectionViewController
+                aleSelectionViewController.aleFileDelegate = self
+                aleSelectionViewController.setStructDataReference(structDataReference:aleSouceFilesArray)
+                controller.showWindow(self)
+                
+                NotificationCenter.default.addObserver(
+                    self,
+                    selector: #selector(resetViewController(_:)),
+                    name: Notification.Name(WindowViewController.NotificationNames.DismissUploadSettingsDialog),
+                    object: nil)
             }
         }
     }
@@ -475,7 +531,10 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
             "info":infoField.stringValue,
             "notificationEmail":emailField.stringValue,
             "checksum":"md5",
+            "season":season,
+            "blockOrEpisode":blockOrEpisode.0,
         ]
+        
         
         var uploadFiles : [String:[[String:Any]]] = [:]
         var uploadDirs : [String:[String]] = [:]
@@ -490,16 +549,12 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
             for (key, value) in selectedFilePathsArray[i] {
                 uploadDirs[selectedArray[i]]?.append(key)
                 for f in value {
-                    //uploadFiles[selectedArray[i]]?.append(f)   // Kush
-                
-                    //f is an dictionary
                     var dictWithDirPath = [String:Any]()
                     for (key, value1) in f {  //key means dir path
                         var fDict:[String:Any]
                         fDict = value1 as! [String : Any]
                         
-                        if let fileName = fDict["name"]{
-                            
+                        if let fileName = fDict["name"] {
                             let strArray = (fileName as AnyObject).components(separatedBy: ".")
                             if ( strArray.count > 1 ){
                                 if(strArray[1] == "ale"){
@@ -532,9 +587,6 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
                                                    "srcDir": uploadDirs,
                                         ])
         window?.performClose(nil) // nil because I'm not return a message
-        
-        
-        
     }
     
     func getSeasonId(seasonName: String) -> String {
@@ -587,7 +639,14 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
                 if let error = result["error"] as? String {
                     print(error)
                     self.seasonsCombo.addItem(withObjectValue: "Failed to fetch seasons")
-                    self.seasonsCombo.selectItem(at: 0)
+                    
+                    if self.populated != nil {
+                        if let season = self.populated.uploadParams["season"] {
+                            self.seasonsCombo.selectItem(withObjectValue: season)
+                        }
+                    } else {
+                        self.seasonsCombo.selectItem(at: 0)
+                    }
                     
                     AppDelegate.retryContext["showId"] = showId
                     AppDelegate.lastError = AppDelegate.ErrorStatus.kFailedFetchSeasonsAndEpisodes
@@ -692,13 +751,46 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
     // MARK:  File Browser
     func didFileBrowseTapped(_ sender: NSButton) {
         
+        let row = sender.tag
+        let fileType = deduceFileType(forRow: row)
+        
+        if (fileType == nil) { return }
+        
+        filePickerDialog(fileType: fileType!) { [self] (files) in
+            if files.isEmpty {
+                return
+            }
+            
+            populateSelectedArray(forRow: row, files: files)
+        }
+    }
+    
+    func populateSelectedArray(forRow: Int, files: [String:[[String:Any]]]) {
+        let index = teamPopup.indexOfSelectedItem
+        
+        if (index == 0) {
+            self.selectedCameraFilePathsArray[forRow] = files
+            self.selectedFilePathsArray = self.selectedCameraFilePathsArray
+        } else if(index == 1) {
+            self.selectedSoundFilePathsArray[forRow] = files
+            self.selectedFilePathsArray = self.selectedSoundFilePathsArray
+        } else if(index == 2) {
+            self.selectedScriptsFilePathsArray[forRow] = files
+            self.selectedFilePathsArray = self.selectedScriptsFilePathsArray
+        } else if(index == 3) {
+            self.selectedOthersFilePathsArray[forRow] = files
+            self.selectedFilePathsArray = self.selectedOthersFilePathsArray
+        }
+        self.reloadTable()
+    }
+    
+    func deduceFileType(forRow: Int) -> String? {
         let index = teamPopup.indexOfSelectedItem
         
         var fileType:String?
-        let btnTag = sender.tag
         
         if (index == 0) {
-            switch btnTag {
+            switch forRow {
             case 0:
                 fileType = UploadSettingsViewController.kCameraRAWFileType
             case 1:
@@ -713,7 +805,7 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
                 break
             }
         } else if (index == 1) {
-            switch btnTag {
+            switch forRow {
             case 0:
                 fileType = UploadSettingsViewController.kAudioFileType
             case 1:
@@ -722,14 +814,14 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
                 break
             }
         } else if (index == 2) {
-            switch btnTag {
+            switch forRow {
             case 0:
                 fileType = StringConstant().reportNotesType
             default:
                 break
             }
         } else if (index == 3) {
-            switch btnTag {
+            switch forRow {
             case 0:
                 fileType = UploadSettingsViewController.kOthersFileType
             default:
@@ -737,37 +829,14 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
             }
         }
         
-        if (fileType == nil) { return }
-        
-        filePickerDialog(fileType: fileType!) { [self] (files) in
-            if files.isEmpty {
-                return
-            }
-            
-            if (index == 0) {
-                self.selectedCameraFilePathsArray[btnTag] = files
-                self.selectedFilePathsArray = self.selectedCameraFilePathsArray
-            } else if(index == 1) {
-                self.selectedSoundFilePathsArray[btnTag] = files
-                self.selectedFilePathsArray = self.selectedSoundFilePathsArray
-            } else if(index == 2) {
-                self.selectedScriptsFilePathsArray[btnTag] = files
-                self.selectedFilePathsArray = self.selectedScriptsFilePathsArray
-            } else if(index == 3) {
-                self.selectedOthersFilePathsArray[btnTag] = files
-                self.selectedFilePathsArray = self.selectedOthersFilePathsArray
-            }
-            
-            self.reloadTable()
-        }
+        return fileType
     }
     
     @IBAction func popUpSelectionDidChange(_ sender: NSPopUpButton) {
         
-        //  print("selected Item : ",teamPopup.titleOfSelectedItem!)
-        
         let index = teamPopup.indexOfSelectedItem
         selectedArray.removeAll()
+        
         if(index == 0) {
             selectedArray.append(UploadSettingsViewController.kCameraRAWFileType)
             selectedArray.append(UploadSettingsViewController.kLUTFileType)
@@ -868,7 +937,7 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
     
     // MARK:  ALE File Handling
     
-    func checkAllFilesForSourceName(){
+    func checkAllFilesForSourceName() {
         
         aleSouceFilesArray.removeAll()
         uploadedFileList.removeAll()
@@ -1104,6 +1173,8 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
             "info":infoField.stringValue,
             "notificationEmail":emailField.stringValue,
             "checksum":"md5",
+            "season":season,
+            "blockOrEpisode":blockOrEpisode.0,
         ]
         
         var uploadFiles : [String:[[String:Any]]] = [:]

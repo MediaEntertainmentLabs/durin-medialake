@@ -22,7 +22,8 @@ final class FileUploadOperation: AsyncOperation {
     
     var uploadRecord : UploadTableRow?
     var completionStatus : Int
-
+    var isCanceled: Bool
+    
     var args: [String]
     private let step: FileUploadOperation.UploadType
     
@@ -38,6 +39,7 @@ final class FileUploadOperation: AsyncOperation {
         self.uploadRecord = uploadRecord
         self.dependens = dependens
         self.completionStatus = 0
+        self.isCanceled = false
         
         self.step = step
         self.args = args
@@ -45,6 +47,14 @@ final class FileUploadOperation: AsyncOperation {
 
     override func main() {
         let (_, error, status) = runAzCopyCommand(cmd: LoginViewController.azcopyPath.path, args: self.args)
+        if isCanceled {
+            isCanceled = false
+            print ("------------  Upload canceled!")
+            uploadRecord?.completionStatusString = OutlineViewController.NameConstants.kPausedStr
+            uploadRecord?.pauseResumeStatus = .pause
+            self.finish()
+            return
+        }
         
         if status == 0 {
             if self.step == UploadType.kDataRemove {
@@ -63,32 +73,24 @@ final class FileUploadOperation: AsyncOperation {
                     uploadRecord.uploadProgress = 100.0
                     uploadRecord.completionStatusString = "Completed"
                     print ("------------  Upload of data completed successfully!")
-                    NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.UpdateShowUploadProgress),
+                    NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.ShowUploadCompleted),
                                                     object: nil,
-                                                    userInfo: ["showName" : uploadRecord.showName,
-                                                               "progress" : uploadRecord.uploadProgress])
-                    // update show content
-//                    NotificationCenter.default.post(
-//                        name: Notification.Name(WindowViewController.NotificationNames.ShowProgressViewController),
-//                        object: nil,
-//                        userInfo: ["progressLabel" : kFetchingShowContentStr])
-//
-//                    NotificationCenter.default.post(
-//                        name: Notification.Name(WindowViewController.NotificationNames.IconSelectionChanged),
-//                        object: nil,
-//                        userInfo: ["showName" : self.showName, "showId": self.showId, "cdsUserId" : self.cdsUserId])
-                    
+                                                    userInfo: ["uploadRecord" : uploadRecord])
                 }
             }
         } else {
             DispatchQueue.main.async {
                 if self.step == UploadType.kMetadataJsonUpload {
-                    for dep in self.dependens {
+                    for dep in self.dependens where dep.uploadRecord != nil {
                         print(dep.uploadRecord!.completionStatusString)
                         dep.uploadRecord!.uploadProgress = 100.0
                         print ("------------  Upload failed, error: ", error)
                         
                         uploadShowErrorAndNotify(error: OutlineViewController.NameConstants.kUploadShowFailedStr, params: dep.uploadRecord!.uploadParams, operation: self)
+                        
+                        NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.ShowUploadCompleted),
+                                                        object: nil,
+                                                        userInfo: ["uploadRecord" : dep.uploadRecord!])
                     }
                 } else if self.step == UploadType.kDataUpload {
                     
@@ -98,10 +100,11 @@ final class FileUploadOperation: AsyncOperation {
                     uploadRecord.uploadProgress = 100.0
                     print ("------------  Upload failed, error: ", error)
                     uploadShowErrorAndNotify(error: OutlineViewController.NameConstants.kUploadShowFailedStr, params: uploadRecord.uploadParams, operation: self)
+                    
+                    NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.ShowUploadCompleted),
+                                                    object: nil,
+                                                    userInfo: ["uploadRecord" : uploadRecord])
                 }
- 
-                NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.UpdateShowUploadProgress),
-                                                object: nil)
             }
         }
         self.finish()
@@ -189,13 +192,22 @@ final class FileUploadOperation: AsyncOperation {
                 error = error_output
                 return
             }
-     
+            
+            if self.uploadRecord?.pauseResumeStatus == .pause {
+                self.isCanceled = true
+                task.terminate()
+                return
+            }
+            
             // advance progress only for actually upload data stage
             if !result.isEmpty && self.step == FileUploadOperation.UploadType.kDataUpload {
                 
                 guard let uploadRecord = self.uploadRecord else { return }
-               
-                uploadRecord.uploadProgress = ceil(Double(result[0][0])! + 0.5)
+                let progress = ceil(Double(result[0][0])! + 0.5)
+                // normalize progress after resume
+                let newRange = 100.0 - min(100.0, uploadRecord.resumeProgress)
+                let oldRange = 100.0
+                uploadRecord.uploadProgress = uploadRecord.resumeProgress + progress*(newRange/oldRange)
                 print("------------ progress : ", uploadRecord.showName, " ", uploadRecord.uploadProgress, " >> ", result[0])
             }
             

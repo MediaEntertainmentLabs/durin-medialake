@@ -195,3 +195,26 @@ func removeFile(path: String) {
         print("An error took place: \(error)")
     }
 }
+
+
+func jsonFromDict(from object:Any) -> String {
+    
+    let retString = ""
+    do {
+        let jsonData = try JSONSerialization.data(withJSONObject: object, options: .prettyPrinted)
+        // here "jsonData" is the dictionary encoded in JSON data
+        let decoded = try JSONSerialization.jsonObject(with: jsonData, options: [])
+        // here "decoded" is of type `Any`, decoded from JSON data
+        
+        print("metadata::\(decoded)");
+        
+    } catch {
+        print(error.localizedDescription)
+    }
+    
+    return retString;
+}
+
+func equal(_ a: Double, _ b: Double) -> Bool {
+   return fabs(a - b) < Double.ulpOfOne
+}

@@ -2,8 +2,7 @@
 //  UploadStatusTableCellView.swift
 //  MediaUploader
 //
-//  Created by global on 23/02/21.
-//  Copyright © 2021 Mykola Gerasymenko. All rights reserved.
+//  Copyright © 2021 GlobalLogic. All rights reserved.
 //
 
 import Cocoa
@@ -14,19 +13,13 @@ protocol PauseResumeDelegate: class {
 
 class UploadStatusTableCellView: NSTableCellView {
 
-    
     weak var pauseResumeDelegate: PauseResumeDelegate?
+    
+    @IBOutlet weak var btnPauseResume: NSButton!
+    @IBOutlet weak var lblStatus: NSTextField!
+    @IBOutlet weak var imgStatus: NSImageView!
     
     @IBAction func btnPauseResumeClicked(_ sender: NSButton) {
         pauseResumeDelegate?.didPauseResumeTapped(sender)
     }
-    @IBOutlet weak var btnPauseResume: NSButton!
-    @IBOutlet weak var lblStatus: NSTextField!
-    @IBOutlet weak var imgStatus: NSImageView!
-    override func draw(_ dirtyRect: NSRect) {
-        super.draw(dirtyRect)
-
-        // Drawing code here.
-    }
-    
 }

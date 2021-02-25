@@ -7,7 +7,7 @@
 
 import Cocoa
 
-let storedKeys = ["shootDay", "batch", "unit", "team", "seasonId", "blockId", "info", "notificationEmail"]
+let storedKeys = ["shootDay", "batch", "unit", "team", "season", "blockOrEpisode", "blockId", "episodeId", "showId", "info", "notificationEmail"]
 
 func createData(index : Int, uploadTableRecord: UploadTableRow) {
     
@@ -17,7 +17,7 @@ func createData(index : Int, uploadTableRecord: UploadTableRow) {
     
     let data = NSManagedObject(entity: showEntity, insertInto: managedContext)
     
-    data.setValue(index, forKey: "sn")
+    data.setValue(String(index), forKey: "sn")
     data.setValue(uploadTableRecord.showName, forKey: "showName")
     data.setValue(uploadTableRecord.srcPath, forKeyPath: "srcPath")
     data.setValue(uploadTableRecord.dstPath, forKey: "dstPath")
@@ -43,16 +43,23 @@ func retrieveData(completion: @escaping (_ record: UploadTableRow) -> Void) {
         let result = try managedContext.fetch(fetchRequest)
         for data in result as! [NSManagedObject] {
             let record = UploadTableRow()
-            print("S/N\(data.value(forKey: "sn") as! Int)")
+            record.uniqueIndex = Int(data.value(forKey: "sn") as! String)!
             record.showName = data.value(forKey: "showName") as! String
             record.srcPath = data.value(forKey: "srcPath") as! String
             record.dstPath = data.value(forKey: "dstPath") as! String
-            record.uploadProgress = data.value(forKey: "progress") as! Double
+            record.resumeProgress = data.value(forKey: "progress") as! Double
+            record.uploadProgress = record.resumeProgress
             record.completionStatusString = data.value(forKey: "status") as! String
+            record.pauseResumeStatus = .none
+            if equal(record.resumeProgress, 100.0) == false {
+                record.pauseResumeStatus = .pause
+                record.completionStatusString = "Paused"
+            }
             
             for key in storedKeys {
-                print(data.value(forKey: key) as! String)
-                record.uploadParams[key] = key
+                if let v = data.value(forKey: key) as? String {
+                    record.uploadParams[key] = v
+                }
             }
             completion(record)
         }
@@ -64,28 +71,38 @@ func retrieveData(completion: @escaping (_ record: UploadTableRow) -> Void) {
 }
 
 func updateData(row: Int, progress : Int, status: String) {
+    print (" ------- updateData for row: \(row), status: \(status)")
+    
     let managedContext = AppDelegate.appDelegate.persistentContainer.viewContext
     let fetchRequest: NSFetchRequest<NSFetchRequestResult> = NSFetchRequest.init(entityName: "ShowEntity")
-    fetchRequest.predicate = NSPredicate(format: "sn = %@", row)
+    fetchRequest.predicate = NSPredicate(format: "sn = %@", String(row))
     
     do
     {
         let test = try managedContext.fetch(fetchRequest)
-
-            let objectUpdate = test[0] as! NSManagedObject
-            objectUpdate.setValue(progress, forKey: "progress")
-            objectUpdate.setValue(status, forKey: "status")
-            do{
-                try managedContext.save()
-            }
-            catch
-            {
-                print(error)
-            }
+        
+        let objectUpdate = test[0] as! NSManagedObject
+        objectUpdate.setValue(progress, forKey: "progress")
+        objectUpdate.setValue(status, forKey: "status")
+        do {
+            try managedContext.save()
+            
+        } catch {
+            print(error)
         }
-    catch
-    {
+        
+    } catch {
         print(error)
     }
+}
 
+func deleteAllData() {
+    let managedContext = AppDelegate.appDelegate.persistentContainer.viewContext
+    let deleteAll = NSBatchDeleteRequest(fetchRequest: NSFetchRequest<NSFetchRequestResult>(entityName: "ShowEntity"))
+    do {
+        try managedContext.execute(deleteAll)
+    }
+    catch {
+        print(error)
+    }
 }
