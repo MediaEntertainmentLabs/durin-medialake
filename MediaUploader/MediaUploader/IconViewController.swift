@@ -253,7 +253,8 @@ class IconViewController: NSViewController {
                     return newValue
                 }
                 
-                self.sortedKeys = Array(itemDict.keys).sorted(by: < )
+                //   self.sortedKeys = Array(itemDict.keys).sorted(by: < )   // For case sensitive
+                self.sortedKeys  = Array(itemDict.keys).sorted { $0.localizedStandardCompare($1) == .orderedAscending }   // For case Insensitive
                 print("sortedKeys :\(self.sortedKeys)")
                 
                 if FileManager.default.fileExists(atPath: LoginViewController.azcopyPath.path) == false {
