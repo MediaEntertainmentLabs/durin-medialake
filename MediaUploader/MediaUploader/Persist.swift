@@ -6,6 +6,7 @@
 //
 
 import Cocoa
+import OSLog
 
 let storedKeys = ["shootDay", "batch", "unit", "team", "season", "blockOrEpisode", "blockId", "episodeId", "showId", "info", "notificationEmail"]
 
@@ -13,7 +14,9 @@ func createData(index : Int, uploadTableRecord: UploadTableRow) {
     
     let managedContext = AppDelegate.appDelegate.persistentContainer.viewContext
     
-    guard let showEntity = NSEntityDescription.entity(forEntityName: "ShowEntity", in: managedContext) else { print(" ------ Could not createData."); return }
+    guard let showEntity = NSEntityDescription.entity(forEntityName: "ShowEntity", in: managedContext) else {
+        os_log("------------  Could not createData.", log: .default, type: .default)
+        return }
     
     let data = NSManagedObject(entity: showEntity, insertInto: managedContext)
     
@@ -23,6 +26,7 @@ func createData(index : Int, uploadTableRecord: UploadTableRow) {
     data.setValue(uploadTableRecord.dstPath, forKey: "dstPath")
     data.setValue(uploadTableRecord.uploadProgress, forKey: "progress")
     data.setValue(uploadTableRecord.completionStatusString, forKey: "status")
+    data.setValue(uploadTableRecord.dateModified, forKey: "dateModified")
     for key in storedKeys {
         data.setValue(uploadTableRecord.uploadParams[key], forKey: key)
     }
@@ -31,7 +35,7 @@ func createData(index : Int, uploadTableRecord: UploadTableRow) {
         try managedContext.save()
        
     } catch let error as NSError {
-        print("Could not save. \(error), \(error.userInfo)")
+       os_log("------------ Could not save. %@", log: .default, type: .error,error)
     }
 }
 
@@ -50,6 +54,7 @@ func retrieveData(completion: @escaping (_ record: UploadTableRow) -> Void) {
             record.resumeProgress = data.value(forKey: "progress") as! Double
             record.uploadProgress = record.resumeProgress
             record.completionStatusString = data.value(forKey: "status") as! String
+            record.dateModified = data.value(forKey: "dateModified") as!Date
             record.pauseResumeStatus = .none
             if equal(record.resumeProgress, 100.0) == false {
                 record.pauseResumeStatus = .pause
@@ -65,14 +70,14 @@ func retrieveData(completion: @escaping (_ record: UploadTableRow) -> Void) {
         }
         
     } catch {
-        print("Failed")
+        os_log("------------ failed durinf retrieve Data from coredata. %@", log: .default, type: .default)
         completion(UploadTableRow())
     }
 }
 
 func updateData(row: Int, progress : Int, status: String) {
-    print (" ------- updateData for row: \(row), status: \(status)")
-    
+    os_log(" ------- updateData for row:%d , status :%@", log: .default, type: .default,row,status)
+  
     let managedContext = AppDelegate.appDelegate.persistentContainer.viewContext
     let fetchRequest: NSFetchRequest<NSFetchRequestResult> = NSFetchRequest.init(entityName: "ShowEntity")
     fetchRequest.predicate = NSPredicate(format: "sn = %@", String(row))
@@ -84,15 +89,19 @@ func updateData(row: Int, progress : Int, status: String) {
         let objectUpdate = test[0] as! NSManagedObject
         objectUpdate.setValue(progress, forKey: "progress")
         objectUpdate.setValue(status, forKey: "status")
+        objectUpdate.setValue(Date(), forKey: "dateModified")
         do {
             try managedContext.save()
             
         } catch {
-            print(error)
+            os_log(" ------- Error during update data %@", log: .default, type: .error,error as CVarArg)
+          
+           
         }
         
     } catch {
-        print(error)
+        os_log(" -----Catch  Error during update data %@", log: .default, type: .error,error as CVarArg)
+      
     }
 }
 

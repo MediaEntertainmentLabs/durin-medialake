@@ -23,6 +23,7 @@ class UploadTableRow : NSObject {
     var resumeProgress: Double
     var uploadProgress: Double
     var completionStatusString: String
+    var dateModified: Date
     var pauseResumeStatus : pauseResumeStatus
     
     // metadata
@@ -36,6 +37,7 @@ class UploadTableRow : NSObject {
         self.uploadProgress = 0.0
         self.resumeProgress = 0.0
         self.completionStatusString = OutlineViewController.NameConstants.kInProgressStr
+        self.dateModified = Date()
         
         self.uploadParams = [:]
         self.isExistRemotely = false
@@ -52,6 +54,7 @@ class UploadTableRow : NSObject {
         self.uploadProgress = 0.0
         self.resumeProgress = 0.0
         self.completionStatusString = OutlineViewController.NameConstants.kInProgressStr
+        self.dateModified = Date()
         
         self.uploadParams = uploadParams
         self.isExistRemotely = isExistRemotely
@@ -86,6 +89,7 @@ class UploadWindowViewController: NSViewController,PauseResumeDelegate {
                     uploads[row].completionStatusString = OutlineViewController.NameConstants.kInProgressStr
                     uploads[row].uploadProgress = record.resumeProgress
                     uploads[row].resumeProgress = record.resumeProgress
+                    
                 }
             }
             let record = uploads[row]
@@ -124,11 +128,12 @@ class UploadWindowViewController: NSViewController,PauseResumeDelegate {
         tableView.tableColumns.forEach { (column) in
             switch(column_index) {
             case 0: column.title = "S.N"
-            case 1: column.title = "Show Name"
-            case 2: column.title = "Source Location"
-            case 3: column.title = "Destination Location"
-            case 4: column.title = "Progress bar"
-            case 5: column.title = "Status"
+            case 1: column.title = "Date Modified"
+            case 2: column.title = "Show Name"
+            case 3: column.title = "Source Location"
+            case 4: column.title = "Destination Location"
+            case 5: column.title = "Progress bar"
+            case 6: column.title = "Status"
             default: break
             }
             column_index += 1
@@ -205,6 +210,7 @@ class UploadWindowViewController: NSViewController,PauseResumeDelegate {
                 let objectUpdate = test[0] as! NSManagedObject
                 objectUpdate.setValue(record.uploadProgress, forKey: "progress")
                 objectUpdate.setValue(record.completionStatusString, forKey: "status")
+                objectUpdate.setValue(record.dateModified, forKey: "dateModified")
                 
                 do {
                     try managedContext.save()

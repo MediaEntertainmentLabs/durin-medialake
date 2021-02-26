@@ -56,6 +56,7 @@ extension UploadWindowViewController: NSTableViewDelegate {
 
     enum ColumnIdentifiers {
         static let Num = "NumColumn"
+        static let DateModified = "DateModifiedColumn"
         static let ShowName = "ShowNameColumn"
         static let SrcPath = "SrcPathColumn"
         static let DstPath = "DstPathColumn"
@@ -81,7 +82,11 @@ extension UploadWindowViewController: NSTableViewDelegate {
         
         if tableColumn?.identifier == NSUserInterfaceItemIdentifier(rawValue: ColumnIdentifiers.Num) {
             text = "\(row+1)"
-        } else if tableColumn?.identifier == NSUserInterfaceItemIdentifier(rawValue: ColumnIdentifiers.ShowName) {
+        }else if tableColumn?.identifier == NSUserInterfaceItemIdentifier(rawValue: ColumnIdentifiers.DateModified) {
+            print("modifiedDate : \(stringFromDate(date: item.dateModified))")
+            text = stringFromDate(date: item.dateModified)
+        }
+        else if tableColumn?.identifier == NSUserInterfaceItemIdentifier(rawValue: ColumnIdentifiers.ShowName) {
             text = item.showName
         } else if tableColumn?.identifier == NSUserInterfaceItemIdentifier(rawValue: ColumnIdentifiers.SrcPath) {
             text = item.srcPath
