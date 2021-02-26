@@ -239,12 +239,18 @@ class UploadWindowViewController: NSViewController,PauseResumeDelegate {
     override func rightMouseDown(with theEvent: NSEvent) {
         let point = tableView.convert(theEvent.locationInWindow, from: nil)
         let row = tableView.row(at: point)
-        print("right click :\(row)")
-        let theMenu = popupMenuForValue(selectedRow: row)
+        let uploads : [UploadTableRow] = self.uploadContent.arrangedObjects as! [UploadTableRow]
+
+        var retry = false
+        if uploads[row].completionStatusString.lowercased() != "completed"{
+            retry = true
+        }
+                
+        let theMenu = popupMenuForValue(selectedRow: row,withRetry: retry)
         NSMenu.popUpContextMenu(theMenu, with: theEvent, for: tableView) // returns a selected value
     }
     
-    func popupMenuForValue(selectedRow:Int) -> NSMenu {
+    func popupMenuForValue(selectedRow:Int,withRetry:Bool) -> NSMenu {
         
         let menu = NSMenu()
         menu.autoenablesItems = false
@@ -257,7 +263,9 @@ class UploadWindowViewController: NSViewController,PauseResumeDelegate {
         retry.representedObject = selectedRow
         
         menu.addItem(restart)
-        menu.addItem(retry)
+        if(withRetry){
+            menu.addItem(retry)
+        }
         
         return menu
     }
