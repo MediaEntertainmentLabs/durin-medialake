@@ -116,24 +116,30 @@ extension UploadWindowViewController: NSTableViewDelegate {
                     cell.imgStatus?.isHidden = false
                     cell.btnPauseResume?.isHidden = true;
                     if item.completionStatusString == "Completed" {
-                       
                         cell.imgStatus?.image = NSImage(named: NSImage.statusAvailableName)
                     } else {
                         cell.imgStatus?.image = NSImage(named: NSImage.statusUnavailableName)
                     }
                 } else {
-                    cell.imgStatus?.isHidden = true
-                    cell.btnPauseResume?.isHidden = false;
-                    
-                    switch item.pauseResumeStatus {
-                    case .none:
+                    if item.completionStatusString == "Failed" {
+                        cell.imgStatus?.isHidden = false
                         cell.btnPauseResume?.isHidden = true;
-                    case .pause:
+                        cell.imgStatus?.image = NSImage(named: NSImage.statusUnavailableName)
+                    }
+                    else {
+                        cell.imgStatus?.isHidden = true
                         cell.btnPauseResume?.isHidden = false;
-                        cell.btnPauseResume?.image = NSImage(named:"pause")
-                    case .resume:
-                        cell.btnPauseResume?.isHidden = false;
-                        cell.btnPauseResume?.image = NSImage(named:"resume")
+                        
+                        switch item.pauseResumeStatus {
+                        case .none:
+                            cell.btnPauseResume?.isHidden = true;
+                        case .pause:
+                            cell.btnPauseResume?.isHidden = false;
+                            cell.btnPauseResume?.image = NSImage(named:"pause")
+                        case .resume:
+                            cell.btnPauseResume?.isHidden = false;
+                            cell.btnPauseResume?.image = NSImage(named:"resume")
+                        }
                     }
                 }
                

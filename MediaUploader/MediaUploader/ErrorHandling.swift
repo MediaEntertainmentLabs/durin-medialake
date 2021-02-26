@@ -20,7 +20,7 @@ func uploadShowErrorAndNotify(error : Error, params : [String:String], operation
     if operation != nil {
         NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.OnUploadFailed),
                                         object: nil,
-                                        userInfo: ["failedOperation" : operation])
+                                        userInfo: ["failedOperation" : operation as Any])
     }
 }
 

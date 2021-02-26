@@ -79,6 +79,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     lazy var persistentContainer: NSPersistentContainer = {
 
         let container = NSPersistentContainer(name: "uploadsModelData")
+        print(" ---------- CoreData SQL path \(container.persistentStoreDescriptions[0].url?.path)")
         container.loadPersistentStores(completionHandler: { (storeDescription, error) in
             if let error = error as NSError? {
                 // Replace this implementation with code to handle the error appropriately.

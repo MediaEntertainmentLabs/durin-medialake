@@ -663,13 +663,17 @@ class IconViewController: NSViewController {
         
         var uploadOperations = [FileUploadOperation]()
         for uploadRecord in uploadRecords {
+            var args = ["copy", uploadRecord.srcPath, sasTokenWithDestPath, "--recursive", "--put-md5"]
+            if isResume {
+                args.append("--overwrite=false")
+            }
             uploadOperations.append(FileUploadOperation(showId: self.showId(showName: showName),
                                                         cdsUserId: LoginViewController.cdsUserId!,
                                                         sasToken: sasToken,
                                                         step: FileUploadOperation.UploadType.kDataUpload,
                                                         uploadRecord : uploadRecord,
                                                         dependens: [],
-                                                        args: ["copy", uploadRecord.srcPath, sasTokenWithDestPath, "--recursive", "--put-md5", isResume ? "--overwrite=false" : ""]))
+                                                        args: args))
         }
         return uploadOperations
     }

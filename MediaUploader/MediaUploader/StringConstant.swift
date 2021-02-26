@@ -28,6 +28,7 @@ class StringConstant {
     var lblPresent = "   Present"
     var noItem = "No Items"
     var restart = "Restart"
+    var retry = "Retry"
     var pause = "Pause"
     var resume = "Resume"
 

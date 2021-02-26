@@ -250,28 +250,36 @@ class UploadWindowViewController: NSViewController,PauseResumeDelegate {
         menu.autoenablesItems = false
         let restart = NSMenuItem(title:StringConstant().restart,
                                  action: #selector(restartUpload(_:)), keyEquivalent: "")
-        restart.representedObject = selectedRow
+        let retry = NSMenuItem(title:StringConstant().retry,
+                               action: #selector(retryUpload(_:)), keyEquivalent: "")
         
-        //        let pause = NSMenuItem(title:StringConstant().pause,
-        //                               action: #selector(restartUpload(_:)), keyEquivalent: "")
-        //        let resume = NSMenuItem(title:StringConstant().resume,
-        //                                action: #selector(restartUpload(_:)), keyEquivalent: "")
+        restart.representedObject = selectedRow
+        retry.representedObject = selectedRow
         
         menu.addItem(restart)
-        //        menu.addItem(pause)
-        //        menu.addItem(resume)
+        menu.addItem(retry)
+        
         return menu
     }
     
     @objc func restartUpload(_ item: NSMenuItem) {
         guard let selectedRow = item.representedObject as? Int else { return }
         
-        print("selectedItem :\(item.title) , selectedRow :\(selectedRow)")
         let record = (uploadContent.arrangedObjects as! [Any])[selectedRow] as! UploadTableRow
         
         NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.ShowUploadSettings),
                                         object: nil,
                                         userInfo: ["record" : record])
+    }
+    
+    @objc func retryUpload(_ item: NSMenuItem) {
+        guard let selectedRow = item.representedObject as? Int else { return }
+        let record = (uploadContent.arrangedObjects as! [Any])[selectedRow] as! UploadTableRow
+       
+        // resume in terms of functionality identical to Retry
+        NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.OnResumeUploadShow),
+                                        object: nil,
+                                        userInfo: ["resumeUpload": record])
     }
 }
 

@@ -82,9 +82,8 @@ final class FileUploadOperation: AsyncOperation {
             DispatchQueue.main.async {
                 if self.step == UploadType.kMetadataJsonUpload {
                     for dep in self.dependens where dep.uploadRecord != nil {
-                        print(dep.uploadRecord!.completionStatusString)
-                        dep.uploadRecord!.uploadProgress = 100.0
-                        print ("------------  Upload failed, error: ", error)
+                        dep.uploadRecord!.completionStatusString = "Failed"
+                        print ("------------  Metadata.json upload failed, error: ", error)
                         
                         uploadShowErrorAndNotify(error: OutlineViewController.NameConstants.kUploadShowFailedStr, params: dep.uploadRecord!.uploadParams, operation: self)
                         
@@ -95,10 +94,8 @@ final class FileUploadOperation: AsyncOperation {
                 } else if self.step == UploadType.kDataUpload {
                     
                     guard let uploadRecord = self.uploadRecord else { return }
-                   
-                    print(uploadRecord.completionStatusString)
-                    uploadRecord.uploadProgress = 100.0
-                    print ("------------  Upload failed, error: ", error)
+                    uploadRecord.completionStatusString = "Failed"
+                    print ("------------  Data upload failed, error: ", error)
                     uploadShowErrorAndNotify(error: OutlineViewController.NameConstants.kUploadShowFailedStr, params: uploadRecord.uploadParams, operation: self)
                     
                     NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.ShowUploadCompleted),
