@@ -7,6 +7,7 @@
 
 import Cocoa
 import CommonCrypto
+import OSLog
 
 final class CalculateChecksumOperation: AsyncOperation {
 
@@ -55,7 +56,7 @@ final class CalculateChecksumOperation: AsyncOperation {
             try result.write(to: metadataJsonURL, atomically: true, encoding: .utf8)
             
         } catch let error as NSError {
-            print("An error took place: \(error)")
+            os_log("An error took place during calculate checksum ", log: .default, type: .error,error)
         }
         
         self.finish()

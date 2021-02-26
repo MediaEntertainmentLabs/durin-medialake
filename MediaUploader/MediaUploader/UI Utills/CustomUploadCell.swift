@@ -7,6 +7,7 @@
 //
 
 import Cocoa
+import OSLog
 
 protocol FileBrowseDelegate: class {
     func didFileBrowseTapped(_ sender: NSButton)
@@ -21,7 +22,7 @@ class CustomUploadCell: NSTableCellView {
     weak var delegate: FileBrowseDelegate?
 
     @IBAction func buttonTapped(_ sender: NSButton) {
-       // print("buttonTapped")
+        os_log("did file browse tapped", log: .default, type: .debug)
         delegate?.didFileBrowseTapped(sender)
     }
     override func draw(_ dirtyRect: NSRect) {

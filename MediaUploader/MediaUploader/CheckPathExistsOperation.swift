@@ -6,6 +6,7 @@
 //
 
 import Cocoa
+import OSLog
 
 final class CheckPathExistsOperation: AsyncOperation {
 
@@ -59,7 +60,7 @@ final class CheckPathExistsOperation: AsyncOperation {
     private func checkPathExists(SASToken: String, showName: String, showId: String, dir: String, completion: @escaping (_ data: [String:Any]) -> Void) {
         
         let checkDirURI = SASToken + "&restype=container&comp=list&prefix="+dir
-        print("checkPathExists ", checkDirURI)
+        os_log("checkPathExists :: %@", log: .default, type: .debug,checkDirURI)
         guard let url = URL(string: checkDirURI) else { completion(["error": OutlineViewController.NameConstants.kFetchShowContentFailedStr]); return }
         
         var request = URLRequest(url: url)
@@ -74,7 +75,7 @@ final class CheckPathExistsOperation: AsyncOperation {
                     if httpResponse.statusCode != 200 {
                         // Convert HTTP Response Data to a simple String
                         if let data = data, let dataString = String(data: data, encoding: .utf8) {
-                            print("Response: \(dataString)")
+                            os_log("dataString :: %@", log: .default, type: .debug,dataString)
                         }
                         throw OutlineViewController.NameConstants.kFetchShowContentFailedStr
                     }
@@ -86,7 +87,7 @@ final class CheckPathExistsOperation: AsyncOperation {
                 
             } catch let error as NSError {
                 completion(["error" : OutlineViewController.NameConstants.kFetchShowContentFailedStr])
-                print("\(error)")
+                os_log("error :: %@", log: .default, type: .error,error)
             } catch let error  {
                 completion(["error": error])
             }

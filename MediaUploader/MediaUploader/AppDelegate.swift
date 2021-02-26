@@ -6,6 +6,7 @@
 //
 import Cocoa
 import MSAL
+import OSLog
 
 @NSApplicationMain
 class AppDelegate: NSObject, NSApplicationDelegate {
@@ -79,7 +80,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     lazy var persistentContainer: NSPersistentContainer = {
 
         let container = NSPersistentContainer(name: "uploadsModelData")
-        print(" ---------- CoreData SQL path \(container.persistentStoreDescriptions[0].url?.path)")
+        os_log(" -------  CoreData SQL path <>><><> %@", log: .default, type: .default,container.persistentStoreDescriptions[0].url?.path as! CVarArg)
+      
         container.loadPersistentStores(completionHandler: { (storeDescription, error) in
             if let error = error as NSError? {
                 // Replace this implementation with code to handle the error appropriately.
