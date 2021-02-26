@@ -236,6 +236,7 @@ class UploadWindowViewController: NSViewController,PauseResumeDelegate {
             object: nil)
     }
     
+    // MARK:  rightMouseDown
     override func rightMouseDown(with theEvent: NSEvent) {
         let point = tableView.convert(theEvent.locationInWindow, from: nil)
         let row = tableView.row(at: point)
@@ -245,9 +246,13 @@ class UploadWindowViewController: NSViewController,PauseResumeDelegate {
         if uploads[row].completionStatusString.lowercased() != "completed"{
             retry = true
         }
-                
+     
         let theMenu = popupMenuForValue(selectedRow: row,withRetry: retry)
-        NSMenu.popUpContextMenu(theMenu, with: theEvent, for: tableView) // returns a selected value
+        
+        if uploads[row].completionStatusString != OutlineViewController.NameConstants.kInProgressStr{
+            NSMenu.popUpContextMenu(theMenu, with: theEvent, for: tableView) // returns a selected value
+        }
+        
     }
     
     func popupMenuForValue(selectedRow:Int,withRetry:Bool) -> NSMenu {
