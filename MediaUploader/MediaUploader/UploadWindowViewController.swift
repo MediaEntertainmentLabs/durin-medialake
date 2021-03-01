@@ -23,6 +23,7 @@ class UploadTableRow : NSObject {
     var resumeProgress: Double
     var uploadProgress: Double
     var completionStatusString: String
+    var dateModified: Date
     var pauseResumeStatus : pauseResumeStatus
     
     // metadata
@@ -36,7 +37,7 @@ class UploadTableRow : NSObject {
         self.uploadProgress = 0.0
         self.resumeProgress = 0.0
         self.completionStatusString = OutlineViewController.NameConstants.kInProgressStr
-        
+        self.dateModified = Date()
         self.uploadParams = [:]
         self.isExistRemotely = false
         self.pauseResumeStatus = .resume
@@ -52,7 +53,7 @@ class UploadTableRow : NSObject {
         self.uploadProgress = 0.0
         self.resumeProgress = 0.0
         self.completionStatusString = OutlineViewController.NameConstants.kInProgressStr
-        
+        self.dateModified = Date()
         self.uploadParams = uploadParams
         self.isExistRemotely = isExistRemotely
         self.pauseResumeStatus = .resume
@@ -124,11 +125,13 @@ class UploadWindowViewController: NSViewController,PauseResumeDelegate {
         tableView.tableColumns.forEach { (column) in
             switch(column_index) {
             case 0: column.title = "S.N"
-            case 1: column.title = "Show Name"
-            case 2: column.title = "Source Location"
-            case 3: column.title = "Destination Location"
-            case 4: column.title = "Progress bar"
-            case 5: column.title = "Status"
+            case 1: column.title = "Date Modified"
+            case 2: column.title = "Show Name"
+            case 3: column.title = "Source Location"
+            case 4: column.title = "Destination Location"
+            case 5: column.title = "Progress bar"
+            case 6: column.title = "Status"
+
             default: break
             }
             column_index += 1
@@ -205,7 +208,7 @@ class UploadWindowViewController: NSViewController,PauseResumeDelegate {
                 let objectUpdate = test[0] as! NSManagedObject
                 objectUpdate.setValue(record.uploadProgress, forKey: "progress")
                 objectUpdate.setValue(record.completionStatusString, forKey: "status")
-                
+                objectUpdate.setValue(record.dateModified, forKey: "dateModified")
                 do {
                     try managedContext.save()
                     
@@ -239,12 +242,22 @@ class UploadWindowViewController: NSViewController,PauseResumeDelegate {
     override func rightMouseDown(with theEvent: NSEvent) {
         let point = tableView.convert(theEvent.locationInWindow, from: nil)
         let row = tableView.row(at: point)
-        print("right click :\(row)")
-        let theMenu = popupMenuForValue(selectedRow: row)
-        NSMenu.popUpContextMenu(theMenu, with: theEvent, for: tableView) // returns a selected value
+        let uploads : [UploadTableRow] = self.uploadContent.arrangedObjects as! [UploadTableRow]
+
+        var retry = false
+        if uploads[row].completionStatusString.lowercased() != "completed" && uploads[row].completionStatusString != OutlineViewController.NameConstants.kPausedStr{
+            retry = true
+        }
+     
+        let theMenu = popupMenuForValue(selectedRow: row,withRetry: retry)
+        
+        if uploads[row].completionStatusString != OutlineViewController.NameConstants.kInProgressStr{
+            NSMenu.popUpContextMenu(theMenu, with: theEvent, for: tableView) // returns a selected value
+        }
+        
     }
     
-    func popupMenuForValue(selectedRow:Int) -> NSMenu {
+    func popupMenuForValue(selectedRow:Int,withRetry:Bool) -> NSMenu {
         
         let menu = NSMenu()
         menu.autoenablesItems = false
@@ -257,7 +270,9 @@ class UploadWindowViewController: NSViewController,PauseResumeDelegate {
         retry.representedObject = selectedRow
         
         menu.addItem(restart)
-        menu.addItem(retry)
+        if(withRetry){
+            menu.addItem(retry)
+        }
         
         return menu
     }

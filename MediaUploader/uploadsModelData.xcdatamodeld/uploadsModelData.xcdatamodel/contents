@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="17183" systemVersion="19H15" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="17709" systemVersion="19G73" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
     <entity name="ShowEntity" representedClassName="ShowEntity" syncable="YES" codeGenerationType="class">
         <attribute name="batch" optional="YES" attributeType="String"/>
         <attribute name="blockId" optional="YES" attributeType="String"/>
         <attribute name="blockOrEpisode" optional="YES" attributeType="String"/>
+        <attribute name="dateModified" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="dstPath" optional="YES" attributeType="String"/>
         <attribute name="episodeId" optional="YES" attributeType="String"/>
         <attribute name="info" optional="YES" attributeType="String"/>
@@ -20,6 +21,6 @@
         <attribute name="unit" optional="YES" attributeType="String"/>
     </entity>
     <elements>
-        <element name="ShowEntity" positionX="-63" positionY="-18" width="128" height="298"/>
+        <element name="ShowEntity" positionX="-63" positionY="-18" width="128" height="313"/>
     </elements>
 </model>

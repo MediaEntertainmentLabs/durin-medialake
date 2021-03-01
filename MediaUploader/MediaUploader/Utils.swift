@@ -218,3 +218,22 @@ func jsonFromDict(from object:Any) -> String {
 func equal(_ a: Double, _ b: Double) -> Bool {
    return fabs(a - b) < Double.ulpOfOne
 }
+
+func dateFromString(strDate :String)->Date{
+    
+    let dateFormatterGet = DateFormatter()
+    dateFormatterGet.dateFormat = "MM-dd-yyyy HH:mm"
+
+    let date: Date? = dateFormatterGet.date(from:strDate)
+    return date!
+}
+
+func stringFromDate(date :Date)->String{
+    
+    let dateFormatter = DateFormatter()
+    dateFormatter.dateFormat = "MM-dd-yyyy HH:mm"
+
+    let strDate: String? = dateFormatter.string(from: date)
+    return strDate!
+}
+

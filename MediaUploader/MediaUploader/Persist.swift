@@ -23,6 +23,7 @@ func createData(index : Int, uploadTableRecord: UploadTableRow) {
     data.setValue(uploadTableRecord.dstPath, forKey: "dstPath")
     data.setValue(uploadTableRecord.uploadProgress, forKey: "progress")
     data.setValue(uploadTableRecord.completionStatusString, forKey: "status")
+    data.setValue(uploadTableRecord.dateModified, forKey: "dateModified")
     for key in storedKeys {
         data.setValue(uploadTableRecord.uploadParams[key], forKey: key)
     }
@@ -51,9 +52,10 @@ func retrieveData(completion: @escaping (_ record: UploadTableRow) -> Void) {
             record.uploadProgress = record.resumeProgress
             record.completionStatusString = data.value(forKey: "status") as! String
             record.pauseResumeStatus = .none
+            record.dateModified = data.value(forKey: "dateModified") as!Date
             if equal(record.resumeProgress, 100.0) == false {
                 record.pauseResumeStatus = .pause
-                record.completionStatusString = "Paused"
+                record.completionStatusString = OutlineViewController.NameConstants.kPausedStr
             }
             
             for key in storedKeys {
@@ -84,6 +86,7 @@ func updateData(row: Int, progress : Int, status: String) {
         let objectUpdate = test[0] as! NSManagedObject
         objectUpdate.setValue(progress, forKey: "progress")
         objectUpdate.setValue(status, forKey: "status")
+        objectUpdate.setValue(Date(), forKey: "dateModified")
         do {
             try managedContext.save()
             
