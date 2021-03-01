@@ -289,6 +289,13 @@ class UploadWindowViewController: NSViewController,PauseResumeDelegate {
     
     @objc func retryUpload(_ item: NSMenuItem) {
         guard let selectedRow = item.representedObject as? Int else { return }
+        
+        let uploads : [UploadTableRow] = self.uploadContent.arrangedObjects as! [UploadTableRow]
+        uploads[selectedRow].pauseResumeStatus = .none
+        uploads[selectedRow].completionStatusString = OutlineViewController.NameConstants.kInProgressStr
+        tableView.reloadData()
+        updateData(uploads: uploads)
+        
         let record = (uploadContent.arrangedObjects as! [Any])[selectedRow] as! UploadTableRow
        
         // resume in terms of functionality identical to Retry
