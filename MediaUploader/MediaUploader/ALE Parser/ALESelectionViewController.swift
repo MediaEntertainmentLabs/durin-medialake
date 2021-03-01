@@ -78,7 +78,6 @@ class ALESelectionViewController: NSViewController,SourceFileColumnSelectedDeleg
             
         }
         filesArray[selectedRow]?.aleFileDetail = updatedStruct
-        //     print("updated Struct :\(String(describing: filesArray[selectedRow]?.aleFileDetail.map({ $0.selectedSourceFilesIndex })))")
         tblALEList.reloadData()
     }
     
@@ -108,36 +107,32 @@ class ALESelectionViewController: NSViewController,SourceFileColumnSelectedDeleg
             // GO TO Upload Files
             var dataArray = [[String: Any]]()
             dataArray = convertToDictionary()
-            //print("file Data Array \(dataArray)")
             aleFileDelegate?.didALEFileUpdated(updatedALEFiles: dataArray)
             window?.performClose(nil)
-        }else{
+        } else {
             showPopoverMessage(positioningView: tblALEList, msg: errMsg)
         }
     }
     
     
     func validateAlEFiles() -> (errMessage : String , result : Bool) {
-        
         let errMsg = ""
         let resultValue = true;
         
         for item in filesArray {
-            
             if (item?.aleFileDetail?.SourceFile == true) {
-                print("No thing to check")
-            }else{
-                if(item?.aleFileDetail?.selectedSourceFilesIndex  == 0){
-                    return (StringConstant().selectColumn,false)
+                break
+            }
+            if (item?.aleFileDetail?.selectedSourceFilesIndex == 0) {
+                return (StringConstant().selectColumn,false)
+            } else {
+                if(item?.aleFileDetail?.selectedOptionIndex == 0) {
+                    return (StringConstant().selectMatchtype,false)
                 }else{
-                    if(item?.aleFileDetail?.selectedOptionIndex  == 0){
-                        return (StringConstant().selectMatchtype,false)
-                    }else{
-                        if((item?.aleFileDetail?.selectedOptionIndex)!  > 1){
-                            
-                            if(item?.aleFileDetail?.charecterFromLeft == nil || item?.aleFileDetail?.charecterFromRight == nil ){
-                                return (StringConstant().enterNumberToRemove,false)
-                            }
+                    if((item?.aleFileDetail?.selectedOptionIndex)! > 1) {
+                        
+                        if(item?.aleFileDetail?.charecterFromLeft == nil || item?.aleFileDetail?.charecterFromRight == nil ){
+                            return (StringConstant().enterNumberToRemove,false)
                         }
                     }
                 }
@@ -152,7 +147,11 @@ class ALESelectionViewController: NSViewController,SourceFileColumnSelectedDeleg
         dictArray.removeAll()
         for item in filesArray {
             
-            var dict: [String: Any] = ["checksum":item?.checksum.trimmingCharacters(in: .whitespacesAndNewlines) ?? "", "filePath":item?.filePath.trimmingCharacters(in: .whitespacesAndNewlines) ?? "", "name":item?.name.trimmingCharacters(in: .whitespacesAndNewlines) ?? "", "type":item?.type.trimmingCharacters(in: .whitespacesAndNewlines) ?? "","filesize":item?.filesize ?? "","uniqueID":item?.uniqueID ?? ""]
+            var dict: [String: Any] = ["checksum":item?.checksum.trimmingCharacters(in: .whitespacesAndNewlines) ?? "",
+                                       "filePath":item?.filePath.trimmingCharacters(in: .whitespacesAndNewlines) ?? "",
+                                       "name":item?.name.trimmingCharacters(in: .whitespacesAndNewlines) ?? "",
+                                       "type":item?.type.trimmingCharacters(in: .whitespacesAndNewlines) ?? "",
+                                       "filesize":item?.filesize ?? "","uniqueID":item?.uniqueID ?? ""]
             
             var miscDict = [String:Any]()
             
@@ -188,7 +187,6 @@ class ALESelectionViewController: NSViewController,SourceFileColumnSelectedDeleg
     }
     
     override func keyUp(with event: NSEvent) {
-        print("key code :\(event.keyCode)")
         if (event.keyCode > 17 && event.keyCode < 30) {
             tblALEList.reloadData()
         }
@@ -200,7 +198,6 @@ class ALESelectionViewController: NSViewController,SourceFileColumnSelectedDeleg
 extension ALESelectionViewController: NSTableViewDataSource {
     
     func numberOfRows(in tableView: NSTableView) -> Int {
-        // print("filesArray.count : \(filesArray.count)")
         return filesArray.count
     }
     
@@ -280,8 +277,6 @@ extension ALESelectionViewController: NSTableViewDelegate {
                     }
                     cell.otherSourceFilesArray.tag = row
                     
-                    //  print("item.aleFileDetail!.selectedSourceFilesIndex :\(item.aleFileDetail!.selectedSourceFilesIndex)")
-                    
                     if(item.aleFileDetail!.selectedSourceFilesIndex! > 0){
                         showOption = true;
                     }else{
@@ -294,8 +289,7 @@ extension ALESelectionViewController: NSTableViewDelegate {
                 }else{
                     cell.ExactCancelPopUp.isHidden = true
                 }
-                //  print("item.aleFileDetail!.selectedOptionIndex :\(item.aleFileDetail!.selectedOptionIndex)")
-                
+     
                 if let chooseArray =  item.aleFileDetail?.optionExactContains {
                     
                     cell.exactContainDelegate = self
@@ -331,12 +325,10 @@ extension ALESelectionViewController: NSTableViewDelegate {
             }
             return cell
         }
-        
         return nil
     }
-    
-    
 }
+
 extension ALESelectionViewController: NSTextFieldDelegate {
     
     
@@ -357,19 +349,16 @@ extension ALESelectionViewController: NSTextFieldDelegate {
         var tagIndex = textField.tag
         tagIndex = tagIndex % 1000
         
-        if(tagIndex == 1){
+        if(tagIndex == 1) {
             var updatedStruct = filesArray[selectedRowIndex]?.aleFileDetail;
             updatedStruct?.charecterFromLeft = Int(textField.intValue)
             filesArray[selectedRowIndex]?.aleFileDetail = updatedStruct
             tblALEList.reloadData()
-        }
-        else  if(tagIndex == 2){
+        } else if(tagIndex == 2) {
             var updatedStruct = filesArray[selectedRowIndex]?.aleFileDetail;
             updatedStruct?.charecterFromRight = Int(textField.intValue)
             filesArray[selectedRowIndex]?.aleFileDetail = updatedStruct
             tblALEList.reloadData()
-            
         }
     }
-    
 }

@@ -32,7 +32,7 @@ func createData(index : Int, uploadTableRecord: UploadTableRow) {
         try managedContext.save()
        
     } catch let error as NSError {
-        print("Could not save. \(error), \(error.userInfo)")
+        print("------------ createData failed. \(error), \(error.userInfo)")
     }
 }
 
@@ -52,7 +52,7 @@ func retrieveData(completion: @escaping (_ record: UploadTableRow) -> Void) {
             record.uploadProgress = record.resumeProgress
             record.completionStatusString = data.value(forKey: "status") as! String
             record.pauseResumeStatus = .none
-            record.dateModified = data.value(forKey: "dateModified") as!Date
+            record.dateModified = data.value(forKey: "dateModified") as! Date
             if equal(record.resumeProgress, 100.0) == false {
                 record.pauseResumeStatus = .pause
                 record.completionStatusString = OutlineViewController.NameConstants.kPausedStr
@@ -66,14 +66,14 @@ func retrieveData(completion: @escaping (_ record: UploadTableRow) -> Void) {
             completion(record)
         }
         
-    } catch {
-        print("Failed")
+    } catch let error as NSError {
+        print("------------ retrieveData Failed. \(error), \(error.userInfo)")
         completion(UploadTableRow())
     }
 }
 
 func updateData(row: Int, progress : Int, status: String) {
-    print (" ------- updateData for row: \(row), status: \(status)")
+    print ("------------ updateData for row: \(row), status: \(status)")
     
     let managedContext = AppDelegate.appDelegate.persistentContainer.viewContext
     let fetchRequest: NSFetchRequest<NSFetchRequestResult> = NSFetchRequest.init(entityName: "ShowEntity")

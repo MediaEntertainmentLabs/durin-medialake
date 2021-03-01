@@ -335,17 +335,16 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
                         if let fSize = enumerator?.fileAttributes?[FileAttributeKey.size] as? UInt64 {
                             filePaths[path!]=fSize
                         }
-                        
                     case .typeDirectory:
-                        print("a dir")
+                        break
                     default:
                         continue
                     }
                 }
                 
             }
-            let scanItems = filePaths
             
+            let scanItems = filePaths
             var files = [[String:Any]]()
             for scanItem in scanItems {
                 let filename = URL(fileURLWithPath: scanItem.key).lastPathComponent
@@ -355,6 +354,11 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
                 if parsed.hasPrefix("/") {
                     parsed = String(parsed.dropFirst())
                 }
+                // WARNING: special requirement to be compliant with backend we need to trim trailinig dot for root folder
+                if let range = parsed.range(of: "./")  {
+                    parsed = parsed.replacingCharacters(in: range, with: "/")
+                }
+                
                 let filePath = parsed.isEmpty ? filename : parsed + "/" + filename
                 let item : [String : Any] = ["name":filename,
                                              "filePath":fileDirPath + "/" + filePath,
@@ -389,7 +393,6 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
         let episode = self.episodesCombo.selectedCell()!.stringValue as String
         
         var blockOrEpisode : (String,String)!
-        let isBlock : Bool = byBlockRadio.state == NSControl.StateValue.on
         
         if byBlockRadio.state == NSControl.StateValue.on {
             if block.isEmpty {
@@ -413,19 +416,16 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
             }
         }
         
-       
-        
         if shootDayField.stringValue.isEmpty {
             showPopoverMessage(positioningView: shootDayField, msg:StringConstant().specifyShootDay)
             return
-        } else {
-            if shootDayField.stringValue.isStringPatternMatch(withstring: shootDayFormat ?? " "){
-                //  print("shootDay string: \(shootDayField.stringValue)")
-            } else {
-                showPopoverMessage(positioningView: shootDayField, msg:StringConstant().invalidShootday )
-                return
-            }
         }
+        
+        if !shootDayField.stringValue.isStringPatternMatch(withstring: shootDayFormat ?? " ") {
+            showPopoverMessage(positioningView: shootDayField, msg:StringConstant().invalidShootday )
+            return
+        }
+        
         
         if !emailField.stringValue.isEmpty && !isValidEmail(emailField.stringValue){
             showPopoverMessage(positioningView: emailField, msg:StringConstant().wrongEmailFormat)
@@ -491,27 +491,16 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
         
         if byBlockRadio.state == NSControl.StateValue.on {
             if block.isEmpty {
-          //      showPopoverMessage(positioningView: blocksCombo, msg: "Invalid params for Block")
                 return
             }
             blockOrEpisode = getBlock(seasonName: season, blockName: block)
         } else {
             if episode.isEmpty {
-            //    showPopoverMessage(positioningView: episodesCombo, msg: "Invalid params for Episode")
                 return
             }
             blockOrEpisode = getEpisode(seasonName: season, episopeName: episode)
         }
-        
-        var isEmpty: Bool = true
-        for item in selectedFilePathsArray {
-            if !item.isEmpty {
-                isEmpty = false
-                break
-            }
-        }
     
-        
         if blockOrEpisode == nil {
             return
         }
@@ -889,12 +878,11 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
         do {
             let data = try Data(contentsOf: url)
             let tsvFile = String(decoding: data, as: UTF8.self)
-            // print("tsv Files :\(tsvFile)")
-            
             let subStr = tsvFile.slice(from: "Column", to: "Data")
             columnArrayList = (subStr?.components(separatedBy: "\t"))!
             
             colArray.removeAll()
+            
             var strTitle:String
             for str in columnArrayList{
                 strTitle = String(str.filter { !"\r".contains($0) })
@@ -1040,12 +1028,12 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
             for(key,valueItem) in itemDict {
                 tempDict = valueItem as! [String : Any]
                 
-                if let fileName = tempDict["name"]{
+                if let fileName = tempDict["name"] {
                     let fileExtenssion = (fileName as! String).components(separatedBy: ".")
                     if fileExtenssion.count >= 2 {
                         retDict = [String: Any]()
                         dirPath = key
-                        if fileExtenssion[1] == "ale"{
+                        if fileExtenssion[1] == "ale" {
                             retDict = updatedALEFile(sourceCheckSum: tempDict["uniqueID"] as Any, fromDictArray: fromArray)
                         }else{
                             retDict["checksum"] = tempDict["checksum"]
@@ -1069,9 +1057,9 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
     func updatedALEFile(sourceCheckSum:Any,fromDictArray:[[String:Any]]) -> [String : Any] {
         var retDict = [String: Any]()
         
-        for item in fromDictArray{
-            if let itemValue = item["uniqueID"]{
-                if sourceCheckSum as? String == itemValue as? String{
+        for item in fromDictArray {
+            if let itemValue = item["uniqueID"] {
+                if sourceCheckSum as? String == itemValue as? String {
                     
                     retDict["checksum"] = item["checksum"] as Any
                     retDict["filePath"] = item["filePath"]as Any
@@ -1079,10 +1067,9 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
                     retDict["name"] = item["name"] as Any
                     retDict["type"] = item["type"] as Any
                     retDict["miscInfo"] = item["miscInfo"] as Any
-                     return retDict
+                    return retDict
                 }
             }
-            
         }
         
         return retDict
@@ -1096,7 +1083,6 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
     
     func startUploadWithALEParsing(uploadFilesWithALE:[String: Any]) {
         
-        // To DO : Go to Upload files   //KUSH 12 Feb 2021
         let dateformat: String = "yyyy-MM-dd"
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = dateformat
@@ -1215,7 +1201,6 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
         retDict["truncateCharFromEnd"] = 0
         return retDict;
     }
-    
 }
 
 extension NSComboBox {
