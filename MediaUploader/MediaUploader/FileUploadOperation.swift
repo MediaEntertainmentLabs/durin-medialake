@@ -99,7 +99,8 @@ final class FileUploadOperation: AsyncOperation {
                     
                     guard let uploadRecord = self.uploadRecord else { return }
                     uploadRecord.completionStatusString = "Failed"
-                    os_log("------------   Data upload failed, error:  ", log: .default, type: .error,error)
+                    print("------------   Data upload failed, error:  \(error)")
+                    //os_log("------------   Data upload failed, error:  ", log: .default, type: .error,error)
                     uploadShowErrorAndNotify(error: OutlineViewController.NameConstants.kUploadShowFailedStr, params: uploadRecord.uploadParams, operation: self)
                     
                     NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.ShowUploadCompleted),
@@ -311,7 +312,8 @@ func getCompletionStatusString(inputString : String) -> String {
         }
     }
     if (result.count != 0) {
-        os_log("------------   getCompletionStatusString: %@ ", log: .default, type: .default, result[0][0])
+        print("------------   getCompletionStatusString: ,\(result[0][0])")
+        //os_log("------------   getCompletionStatusString: %@ ", log: .default, type: .default, result[0][0])
         return result[0][0].trimmingCharacters(in: .whitespacesAndNewlines)
     }
     return ""

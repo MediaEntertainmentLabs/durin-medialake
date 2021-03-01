@@ -10,7 +10,7 @@ import OSLog
 
 @NSApplicationMain
 class AppDelegate: NSObject, NSApplicationDelegate {
-
+    
     enum ErrorStatus {
         case kNoError
         case kFailedFetchListShows
@@ -25,14 +25,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     static var lastError : ErrorStatus = ErrorStatus.kNoError
     static var retryContext : [String:Any] = [:]
     static var cacheSASTokens : [String:SASToken] = [:]
-  
+    
     static let appDelegate = NSApplication.shared.delegate as! AppDelegate
     
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         
         // The MSAL Logger should be set as early as possible in the app launch sequence, before any MSAL
         // requests are made.
-
+        
         MSALGlobalConfig.loggerConfig.setLogCallback { (logLevel, message, containsPII) in
             
             // If PiiLoggingEnabled is set YES, this block will potentially contain sensitive information (Personally Identifiable Information), but not all messages will contain it.
@@ -48,11 +48,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 }
             }
         }
-
+        
     }
     
     func applicationShouldHandleReopen(_ sender: NSApplication,
-                                                hasVisibleWindows flag: Bool) -> Bool
+                                       hasVisibleWindows flag: Bool) -> Bool
     {
         if flag == false {
             if self.mainWindowController != nil {
@@ -63,30 +63,30 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 self.loginWindowController.window?.makeKeyAndOrderFront(self)
                 return true
             }
-//            {
-//                for window in sender.windows {
-//
-//                    if (window.delegate?.isKind(of: WindowController.self)) == true {
-//                        window.makeKeyAndOrderFront(self)
-//                    }
-//                }
-//            }
+            //            {
+            //                for window in sender.windows {
+            //
+            //                    if (window.delegate?.isKind(of: WindowController.self)) == true {
+            //                        window.makeKeyAndOrderFront(self)
+            //                    }
+            //                }
+            //            }
         }
         return true
     }
     
     // MARK: - Core Data stack
-
+    
     lazy var persistentContainer: NSPersistentContainer = {
-
+        
         let container = NSPersistentContainer(name: "uploadsModelData")
-        os_log(" -------  CoreData SQL path <>><><> %@", log: .default, type: .default,container.persistentStoreDescriptions[0].url?.path as! CVarArg)
-      
+        //        os_log(" -------  CoreData SQL path <>><><> %@", log: .default, type: .default,container.persistentStoreDescriptions[0].url?.path as! CVarArg)
+        print(" -------  CoreData SQL path <>><><> \(container.persistentStoreDescriptions[0].url?.path)") 
         container.loadPersistentStores(completionHandler: { (storeDescription, error) in
             if let error = error as NSError? {
                 // Replace this implementation with code to handle the error appropriately.
                 // fatalError() causes the application to generate a crash log and terminate. You should not use this function in a shipping application, although it may be useful during development.
-                 
+                
                 /*
                  Typical reasons for an error here include:
                  * The parent directory does not exist, cannot be created, or disallows writing.
@@ -100,9 +100,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         })
         return container
     }()
-
+    
     // MARK: - Core Data Saving support
-
+    
     func saveContext () {
         let context = persistentContainer.viewContext
         if context.hasChanges {
@@ -116,5 +116,5 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             }
         }
     }
-
+    
 }

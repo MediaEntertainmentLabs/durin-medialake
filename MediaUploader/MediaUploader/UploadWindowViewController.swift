@@ -201,7 +201,7 @@ class UploadWindowViewController: NSViewController,PauseResumeDelegate {
             let fetchRequest: NSFetchRequest<NSFetchRequestResult> = NSFetchRequest.init(entityName: "ShowEntity")
             fetchRequest.predicate = NSPredicate(format: "sn = %@", String(record.uniqueIndex))
             
-            print (" ------- updateData for row: \(record.uniqueIndex), status: \(record.completionStatusString)")
+            print (" ------- updateData for row: \(record.uniqueIndex), status: \(record.completionStatusString)  progress :\(record.uploadProgress)")
             
             do
             {

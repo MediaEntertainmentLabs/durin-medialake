@@ -122,8 +122,7 @@ class ALESelectionViewController: NSViewController,SourceFileColumnSelectedDeleg
         for item in filesArray {
             
             if (item?.aleFileDetail?.SourceFile == true) {
-               // print("No thing to check")
-                os_log("Nothing to check:", log: .default, type: .debug)
+                print("No thing to check")
             }else{
                 if(item?.aleFileDetail?.selectedSourceFilesIndex  == 0){
                     return (StringConstant().selectColumn,false)
@@ -186,7 +185,8 @@ class ALESelectionViewController: NSViewController,SourceFileColumnSelectedDeleg
     }
     
     override func keyUp(with event: NSEvent) {
-        os_log("key code :: %hu", log: .default, type: .debug,event.keyCode)
+        print("event.keyCode :\(event.keyCode)")
+      //  os_log("key code :: %hu", log: .default, type: .debug,event.keyCode)
         if (event.keyCode > 17 && event.keyCode < 30) {
             tblALEList.reloadData()
         }

@@ -6,7 +6,6 @@
 //
 
 import Cocoa
-import OSLog
 
 let storedKeys = ["shootDay", "batch", "unit", "team", "season", "blockOrEpisode", "blockId", "episodeId", "showId", "info", "notificationEmail"]
 
@@ -15,7 +14,8 @@ func createData(index : Int, uploadTableRecord: UploadTableRow) {
     let managedContext = AppDelegate.appDelegate.persistentContainer.viewContext
     
     guard let showEntity = NSEntityDescription.entity(forEntityName: "ShowEntity", in: managedContext) else {
-        os_log("------------  Could not createData.", log: .default, type: .default)
+        print("------------  Could not createData.")
+        // os_log("------------  Could not createData.", log: .default, type: .default)
         return }
     
     let data = NSManagedObject(entity: showEntity, insertInto: managedContext)
@@ -33,9 +33,10 @@ func createData(index : Int, uploadTableRecord: UploadTableRow) {
     
     do {
         try managedContext.save()
-       
+        
     } catch let error as NSError {
-       os_log("------------ Could not save. %@", log: .default, type: .error,error)
+        print("------------ Could not save. \(error)")
+        //os_log("------------ Could not save. %@", log: .default, type: .error,error)
     }
 }
 
@@ -70,14 +71,17 @@ func retrieveData(completion: @escaping (_ record: UploadTableRow) -> Void) {
         }
         
     } catch {
-        os_log("------------ failed durinf retrieve Data from coredata. %@", log: .default, type: .default)
+        
+        print("------------ failed durinf retrieve Data from coredata. ")
+        //os_log("------------ failed durinf retrieve Data from coredata. %@", log: .default, type: .default)
         completion(UploadTableRow())
     }
 }
 
 func updateData(row: Int, progress : Int, status: String) {
-    os_log(" ------- updateData for row:%d , status :%@", log: .default, type: .default,row,status)
-  
+    print(" ------- updateData for row:\(row) , status :\(status)")
+    // os_log(" ------- updateData for row:%d , status :%@", log: .default, type: .default,row,status)
+    
     let managedContext = AppDelegate.appDelegate.persistentContainer.viewContext
     let fetchRequest: NSFetchRequest<NSFetchRequestResult> = NSFetchRequest.init(entityName: "ShowEntity")
     fetchRequest.predicate = NSPredicate(format: "sn = %@", String(row))
@@ -94,14 +98,13 @@ func updateData(row: Int, progress : Int, status: String) {
             try managedContext.save()
             
         } catch {
-            os_log(" ------- Error during update data %@", log: .default, type: .error,error as CVarArg)
-          
-           
+            //     os_log(" ------- Error during update data %@", log: .default, type: .error,error as CVarArg)
+            print(" ------- Error during update data :\(error)")
         }
         
     } catch {
-        os_log(" -----Catch  Error during update data %@", log: .default, type: .error,error as CVarArg)
-      
+        // os_log(" -----Catch  Error during update data %@", log: .default, type: .error,error as CVarArg)
+        print(" -----Catch  Error during update data :\(error)")
     }
 }
 
