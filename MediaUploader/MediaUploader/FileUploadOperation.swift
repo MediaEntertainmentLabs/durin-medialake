@@ -23,7 +23,6 @@ final class FileUploadOperation: AsyncOperation {
     
     var uploadRecord : UploadTableRow?
     var completionStatus : Int
-    var isCanceled: Bool
     
     var args: [String]
     private let step: FileUploadOperation.UploadType
@@ -40,7 +39,6 @@ final class FileUploadOperation: AsyncOperation {
         self.uploadRecord = uploadRecord
         self.dependens = dependens
         self.completionStatus = 0
-        self.isCanceled = false
         
         self.step = step
         self.args = args
@@ -48,22 +46,22 @@ final class FileUploadOperation: AsyncOperation {
 
     override func main() {
         let (_, error, status) = runAzCopyCommand(cmd: LoginViewController.azcopyPath.path, args: self.args)
-        if isCanceled {
-            isCanceled = false
-            os_log("------------  Upload canceled!", log: .default, type: .debug)
 
+        if isCancelled {
+            print ("------------ Upload canceled!")
             uploadRecord?.completionStatusString = OutlineViewController.NameConstants.kPausedStr
             uploadRecord?.pauseResumeStatus = .pause
-            self.finish()
             return
         }
         
         if status == 0 {
             if self.step == UploadType.kDataRemove {
-              os_log("------------  Remove of data completed successfully!", log: .default, type: .debug)
+
+                print ("------------ Remove of data completed successfully!")
             } else if self.step == UploadType.kMetadataJsonUpload {
-                os_log("------------  Completed successfully: %@", log: .default, type: .debug,sasToken)
-                os_log("------------  Cleanup of: %@", log: .default, type: .debug,self.args[1])
+                print ("------------ Completed successfully: \(sasToken) ")
+                print ("------------ Cleanup of ", self.args[1])
+
                 removeFile(path: self.args[1])
                 
 
@@ -74,7 +72,9 @@ final class FileUploadOperation: AsyncOperation {
                    
                     uploadRecord.uploadProgress = 100.0
                     uploadRecord.completionStatusString = "Completed"
-                    os_log("------------  Upload of data completed successfully!", log: .default, type: .debug)
+
+                    print ("------------ Upload of data completed successfully!")
+
                     NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.ShowUploadCompleted),
                                                     object: nil,
                                                     userInfo: ["uploadRecord" : uploadRecord])
@@ -85,7 +85,9 @@ final class FileUploadOperation: AsyncOperation {
                 if self.step == UploadType.kMetadataJsonUpload {
                     for dep in self.dependens where dep.uploadRecord != nil {
                         dep.uploadRecord!.completionStatusString = "Failed"
-                        os_log("------------   Metadata.json upload failed, error: ", log: .default, type: .error,error)
+
+                        print ("------------ Metadata.json upload failed, error: ", error)
+
                         
                         uploadShowErrorAndNotify(error: OutlineViewController.NameConstants.kUploadShowFailedStr, params: dep.uploadRecord!.uploadParams, operation: self)
                         
@@ -131,16 +133,23 @@ final class FileUploadOperation: AsyncOperation {
         //task.standardError = errpipe
 
         var terminationObserver : NSObjectProtocol!
+        var outpipeObserver : NSObjectProtocol!
         terminationObserver = NotificationCenter.default.addObserver(forName: Process.didTerminateNotification,
                                                       object: task, queue: nil) { notification -> Void in
+            print("------------ terminationObserver completion: terminate")
             if let observer = terminationObserver {
+                print("------------ terminationObserver completion: remove terminationObserver")
+                NotificationCenter.default.removeObserver(observer)
+            }
+            if let observer = outpipeObserver {
+                print("------------ terminationObserver completion: remove outpipeObserver")
                 NotificationCenter.default.removeObserver(observer)
             }
         }
         
         
         outpipe.fileHandleForReading.waitForDataInBackgroundAndNotify()
-        var outpipeObserver : NSObjectProtocol!
+
         outpipeObserver = NotificationCenter.default.addObserver(forName: NSNotification.Name.NSFileHandleDataAvailable, object: outpipe.fileHandleForReading , queue: nil) {
             notification in
             let output = outpipe.fileHandleForReading.availableData
@@ -148,7 +157,7 @@ final class FileUploadOperation: AsyncOperation {
                 let outputString = String(data: output, encoding: String.Encoding.utf8) ?? ""
                 
                 print(outputString)
-                os_log("------------   outputString: %@  ", log: .default, type: .default,outputString)
+                
                 let (status, error_output) = self.parseResult(inputString: outputString)
                 if status != 0 {
                     self.completionStatus = status
@@ -190,8 +199,8 @@ final class FileUploadOperation: AsyncOperation {
             }
             
             if self.uploadRecord?.pauseResumeStatus == .pause {
-                self.isCanceled = true
                 task.terminate()
+                self.cancel()
                 return
             }
             
@@ -199,14 +208,13 @@ final class FileUploadOperation: AsyncOperation {
             if !result.isEmpty && self.step == FileUploadOperation.UploadType.kDataUpload {
                 
                 guard let uploadRecord = self.uploadRecord else { return }
-                let progress = ceil(Double(result[0][0])! + 0.5)
+                let progress = ceil(Double(result[0][0])!)
                 // normalize progress after resume
                 let newRange = 100.0 - min(100.0, uploadRecord.resumeProgress)
                 let oldRange = 100.0
                 uploadRecord.uploadProgress = uploadRecord.resumeProgress + progress*(newRange/oldRange)
-                os_log("------------   progress: %@    %f  >>  %@", log: .default, type: .default,uploadRecord.showName,uploadRecord.uploadProgress,result[0])
-                
-                
+                print("------------ progress: \(uploadRecord.showName) resume: \(uploadRecord.resumeProgress) curr: \(uploadRecord.uploadProgress) azcopy: \(result[0])")
+
             }
             
             DispatchQueue.main.async {
