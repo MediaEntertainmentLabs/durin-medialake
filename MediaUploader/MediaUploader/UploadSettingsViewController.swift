@@ -218,7 +218,8 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
             for i in 0 ..< selectedArray.count where selectedArray[i] == selectedDir {
                 
                 guard let fileType = deduceFileType(forRow: i) else { return }
-                let urlDir = URL(string: populated.srcPath)!
+                let urlString = populated.srcPath.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)
+                guard let urlDir = URL(string: urlString!) else { return }
                 let outputFiles = prepareUploadFiles(fileType: fileType, inputDirs: [urlDir])
                 populateSelectedArray(forRow: i, files: outputFiles)
                 break
