@@ -248,8 +248,13 @@ class UploadWindowViewController: NSViewController,PauseResumeDelegate {
         if uploads[row].completionStatusString.lowercased() != "completed" && uploads[row].completionStatusString != OutlineViewController.NameConstants.kPausedStr{
             retry = true
         }
+        
+        var restart = true
+        if uploads[row].completionStatusString == OutlineViewController.NameConstants.kPausedStr{
+            restart = false
+        }
      
-        let theMenu = popupMenuForValue(selectedRow: row,withRetry: retry)
+        let theMenu = popupMenuForValue(selectedRow: row,withRetry: retry,withRestart: restart)
         
         if uploads[row].completionStatusString != OutlineViewController.NameConstants.kInProgressStr{
             NSMenu.popUpContextMenu(theMenu, with: theEvent, for: tableView) // returns a selected value
@@ -257,7 +262,7 @@ class UploadWindowViewController: NSViewController,PauseResumeDelegate {
         
     }
     
-    func popupMenuForValue(selectedRow:Int,withRetry:Bool) -> NSMenu {
+    func popupMenuForValue(selectedRow:Int,withRetry:Bool,withRestart :Bool) -> NSMenu {
         
         let menu = NSMenu()
         menu.autoenablesItems = false
@@ -269,7 +274,9 @@ class UploadWindowViewController: NSViewController,PauseResumeDelegate {
         restart.representedObject = selectedRow
         retry.representedObject = selectedRow
         
-        menu.addItem(restart)
+        if(withRestart) {
+            menu.addItem(restart)
+        }
         if(withRetry){
             menu.addItem(retry)
         }
@@ -291,7 +298,7 @@ class UploadWindowViewController: NSViewController,PauseResumeDelegate {
         guard let selectedRow = item.representedObject as? Int else { return }
         
         let uploads : [UploadTableRow] = self.uploadContent.arrangedObjects as! [UploadTableRow]
-        uploads[selectedRow].pauseResumeStatus = .none
+        uploads[selectedRow].pauseResumeStatus = .resume
         uploads[selectedRow].completionStatusString = OutlineViewController.NameConstants.kInProgressStr
         tableView.reloadData()
         updateData(uploads: uploads)

@@ -33,6 +33,8 @@ struct ALEFileDetails {
 var aleSelectionViewController : ALESelectionViewController!
 class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTableViewDataSource,FileBrowseDelegate, aleFileUpdatedDelegate {
     
+
+    @IBOutlet weak var btnReloadSeason: NSButton!
     @IBOutlet weak var showNameField: NSTextField!
     @IBOutlet weak var shootDayField: NSTextField!
     //@IBOutlet weak var shootDate: NSDatePicker!
@@ -624,19 +626,21 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
             DispatchQueue.main.async {
                 self.progressFetch.isHidden = true
                 self.progressFetch.stopAnimation(self)
-                
+                self.btnReloadSeason.isHidden = true
                 if let error = result["error"] as? String {
                     print(error)
-                    self.seasonsCombo.addItem(withObjectValue: "Failed to fetch seasons")
-                    
-                    if self.populated != nil {
-                        if let season = self.populated.uploadParams["season"] {
-                            self.seasonsCombo.selectItem(withObjectValue: season)
-                        }
-                    } else {
-                        self.seasonsCombo.selectItem(at: 0)
-                    }
-                    
+                    self.btnReloadSeason.isHidden = false
+                    /*
+                     self.seasonsCombo.addItem(withObjectValue: "Failed to fetch seasons")
+                     if self.populated != nil {
+                     if let season = self.populated.uploadParams["season"] {
+                     self.seasonsCombo.selectItem(withObjectValue: season)
+                     }
+                     } else {
+                     self.seasonsCombo.selectItem(at: 0)
+                     }
+                     */
+                    showPopoverMessage(positioningView: self.seasonsCombo, msg: "Failed to fetch seasons. Kindly retry to fetch")
                     AppDelegate.retryContext["showId"] = showId
                     AppDelegate.lastError = AppDelegate.ErrorStatus.kFailedFetchSeasonsAndEpisodes
                     return
@@ -1200,6 +1204,13 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
         retDict["truncateCharFromStart"] = 0
         retDict["truncateCharFromEnd"] = 0
         return retDict;
+    }
+    
+    @IBAction func btnReloadSesionClicked(_ sender: Any) {
+        self.progressFetch.isHidden = false
+        self.progressFetch.startAnimation(true)
+        self.btnReloadSeason.isHidden = true
+        fetchSeasonsAndEpisodes(showId: self.showId)
     }
 }
 
