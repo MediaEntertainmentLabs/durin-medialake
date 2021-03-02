@@ -125,7 +125,7 @@ class UploadWindowViewController: NSViewController,PauseResumeDelegate {
         tableView.tableColumns.forEach { (column) in
             switch(column_index) {
             case 0: column.title = "S.N"
-            case 1: column.title = "Date Modified"
+            case 1: column.title = "Uploaded On"
             case 2: column.title = "Show Name"
             case 3: column.title = "Source Location"
             case 4: column.title = "Destination Location"

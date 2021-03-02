@@ -222,7 +222,7 @@ func equal(_ a: Double, _ b: Double) -> Bool {
 func dateFromString(strDate :String)->Date{
     
     let dateFormatterGet = DateFormatter()
-    dateFormatterGet.dateFormat = "MM-dd-yyyy HH:mm"
+    dateFormatterGet.dateFormat = "MM-dd-yyyy hh:mm a"
 
     let date: Date? = dateFormatterGet.date(from:strDate)
     return date!
@@ -231,7 +231,7 @@ func dateFromString(strDate :String)->Date{
 func stringFromDate(date :Date)->String{
     
     let dateFormatter = DateFormatter()
-    dateFormatter.dateFormat = "MM-dd-yyyy HH:mm"
+    dateFormatter.dateFormat = "MM-dd-yyyy hh:mm a"
 
     let strDate: String? = dateFormatter.string(from: date)
     return strDate!
