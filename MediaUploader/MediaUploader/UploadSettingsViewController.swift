@@ -178,6 +178,23 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
         }
         populateAfterRestore()
         
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(onSignOutClicked(_:)),
+            name: Notification.Name(WindowViewController.NotificationNames.logoutItem),
+            object: nil)
+        
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(
+            self,
+            name: Notification.Name(WindowViewController.NotificationNames.logoutItem),
+            object: nil)
+    }
+    
+    @objc func onSignOutClicked(_ sender: Any) {
+        window?.performClose(nil) // nil because I'm not return a message
     }
     
     func populateAfterRestore() {
@@ -357,10 +374,9 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
                 if parsed.hasPrefix("/") {
                     parsed = String(parsed.dropFirst())
                 }
-                // WARNING: special requirement to be compliant with backend we need to trim trailinig dot for root folder
-                if let range = parsed.range(of: "./")  {
-                    parsed = parsed.replacingCharacters(in: range, with: "/")
-                }
+                // WARNING: special requirement to be compliant with backend we need to trim trailinig dot for each folder
+                //          if folder name ends with dot.
+                parsed = parsed.replacingOccurrences(of: "./", with: "/")
                 
                 let filePath = parsed.isEmpty ? filename : parsed + "/" + filename
                 let item : [String : Any] = ["name":filename,

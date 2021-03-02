@@ -100,11 +100,15 @@ class IconViewController: NSViewController {
             
             uploadSettingsViewController.showId = node.identifier // showId
             uploadSettingsViewController.showName = node.title // showName
-        } else if tableRecord != nil {
+        }
+        
+        if tableRecord != nil {
             uploadSettingsViewController.populated = tableRecord
             uploadSettingsViewController.showId = tableRecord?.uploadParams["showId"]
             uploadSettingsViewController.showName = tableRecord?.showName
-        } else {
+        }
+        
+        if currentSelectionIndex != nil && tableRecord != nil {
             return
         }
         
@@ -545,11 +549,12 @@ class IconViewController: NSViewController {
                         fallthrough
                         
                     default:
+                        let timestamp = String(format:"%2X", Int(Date().timeIntervalSince1970 * 1000)) // in millsecs
                         self.uploadMetadataJsonOperation(showName: showName,
                                                          sasToken: sasToken,
                                                          dataFiles: filesToUpload,
                                                          metadataFilePath: metadataPath.path,
-                                                         dstPath: metadatafolderLayout + "metadata.json",
+                                                         dstPath: metadatafolderLayout + "\(timestamp)_metadata.json",
                                                          dependens : dataSubTasks,
                                                          appendOnly : appendOnly,
                                                          recoveryContext : recoveryContext)
@@ -602,6 +607,8 @@ class IconViewController: NSViewController {
                                      dependens : [FileUploadOperation],
                                      appendOnly: Bool,
                                      recoveryContext : [String : Any]) {
+        
+        print("------------ uploadMetadataJsonOperation: metadataFilePath: \(metadataFilePath), dstPath: \(dstPath)")
         
         if appendOnly == true {
             for op in dependens {

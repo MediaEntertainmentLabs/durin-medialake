@@ -91,7 +91,7 @@ final class FileUploadOperation: AsyncOperation {
                     
                     guard let uploadRecord = self.uploadRecord else { return }
                     uploadRecord.completionStatusString = "Failed"
-                    print ("------------  Data upload failed, error: ", error)
+                    print ("------------  Data upload failed, status: \(status) error: \(error)")
                     uploadShowErrorAndNotify(error: OutlineViewController.NameConstants.kUploadShowFailedStr, params: uploadRecord.uploadParams, operation: self)
                     
                     NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.ShowUploadCompleted),
@@ -277,6 +277,7 @@ final class FileUploadOperation: AsyncOperation {
                     if self.uploadRecord != nil {
                         self.uploadRecord!.completionStatusString = resultString
                     }
+                    print ("------------ AzCopy resultString: \(resultString)")
                     error = "Failed AzCopy data Upload!"
                 }
                 
