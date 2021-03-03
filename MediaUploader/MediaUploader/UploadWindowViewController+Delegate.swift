@@ -117,39 +117,32 @@ extension UploadWindowViewController: NSTableViewDelegate {
                 cell.lblStatus?.stringValue = item.completionStatusString
                 cell.btnPauseResume.tag = row
                 
-                if equal(item.uploadProgress, 100.0) {
+                if item.completionStatusString == "Completed" {
                     cell.imgStatus?.isHidden = false
                     cell.btnPauseResume?.isHidden = true;
-                    if item.completionStatusString == "Completed" {
-                        cell.imgStatus?.image = NSImage(named: NSImage.statusAvailableName)
-                    } else {
-                        cell.imgStatus?.image = NSImage(named: NSImage.statusUnavailableName)
-                    }
+                    cell.imgStatus?.image = NSImage(named: NSImage.statusAvailableName)
+                } else if item.completionStatusString == "Failed" {
+                    cell.imgStatus?.isHidden = false
+                    cell.btnPauseResume?.isHidden = true;
+                    cell.imgStatus?.image = NSImage(named: NSImage.statusUnavailableName)
                 } else {
-                    if item.completionStatusString == "Failed" {
-                        cell.imgStatus?.isHidden = false
+                    cell.imgStatus?.isHidden = true
+                    cell.btnPauseResume?.isHidden = false;
+                    
+                    switch item.pauseResumeStatus {
+                    case .none:
                         cell.btnPauseResume?.isHidden = true;
-                        cell.imgStatus?.image = NSImage(named: NSImage.statusUnavailableName)
-                    }
-                    else {
-                        cell.imgStatus?.isHidden = true
+                    case .pause:
                         cell.btnPauseResume?.isHidden = false;
-                        
-                        switch item.pauseResumeStatus {
-                        case .none:
-                            cell.btnPauseResume?.isHidden = true;
-                        case .pause:
-                            cell.btnPauseResume?.isHidden = false;
-                            cell.btnPauseResume?.image = NSImage(named:"resume")
-                            cell.btnPauseResume?.toolTip = "Resume"
-                        case .resume:
-                            cell.btnPauseResume?.isHidden = false;
-                            cell.btnPauseResume?.image = NSImage(named:"pause")
-                            cell.btnPauseResume?.toolTip = "Pause"
-                        }
+                        cell.btnPauseResume?.image = NSImage(named:"resume")
+                        cell.btnPauseResume?.toolTip = "Resume"
+                    case .resume:
+                        cell.btnPauseResume?.isHidden = false;
+                        cell.btnPauseResume?.image = NSImage(named:"pause")
+                        cell.btnPauseResume?.toolTip = "Pause"
                     }
                 }
-                
+            
                 return cell
             }
         }

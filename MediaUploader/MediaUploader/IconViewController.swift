@@ -489,6 +489,8 @@ class IconViewController: NSViewController {
         
         DispatchQueue.global(qos: .background).async {
             
+            let checkPathQueue = OperationQueue()
+            
             var dialogMessage : String = ""
             var isExistRemotely: Bool = false
             for (type, value) in files {
@@ -507,12 +509,12 @@ class IconViewController: NSViewController {
                                 dialogMessage += "\r\n\(v.dstPath)\(tail)"
                             }
                         }
-                        self.uploadQueue.addOperations([checkPathOperation], waitUntilFinished: false)
+                        checkPathQueue.addOperations([checkPathOperation], waitUntilFinished: false)
                     }
                 }
             }
             
-            self.uploadQueue.waitUntilAllOperationsAreFinished()
+            checkPathQueue.waitUntilAllOperationsAreFinished()
             
             // default just fallback to upload step
             var modalResult: NSApplication.ModalResponse = NSApplication.ModalResponse.alertSecondButtonReturn
