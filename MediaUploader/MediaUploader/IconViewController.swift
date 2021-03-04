@@ -108,7 +108,7 @@ class IconViewController: NSViewController {
             uploadSettingsViewController.showName = tableRecord?.showName
         }
         
-        if currentSelectionIndex != nil && tableRecord != nil {
+        if currentSelectionIndex == nil && tableRecord == nil {
             return
         }
         
