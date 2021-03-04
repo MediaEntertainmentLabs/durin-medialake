@@ -46,7 +46,7 @@ final class FileUploadOperation: AsyncOperation {
     override func main() {
         let (_, error, status) = runAzCopyCommand(cmd: LoginViewController.azcopyPath.path, args: self.args)
         if isCancelled {
-            print ("------------ Upload canceled!")
+            print ("------------(\(addressHeap(o: self))) Upload canceled!")
             uploadRecord?.completionStatusString = OutlineViewController.NameConstants.kPausedStr
             uploadRecord?.pauseResumeStatus = .pause
             return
@@ -54,10 +54,10 @@ final class FileUploadOperation: AsyncOperation {
         
         if status == 0 {
             if self.step == UploadType.kDataRemove {
-                print ("------------ Remove of data completed successfully!")
+                print ("------------(\(addressHeap(o: self))) Remove of data completed successfully!")
             } else if self.step == UploadType.kMetadataJsonUpload {
-                print ("------------ Completed successfully: \(sasToken) ")
-                print ("------------ Cleanup of ", self.args[1])
+                print ("------------(\(addressHeap(o: self))) Completed successfully: \(sasToken) ")
+                print ("------------(\(addressHeap(o: self))) Cleanup of ", self.args[1])
                 removeFile(path: self.args[1])
                 
 
@@ -68,7 +68,7 @@ final class FileUploadOperation: AsyncOperation {
                    
                     uploadRecord.uploadProgress = 100.0
                     uploadRecord.completionStatusString = "Completed"
-                    print ("------------ Upload of data completed successfully!")
+                    print ("------------\(self.addressHeap(o: self)) Upload of data completed successfully!")
                     NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.ShowUploadCompleted),
                                                     object: nil,
                                                     userInfo: ["uploadRecord" : uploadRecord])
@@ -79,7 +79,7 @@ final class FileUploadOperation: AsyncOperation {
                 if self.step == UploadType.kMetadataJsonUpload {
                     for dep in self.dependens where dep.uploadRecord != nil {
                         dep.uploadRecord!.completionStatusString = "Failed"
-                        print ("------------ Metadata.json upload failed, error: ", error)
+                        print ("------------(\(self.addressHeap(o: self))) Metadata.json upload failed, error: ", error)
                         
                         uploadShowErrorAndNotify(error: OutlineViewController.NameConstants.kUploadShowFailedStr, params: dep.uploadRecord!.uploadParams, operation: self)
                         
@@ -91,7 +91,7 @@ final class FileUploadOperation: AsyncOperation {
                     
                     guard let uploadRecord = self.uploadRecord else { return }
                     uploadRecord.completionStatusString = "Failed"
-                    print ("------------  Data upload failed, status: \(status) error: \(error)")
+                    print ("------------(\(self.addressHeap(o: self)))  Data upload failed, status: \(status) error: \(error)")
                     uploadShowErrorAndNotify(error: OutlineViewController.NameConstants.kUploadShowFailedStr, params: uploadRecord.uploadParams, operation: self)
                     
                     NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.ShowUploadCompleted),
@@ -128,13 +128,13 @@ final class FileUploadOperation: AsyncOperation {
         var outpipeObserver : NSObjectProtocol!
         terminationObserver = NotificationCenter.default.addObserver(forName: Process.didTerminateNotification,
                                                       object: task, queue: nil) { notification -> Void in
-            print("------------ terminationObserver completion: terminate")
+            print("------------(\(self.addressHeap(o: self))) terminationObserver completion: terminate")
             if let observer = terminationObserver {
-                print("------------ terminationObserver completion: remove terminationObserver")
+                print("------------(\(self.addressHeap(o: self))) terminationObserver(\(observer)) completion: remove terminationObserver")
                 NotificationCenter.default.removeObserver(observer)
             }
             if let observer = outpipeObserver {
-                print("------------ terminationObserver completion: remove outpipeObserver")
+                print("------------(\(self.addressHeap(o: self))) terminationObserver(\(observer)) completion: remove outpipeObserver")
                 NotificationCenter.default.removeObserver(observer)
             }
         }
@@ -208,7 +208,7 @@ final class FileUploadOperation: AsyncOperation {
                 let newRange = 100.0 - min(100.0, uploadRecord.resumeProgress)
                 let oldRange = 100.0
                 uploadRecord.uploadProgress = uploadRecord.resumeProgress + progress*(newRange/oldRange)
-                print("------------ progress: \(uploadRecord.showName) resume: \(uploadRecord.resumeProgress) curr: \(uploadRecord.uploadProgress) azcopy: \(result[0])")
+                print("------------(\(self.addressHeap(o: self))) progress: \(uploadRecord.showName) resume: \(uploadRecord.resumeProgress) curr: \(uploadRecord.uploadProgress) azcopy: \(result[0])")
             }
             
             DispatchQueue.main.async {
@@ -277,7 +277,7 @@ final class FileUploadOperation: AsyncOperation {
                     if self.uploadRecord != nil {
                         self.uploadRecord!.completionStatusString = resultString
                     }
-                    print ("------------ AzCopy resultString: \(resultString)")
+                    print ("------------(\(addressHeap(o: self)) AzCopy resultString: \(resultString)")
                     error = "Failed AzCopy data Upload!"
                 }
                 
@@ -286,6 +286,15 @@ final class FileUploadOperation: AsyncOperation {
         }
         return (0, error)
     }
+    
+    func address(o: UnsafeRawPointer) -> Int {
+        return Int(bitPattern: o)
+    }
+    
+    func addressHeap<T: AnyObject>(o: T) -> Int {
+        return unsafeBitCast(o, to: Int.self)
+    }
+    
 }
 
 

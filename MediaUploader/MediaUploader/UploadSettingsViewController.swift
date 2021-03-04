@@ -372,13 +372,13 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
                 
                 var parsed = filefolder.path.replacingOccurrences(of: pathURL.deletingLastPathComponent!.path, with: "")
                 if parsed.hasPrefix("/") {
-                    parsed = String(parsed.dropFirst())
+                    parsed = String(parsed.dropFirst()) + "/"
                 }
                 // WARNING: special requirement to be compliant with backend we need to trim trailinig dot for each folder
                 //          if folder name ends with dot.
                 parsed = parsed.replacingOccurrences(of: "./", with: "/")
                 
-                let filePath = parsed.isEmpty ? filename : parsed + "/" + filename
+                let filePath = parsed.isEmpty ? filename : parsed + filename
                 let item : [String : Any] = ["name":filename,
                                              "filePath":fileDirPath + "/" + filePath,
                                              "filesize":scanItem.value,
