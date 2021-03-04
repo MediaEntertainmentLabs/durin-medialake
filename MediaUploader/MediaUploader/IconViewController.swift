@@ -87,9 +87,9 @@ class IconViewController: NSViewController {
         
         let tableRecord = notification.userInfo?["record"] as? UploadTableRow
         
-        if uploadSettingsViewController != nil {
-            return
-        }
+//        if uploadSettingsViewController != nil {
+//            return
+//        }
         
         uploadSettingsViewController = UploadSettingsViewController()
         
