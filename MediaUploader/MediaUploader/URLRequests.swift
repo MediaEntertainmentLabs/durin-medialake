@@ -9,7 +9,7 @@
 import Cocoa
 
 
-func postUploadFailureTask(params: [String:String], completion: @escaping (_ result: Bool) -> Void) {
+func postUploadFailureTask(params: [String:Any], completion: @escaping (_ result: Bool) -> Void) {
 
     let json = [
         "showId": params["showId"],
@@ -343,6 +343,7 @@ func fetchSeasonsAndEpisodesTask(showId: String, completion: @escaping (_ shows:
             guard let data = data else { throw OutlineViewController.NameConstants.kFetchListOfSeasonsFailedStr }
             
             let responseJSON = try JSONSerialization.jsonObject(with: data) as! [String:Any]
+            jsonFromDict(from: responseJSON)
 
             guard let seasons = responseJSON["seasons"] as? [[String:Any]] else { throw OutlineViewController.NameConstants.kFetchListOfSeasonsFailedStr }
             guard let episodes = responseJSON["episodes"] as? [[String:String]] else { throw OutlineViewController.NameConstants.kFetchListOfSeasonsFailedStr }

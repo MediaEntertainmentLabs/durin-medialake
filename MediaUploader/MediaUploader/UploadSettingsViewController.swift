@@ -33,7 +33,7 @@ struct ALEFileDetails {
 var aleSelectionViewController : ALESelectionViewController!
 class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTableViewDataSource,FileBrowseDelegate, aleFileUpdatedDelegate {
     
-
+    
     @IBOutlet weak var btnReloadSeason: NSButton!
     @IBOutlet weak var showNameField: NSTextField!
     @IBOutlet weak var shootDayField: NSTextField!
@@ -83,9 +83,9 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
     static let kStillsFileType = "Stills"
     static let kReportsFileType = "Reports"
     static let kOthersFileType = "Others"
-   
+    
     static let kReportNotesType = "Reports/Notes"
-   
+    
     
     fileprivate let teamItems = ["Camera", "Sound","Scripts","Others"]
     
@@ -107,7 +107,7 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
     var showName : String!
     
     var populated : UploadTableRow! // if we restore from CoreData
-    
+    var dataFromCoredata = false
     
     var uploadedFileList: [fileInfo] = []
     var aleSouceFilesArray:[fileInfo] = []
@@ -159,6 +159,8 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
         
         //emailField.delegate = self
         seasonsCombo.delegate = self
+        blocksCombo.delegate = self
+        episodesCombo.delegate = self
         
         uploadButton.isEnabled = false
         
@@ -176,7 +178,9 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
         if showName != nil {
             showNameField.stringValue = showName
         }
-        populateAfterRestore()
+        if(self.dataFromCoredata) {
+            populateAfterRestore()
+        }
         
         NotificationCenter.default.addObserver(
             self,
@@ -202,27 +206,78 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
         guard let populated = self.populated else { return }
         
         if let shootDay = populated.uploadParams["shootDay"] {
-            shootDayField.stringValue = shootDay
+            shootDayField.stringValue = shootDay as! String
         }
         
         if let info = populated.uploadParams["info"] {
-            infoField.stringValue = info
+            infoField.stringValue = info as! String
         }
         
         if let notificationEmail = populated.uploadParams["notificationEmail"] {
-            emailField.stringValue = notificationEmail
+            emailField.stringValue = notificationEmail as! String
         }
         
         if let batch = populated.uploadParams["batch"] {
-            batchPopup.selectItem(withTitle: batch)
+            batchPopup.selectItem(withTitle: batch as! String)
         }
         
         if let unit = populated.uploadParams["unit"] {
-            unitPopup.selectItem(withTitle: unit)
+            unitPopup.selectItem(withTitle: unit as! String)
+        }
+        
+        var out_episodes = [(String,String)]()
+        if let episode = populated.uploadParams["blockOrEpisode"], let episodeId = populated.uploadParams["episodeId"]{
+            out_episodes.append((episode as! String ,episodeId as! String))
+            episodesCombo.addItem(withObjectValue:episode)
+        }
+        
+        var out_blocks = [(String,String)]()
+        if let block = populated.uploadParams["blockOrEpisode"], let blockId = populated.uploadParams["blockId"] {
+            out_blocks.append((block as! String ,blockId as! String))
+            blocksCombo.addItem(withObjectValue:block)
+        }
+        
+        
+        if let seasonName = populated.uploadParams["season"], let sessionId = populated.uploadParams["seasonId"],let lastShootDay = populated.uploadParams["shootDay"] {
+            self.seasons = [seasonName as! String : ((sessionId as! String), out_episodes , out_blocks , lastShootDay as! String, lastShootDay as! String)]
+            
+            for (key,_) in self.seasons {
+                self.seasonsCombo.addItem(withObjectValue: key)
+                self.seasonsCombo.isEnabled = true
+                self.uploadButton.isEnabled = true
+            }
+            if self.seasonsCombo.numberOfItems > 0 {
+                self.seasonsCombo.selectItem(at: 0)
+            }
+        }
+        
+        if populated.isBlock {
+            blocksCombo.isHidden = false
+            blocksCombo.isEnabled = blocksCombo.numberOfItems > 0
+            blocksComboLabel.isHidden = false
+            episodesCombo.isHidden = true
+            episodesComboLabel .isHidden = true
+            byBlockRadio.state = NSControl.StateValue(rawValue: 1)
+            
+            if blocksCombo.numberOfItems > 0 {
+                blocksCombo.selectItem(at: 0)
+            }
+            
+        } else  {
+            episodesCombo.isHidden = false
+            episodesCombo.isEnabled = episodesCombo.numberOfItems > 0
+            episodesComboLabel .isHidden = false
+            blocksCombo.isHidden = true
+            blocksComboLabel.isHidden = true
+            byEpisodeRadio.state = NSControl.StateValue(rawValue: 1)
+            if episodesCombo.numberOfItems > 0 {
+                episodesCombo.selectItem(at: 0)
+            }
+            
         }
         
         if let team = populated.uploadParams["team"] {
-            teamPopup.selectItem(withTitle: team)
+            teamPopup.selectItem(withTitle: team as! String)
             popUpSelectionDidChange(teamPopup)
             var str = populated.dstPath
             if str.last == "/" {
@@ -290,6 +345,7 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
             episodesComboLabel .isHidden = false
             blocksCombo.isHidden = true
             blocksComboLabel.isHidden = true
+            byBlockRadio.state = NSControl.StateValue.off
             
         } else if byBlockRadio.state == NSControl.StateValue.on {
             blocksCombo.isHidden = false
@@ -297,6 +353,7 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
             blocksComboLabel.isHidden = false
             episodesCombo.isHidden = true
             episodesComboLabel .isHidden = true
+            byEpisodeRadio.state = NSControl.StateValue.off
         }
     }
     
@@ -415,14 +472,18 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
         
         if byBlockRadio.state == NSControl.StateValue.on {
             if block.isEmpty {
-                showPopoverMessage(positioningView: blocksCombo, msg: "Invalid params for Block")
-                return
+                if(self.blocksCombo.numberOfItems > 0) {
+                    showPopoverMessage(positioningView: blocksCombo, msg: "Invalid params for Block")
+                    return
+                }
             }
             blockOrEpisode = getBlock(seasonName: season, blockName: block)
         } else {
             if episode.isEmpty {
-                showPopoverMessage(positioningView: episodesCombo, msg: "Invalid params for Episode")
-                return
+                if(self.blocksCombo.numberOfItems > 0) {
+                    showPopoverMessage(positioningView: episodesCombo, msg: "Invalid params for Episode")
+                    return
+                }
             }
             blockOrEpisode = getEpisode(seasonName: season, episopeName: episode)
         }
@@ -510,16 +571,20 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
         
         if byBlockRadio.state == NSControl.StateValue.on {
             if block.isEmpty {
-                return
+                if(self.blocksCombo.numberOfItems > 0) {
+                    return
+                }
             }
             blockOrEpisode = getBlock(seasonName: season, blockName: block)
         } else {
             if episode.isEmpty {
-                return
+                if(self.episodesCombo.numberOfItems > 0) {
+                    return
+                }
             }
             blockOrEpisode = getEpisode(seasonName: season, episopeName: episode)
         }
-    
+        
         if blockOrEpisode == nil {
             return
         }
@@ -583,7 +648,7 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
                 }
             }
         }
-       
+        
         NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.OnStartUploadShow),
                                         object: nil,
                                         userInfo: ["json_main":json_main,
@@ -640,7 +705,7 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
         
         fetchSeasonsAndEpisodesTask(showId : showId) { (result) in
             
-            DispatchQueue.main.async {
+            DispatchQueue.main.async { [self] in
                 self.progressFetch.isHidden = true
                 self.progressFetch.stopAnimation(self)
                 self.btnReloadSeason.isHidden = true
@@ -665,15 +730,28 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
                 
                 // "by default" insert first ket from dict
                 self.seasons = result["data"] as? SeasonsType
-                
-                for (key, _) in self.seasons {
+                cleanCombobox(combo: seasonsCombo)
+                var selectedSeasonIndex:Int = 0
+                var tempIndex:Int = 0
+                for (key,_) in self.seasons {
+                    
+                    if(self.dataFromCoredata){
+                        guard let populated = self.populated else { return }
+                        guard let seasonName = populated.uploadParams["season"] else { return }
+                        if key == seasonName as! String {
+                            selectedSeasonIndex = tempIndex
+                        }else{
+                            tempIndex = +1
+                            
+                        }
+                    }
                     self.seasonsCombo.addItem(withObjectValue: key)
                     self.seasonsCombo.isEnabled = true
                     self.uploadButton.isEnabled = true
-                }
+                 }
                 
                 if self.seasonsCombo.numberOfItems > 0 {
-                    self.seasonsCombo.selectItem(at: 0)
+                    self.seasonsCombo.selectItem(at: selectedSeasonIndex)
                 }
             }
         }
@@ -692,7 +770,7 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
         if let values = seasons[seasonName] {
             
             self.lastShootDay  = values.3
-            self.shootDayFormat = values.4
+            self.shootDayFormat = values.4   // value.2 = Blocks array of dict ; value.1 = Episode array of dict
             
             if let myValue = shootDayFormat as NSString?  {
                 lblShootDayHint.isHidden = false;
@@ -707,14 +785,27 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
             
             cleanCombobox(combo: episodesCombo)
             cleanCombobox(combo: blocksCombo)
+            var selectedEpisodeIndex :Int = 0
+            var tempEpisodeIndex :Int = 0
             if (values.1.count != 0) {
                 episodesCombo.isHidden = !(byEpisodeRadio.state == NSControl.StateValue.on)
                 episodesCombo.isEnabled = !episodesCombo.isHidden
                 for item in values.1 {
+                    if(self.dataFromCoredata ){
+                        guard let populated = self.populated else { return }
+                        guard let blockOrEpisode = populated.uploadParams["blockOrEpisode"] else { return }
+                        
+                        if item.0 == blockOrEpisode as! String {
+                            selectedEpisodeIndex =  tempEpisodeIndex
+                        }else{
+                            tempEpisodeIndex = +1
+                        }
+                    }
                     episodesCombo.addItem(withObjectValue: item.0)
                 }
+                
                 if episodesCombo.numberOfItems > 0 {
-                    episodesCombo.selectItem(at: 0)
+                    episodesCombo.selectItem(at: selectedEpisodeIndex)
                 }
             } else {
                 episodesCombo.isEnabled = false
@@ -723,14 +814,45 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
             if (values.2.count != 0) {
                 blocksCombo.isHidden = !(byBlockRadio.state == NSControl.StateValue.on)
                 blocksCombo.isEnabled = !blocksCombo.isHidden
+                var selectedBlockIndex :Int = 0
+                var tempBlockIndex :Int = 0
+                
                 for item in values.2 {
+                    
+                    if(self.dataFromCoredata){
+                        guard let populated = self.populated else { return }
+                        guard let blockOrEpisode = populated.uploadParams["blockOrEpisode"] else { return }
+                        if item.0 == blockOrEpisode as! String {
+                            selectedBlockIndex =  tempBlockIndex
+                        }else{
+                            tempBlockIndex = +1
+                        }
+                    }
                     blocksCombo.addItem(withObjectValue: item.0)
+                    
                 }
                 if blocksCombo.numberOfItems > 0 {
-                    blocksCombo.selectItem(at: 0)
+                    blocksCombo.selectItem(at: selectedBlockIndex)
                 }
             } else {
                 blocksCombo.isEnabled = false
+            }
+            
+            if(dataFromCoredata){
+                if populated.isBlock {
+                    blocksCombo.isHidden = false
+                    blocksCombo.isEnabled = blocksCombo.numberOfItems > 0
+                    blocksComboLabel.isHidden = false
+                    episodesCombo.isHidden = true
+                    episodesComboLabel .isHidden = true
+                } else  {
+                    episodesCombo.isHidden = false
+                    episodesCombo.isEnabled = episodesCombo.numberOfItems > 0
+                    episodesComboLabel .isHidden = false
+                    blocksCombo.isHidden = true
+                    blocksComboLabel.isHidden = true
+                    
+                }
             }
         }
     }
@@ -1119,14 +1241,18 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
         
         if byBlockRadio.state == NSControl.StateValue.on {
             if block.isEmpty {
-                showPopoverMessage(positioningView: blocksCombo, msg: "Invalid params for Block")
-                return
+                if(self.blocksCombo.numberOfItems > 0) {
+                    showPopoverMessage(positioningView: blocksCombo, msg: "Invalid params for Block")
+                    return
+                }
             }
             blockOrEpisode = getBlock(seasonName: season, blockName: block)
         } else {
             if episode.isEmpty {
-                showPopoverMessage(positioningView: episodesCombo, msg: "Invalid params for Episode")
-                return
+                if(self.episodesCombo.numberOfItems > 0) {
+                    showPopoverMessage(positioningView: episodesCombo, msg: "Invalid params for Episode")
+                    return
+                }
             }
             blockOrEpisode = getEpisode(seasonName: season, episopeName: episode)
         }
@@ -1149,7 +1275,7 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
             return
         } else {
             if shootDayField.stringValue.isStringPatternMatch(withstring: shootDayFormat ?? " "){
-               // print("shootDay string: \(shootDayField.stringValue)")
+                // print("shootDay string: \(shootDayField.stringValue)")
             } else {
                 showPopoverMessage(positioningView: shootDayField, msg: StringConstant().invalidShootday)
                 return

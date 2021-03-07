@@ -237,3 +237,37 @@ func stringFromDate(date :Date)->String{
     return strDate!
 }
 
+func writeFile(strToWrite : String) {
+    let dir:NSURL = FileManager.default.urls(for: FileManager.SearchPathDirectory.cachesDirectory, in: FileManager.SearchPathDomainMask.userDomainMask).last! as NSURL
+    let fileurl =  dir.appendingPathComponent("log.txt")
+    let urlString = fileurl!.path.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)
+   // _ = dialogOKCancel(question: "Warning", text: urlString!)
+    let date = stringFromDate(date: Date()) //string.data(using: String.Encoding.utf8, allowLossyConversion: false)!
+
+    let stringToWrite =  "\(date) : \(strToWrite)"
+    if FileManager.default.fileExists(atPath: fileurl!.path) {
+        var _:NSError?
+        
+        let urlString = fileurl!.path.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)
+        let file: FileHandle? = FileHandle(forUpdatingAtPath: urlString!)
+
+        if file == nil {
+            print("File open failed")
+        } else {
+            let data = (stringToWrite).data(using: String.Encoding(rawValue: String.Encoding.utf8.rawValue))
+            file?.seekToEndOfFile()
+            file?.write(data!)
+            file?.closeFile()
+            
+        }
+        
+    }
+    else {
+        var _:NSError?
+        do {
+            try strToWrite.write(to: fileurl!, atomically: false, encoding: .utf8)
+            }
+            catch {/* error handling here */}
+        
+    }
+}
