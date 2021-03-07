@@ -475,6 +475,9 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
                 if(self.blocksCombo.numberOfItems > 0) {
                     showPopoverMessage(positioningView: blocksCombo, msg: "Invalid params for Block")
                     return
+                }else{
+                    showPopoverMessage(positioningView: blocksCombo, msg: "Block are not associated with this season")
+                    return
                 }
             }
             blockOrEpisode = getBlock(seasonName: season, blockName: block)
@@ -482,6 +485,9 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
             if episode.isEmpty {
                 if(self.blocksCombo.numberOfItems > 0) {
                     showPopoverMessage(positioningView: episodesCombo, msg: "Invalid params for Episode")
+                    return
+                }else{
+                    showPopoverMessage(positioningView: episodesCombo, msg: "Episodes are not associated with this season")
                     return
                 }
             }
@@ -573,12 +579,18 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
             if block.isEmpty {
                 if(self.blocksCombo.numberOfItems > 0) {
                     return
+                }else{
+                    showPopoverMessage(positioningView: blocksCombo, msg: "Block are not associated with this season")
+                    return
                 }
             }
             blockOrEpisode = getBlock(seasonName: season, blockName: block)
         } else {
             if episode.isEmpty {
                 if(self.episodesCombo.numberOfItems > 0) {
+                    return
+                }else{
+                    showPopoverMessage(positioningView: episodesCombo, msg: "Episodes are not associated with this season")
                     return
                 }
             }
@@ -742,8 +754,7 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
                             selectedSeasonIndex = tempIndex
                         }else{
                             tempIndex = +1
-                            
-                        }
+                         }
                     }
                     self.seasonsCombo.addItem(withObjectValue: key)
                     self.seasonsCombo.isEnabled = true
@@ -1244,6 +1255,9 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
                 if(self.blocksCombo.numberOfItems > 0) {
                     showPopoverMessage(positioningView: blocksCombo, msg: "Invalid params for Block")
                     return
+                }else{
+                    showPopoverMessage(positioningView: blocksCombo, msg: "Block are not associated with this season")
+                    return
                 }
             }
             blockOrEpisode = getBlock(seasonName: season, blockName: block)
@@ -1251,6 +1265,9 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
             if episode.isEmpty {
                 if(self.episodesCombo.numberOfItems > 0) {
                     showPopoverMessage(positioningView: episodesCombo, msg: "Invalid params for Episode")
+                    return
+                }else{
+                    showPopoverMessage(positioningView: episodesCombo, msg: "Episodes are not associated with this season")
                     return
                 }
             }
