@@ -7,7 +7,7 @@
 
 import Cocoa
 
-func uploadShowErrorAndNotify(error : Error, params : [String:String], operation : FileUploadOperation?) {
+func uploadShowErrorAndNotify(error : Error, params : [String:Any], operation : FileUploadOperation?) {
     
     postUploadFailureTask(params: params) { (result) in
         if !result {

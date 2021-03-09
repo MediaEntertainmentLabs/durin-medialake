@@ -24,6 +24,8 @@ func createData(index : Int, uploadTableRecord: UploadTableRow) {
     data.setValue(uploadTableRecord.uploadProgress, forKey: "progress")
     data.setValue(uploadTableRecord.completionStatusString, forKey: "status")
     data.setValue(uploadTableRecord.dateModified, forKey: "dateModified")
+    data.setValue(uploadTableRecord.isBlock, forKey: "isBlock")
+    data.setValue(uploadTableRecord.seasonId, forKey: "seasonId")
     for key in storedKeys {
         data.setValue(uploadTableRecord.uploadParams[key], forKey: key)
     }
@@ -53,6 +55,8 @@ func retrieveData(completion: @escaping (_ record: UploadTableRow) -> Void) {
             record.completionStatusString = data.value(forKey: "status") as! String
             record.pauseResumeStatus = .none
             record.dateModified = data.value(forKey: "dateModified") as! Date
+            record.isBlock = data.value(forKey: "isBlock") as! Bool
+            record.seasonId = data.value(forKey: "seasonId") as! String
             if equal(record.resumeProgress, 100.0) == false {
                 record.pauseResumeStatus = .pause
                 record.completionStatusString = OutlineViewController.NameConstants.kPausedStr

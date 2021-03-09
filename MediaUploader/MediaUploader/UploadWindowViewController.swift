@@ -25,9 +25,11 @@ class UploadTableRow : NSObject {
     var completionStatusString: String
     var dateModified: Date
     var pauseResumeStatus : pauseResumeStatus
+    var isBlock : Bool
+    var seasonId: String
     
     // metadata
-    var uploadParams: [String:String] // we need to keep JSON params to send error report in case of failure occured
+    var uploadParams: [String:Any] // we need to keep JSON params to send error report in case of failure occured
     
     override init() {
         self.uniqueIndex = 0
@@ -41,11 +43,13 @@ class UploadTableRow : NSObject {
         self.uploadParams = [:]
         self.isExistRemotely = false
         self.pauseResumeStatus = .resume
+        self.isBlock = false
+        self.seasonId = ""
         
         super.init()
     }
     
-    init(showName: String, uploadParams: [String:String], srcPath: String, dstPath: String, isExistRemotely: Bool) {
+    init(showName: String, uploadParams: [String:String], srcPath: String, dstPath: String, isExistRemotely: Bool,isBlock: Bool,seasonId:String) {
         self.uniqueIndex = 0
         self.showName = showName
         self.srcPath = srcPath
@@ -57,7 +61,8 @@ class UploadTableRow : NSObject {
         self.uploadParams = uploadParams
         self.isExistRemotely = isExistRemotely
         self.pauseResumeStatus = .resume
-        
+        self.isBlock = isBlock
+        self.seasonId = seasonId
         super.init()
     }
 }

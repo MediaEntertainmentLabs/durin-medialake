@@ -87,9 +87,9 @@ class IconViewController: NSViewController {
         
         let tableRecord = notification.userInfo?["record"] as? UploadTableRow
         
-        if uploadSettingsViewController != nil {
-            return
-        }
+//        if uploadSettingsViewController != nil {
+//            return
+//        }
         
         uploadSettingsViewController = UploadSettingsViewController()
         
@@ -104,8 +104,9 @@ class IconViewController: NSViewController {
         
         if tableRecord != nil {
             uploadSettingsViewController.populated = tableRecord
-            uploadSettingsViewController.showId = tableRecord?.uploadParams["showId"]
+            uploadSettingsViewController.showId = tableRecord?.uploadParams["showId"] as! String
             uploadSettingsViewController.showName = tableRecord?.showName
+            uploadSettingsViewController.dataFromCoredata = true
         }
         
         if currentSelectionIndex == nil && tableRecord == nil {
@@ -385,7 +386,7 @@ class IconViewController: NSViewController {
                     
                     
                     // create UI row in TableView (one per each folder being upload) before all upload tasks will be created
-                    let uploadRecord = UploadTableRow(showName: showName, uploadParams: json_main, srcPath: dir, dstPath: folderLayoutStr, isExistRemotely: false)
+                    let uploadRecord = UploadTableRow(showName: showName, uploadParams: json_main, srcPath: dir, dstPath: folderLayoutStr, isExistRemotely: false,isBlock: isBlock,seasonId: season.1)
                     pendingUploads![type]!.append(uploadRecord)
                     NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.AddUploadTask),
                                                     object: nil,
@@ -467,7 +468,7 @@ class IconViewController: NSViewController {
         var json : [String:Any] = json_main
         json["files"] = jsonRecords
         
-        //jsonFromDict(from: json)
+        jsonFromDict(from: json)
         
         guard let jsonData = try? JSONSerialization.data(withJSONObject: json, options: [.sortedKeys, .prettyPrinted]) else { return }
         
