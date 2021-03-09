@@ -29,3 +29,8 @@
 
 "in progress string" = "In Progress";
 "paused string" = "Paused";
+
+"generate OTP  string" = "Generate OTP!";
+"verify OTP  string" = "Verify OTP!";
+"generate OTP fail string" = "Failed to generate OTP!";
+"verify OTP fail string" = "Failed to verify OTP!";

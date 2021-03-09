@@ -94,6 +94,9 @@ class LoginViewController: NSViewController {
     static let keyLogicGetAssetsAndFiles: String = "Logic-GetAssetsAndFiles"
     static let keyLogicGetSeasonEpisodeForShow: String = "Logic-GetSeasonEpisodeForShow"
  
+    static let keyLogicGenerateOTP: String = "Logic-GenerateOTP"
+    static let keyLogicVerifyOTP: String = "Logic-VerifyOTP"
+ 
     
     static var kTenantID: String!
     static var kClientID: String!
@@ -164,6 +167,13 @@ class LoginViewController: NSViewController {
     
     static var sendEmailURI : String? {
         return LoginViewController.apiUrls[keyLogicSendEmail]
+    }
+    
+    static var generateOTPForUserURI : String? {
+        return LoginViewController.apiUrls[keyLogicGenerateOTP]
+    }
+    static var verifyOTPForUserURI : String? {
+        return LoginViewController.apiUrls[keyLogicVerifyOTP]
     }
     
     typealias AccountCompletion = (MSALAccount?) -> Void

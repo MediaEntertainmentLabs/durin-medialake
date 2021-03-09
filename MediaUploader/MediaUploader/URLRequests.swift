@@ -377,3 +377,57 @@ func fetchSeasonsAndEpisodesTask(showId: String, completion: @escaping (_ shows:
     }
     task.resume()
 }
+func generateOTP(completion: @escaping (_ optMessage: [String:Any]) -> Void) {
+
+    let json: [String: String] = ["userId" : LoginViewController.cdsUserId!]
+    let jsonData = try? JSONSerialization.data(withJSONObject: json, options: .prettyPrinted)
+    
+    guard let generateOTPForUserURI = LoginViewController.generateOTPForUserURI else { completion(["error": OutlineViewController.NameConstants.kGenerateOTPFailedStr]); return }
+    guard let url = URL(string: generateOTPForUserURI) else { completion(["error": OutlineViewController.NameConstants.kGenerateOTPFailedStr]); return }
+    
+    var request = URLRequest(url: url)
+    request.httpMethod = "POST"
+    request.setValue("application/json; charset=utf-8", forHTTPHeaderField: "Content-Type")
+    request.httpBody = jsonData
+    
+    let task = URLSession.shared.dataTask(with: request) { data, response, error in
+        do {
+            if error != nil {
+                print("Error: \(String(describing: error))")
+                throw OutlineViewController.NameConstants.kGenerateOTPFailedStr
+            }
+
+            if let httpResponse = response as? HTTPURLResponse {
+                if httpResponse.statusCode != 200 {
+                    // Convert HTTP Response Data to a simple String
+                    if let data = data, let dataString = String(data: data, encoding: .utf8) {
+                        print("Generate OTP Response: \(dataString)")
+                    }
+                    throw OutlineViewController.NameConstants.kGenerateOTPFailedStr
+                }
+            }
+            
+            var shows :[String:Any] = [:]
+            if let data = data {
+                if let responseJSON = try JSONSerialization.jsonObject(with: data) as? [[String:Any]] {
+                    for item in responseJSON {
+                    
+                    }
+
+                } else {
+                    if let string = String(bytes: data, encoding: .utf8) {
+                        print (" ---------------- Response JSON \(string)")
+                        throw OutlineViewController.NameConstants.kGenerateOTPFailedStr
+                    }
+                }
+            }
+            
+        } catch let error as NSError {
+            completion(["error" : OutlineViewController.NameConstants.kGenerateOTPFailedStr])
+            print("\(error)")
+        } catch let error  {
+            completion(["error": error])
+        }
+    }
+    task.resume()
+}

@@ -28,6 +28,11 @@ class OutlineViewController: NSViewController,
         static let kUploadShowFailedStr = NSLocalizedString("upload show fail string", comment: "")
         static let kInProgressStr = NSLocalizedString("in progress string", comment: "")
         static let kPausedStr = NSLocalizedString("paused string", comment: "")
+        
+        static let kGenerateOTPStr = NSLocalizedString("generate OTP  string", comment: "")
+        static let kVerifyOTPStr = NSLocalizedString("verify OTP  string", comment: "")
+        static let kGenerateOTPFailedStr = NSLocalizedString("generate OTP fail string", comment: "")
+        static let kVerifyOTPFailedStr = NSLocalizedString("verify OTP fail string", comment: "")
     }
         
     // The data source backing of the NSOutlineView.
