@@ -203,6 +203,7 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
     
     func populateAfterRestore() {
         
+        self.uploadButton.isEnabled = false   // it will enable only fetchAPI success
         guard let populated = self.populated else { return }
         
         if let shootDay = populated.uploadParams["shootDay"] {
@@ -224,79 +225,82 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
         if let unit = populated.uploadParams["unit"] {
             unitPopup.selectItem(withTitle: unit as! String)
         }
+        /*
+         var out_episodes = [(String,String)]()
+         if let episode = populated.uploadParams["blockOrEpisode"], let episodeId = populated.uploadParams["episodeId"]{
+         out_episodes.append((episode as! String ,episodeId as! String))
+         episodesCombo.addItem(withObjectValue:episode)
+         }
+         
+         var out_blocks = [(String,String)]()
+         if let block = populated.uploadParams["blockOrEpisode"], let blockId = populated.uploadParams["blockId"] {
+         out_blocks.append((block as! String ,blockId as! String))
+         blocksCombo.addItem(withObjectValue:block)
+         }
+         
+         
+         if let seasonName = populated.uploadParams["season"], let sessionId = populated.uploadParams["seasonId"],let lastShootDay = populated.uploadParams["shootDay"] {
+         self.seasons = [seasonName as! String : ((sessionId as! String), out_episodes , out_blocks , lastShootDay as! String, lastShootDay as! String)]
+         
+         for (key,_) in self.seasons {
+         self.seasonsCombo.addItem(withObjectValue: key)
+         self.seasonsCombo.isEnabled = true
+         self.uploadButton.isEnabled = true
+         }
+         if self.seasonsCombo.numberOfItems > 0 {
+         self.seasonsCombo.selectItem(at: 0)
+         }
+         }
+         */
+         if populated.isBlock {
+         blocksCombo.isHidden = false
+         blocksCombo.isEnabled = blocksCombo.numberOfItems > 0
+         blocksComboLabel.isHidden = false
+         episodesCombo.isHidden = true
+         episodesComboLabel .isHidden = true
+         byBlockRadio.state = NSControl.StateValue(rawValue: 1)
+         
+         if blocksCombo.numberOfItems > 0 {
+         blocksCombo.selectItem(at: 0)
+         }
+         
+         } else  {
+         episodesCombo.isHidden = false
+         episodesCombo.isEnabled = episodesCombo.numberOfItems > 0
+         episodesComboLabel .isHidden = false
+         blocksCombo.isHidden = true
+         blocksComboLabel.isHidden = true
+         byEpisodeRadio.state = NSControl.StateValue(rawValue: 1)
+         if episodesCombo.numberOfItems > 0 {
+         episodesCombo.selectItem(at: 0)
+         }
+         
+         }
+         
         
-        var out_episodes = [(String,String)]()
-        if let episode = populated.uploadParams["blockOrEpisode"], let episodeId = populated.uploadParams["episodeId"]{
-            out_episodes.append((episode as! String ,episodeId as! String))
-            episodesCombo.addItem(withObjectValue:episode)
-        }
         
-        var out_blocks = [(String,String)]()
-        if let block = populated.uploadParams["blockOrEpisode"], let blockId = populated.uploadParams["blockId"] {
-            out_blocks.append((block as! String ,blockId as! String))
-            blocksCombo.addItem(withObjectValue:block)
-        }
-        
-        
-        if let seasonName = populated.uploadParams["season"], let sessionId = populated.uploadParams["seasonId"],let lastShootDay = populated.uploadParams["shootDay"] {
-            self.seasons = [seasonName as! String : ((sessionId as! String), out_episodes , out_blocks , lastShootDay as! String, lastShootDay as! String)]
-            
-            for (key,_) in self.seasons {
-                self.seasonsCombo.addItem(withObjectValue: key)
-                self.seasonsCombo.isEnabled = true
-                self.uploadButton.isEnabled = true
-            }
-            if self.seasonsCombo.numberOfItems > 0 {
-                self.seasonsCombo.selectItem(at: 0)
-            }
-        }
-        
-        if populated.isBlock {
-            blocksCombo.isHidden = false
-            blocksCombo.isEnabled = blocksCombo.numberOfItems > 0
-            blocksComboLabel.isHidden = false
-            episodesCombo.isHidden = true
-            episodesComboLabel .isHidden = true
-            byBlockRadio.state = NSControl.StateValue(rawValue: 1)
-            
-            if blocksCombo.numberOfItems > 0 {
-                blocksCombo.selectItem(at: 0)
-            }
-            
-        } else  {
-            episodesCombo.isHidden = false
-            episodesCombo.isEnabled = episodesCombo.numberOfItems > 0
-            episodesComboLabel .isHidden = false
-            blocksCombo.isHidden = true
-            blocksComboLabel.isHidden = true
-            byEpisodeRadio.state = NSControl.StateValue(rawValue: 1)
-            if episodesCombo.numberOfItems > 0 {
-                episodesCombo.selectItem(at: 0)
-            }
-            
-        }
-        
-        if let team = populated.uploadParams["team"] {
-            teamPopup.selectItem(withTitle: team as! String)
-            popUpSelectionDidChange(teamPopup)
-            var str = populated.dstPath
-            if str.last == "/" {
-                str = String(str.dropLast())
-            }
-            var selectedDir = str.components(separatedBy: "/").last
-            if  selectedDir == StringConstant().reportNotesFilePath {
-                selectedDir = StringConstant().reportNotesType
-            }
-            for i in 0 ..< selectedArray.count where selectedArray[i] == selectedDir {
-                
-                guard let fileType = deduceFileType(forRow: i) else { return }
-                let urlString = populated.srcPath.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)
-                guard let urlDir = URL(string: urlString!) else { return }
-                let outputFiles = prepareUploadFiles(fileType: fileType, inputDirs: [urlDir])
-                populateSelectedArray(forRow: i, files: outputFiles)
-                break
-            }
-        }
+         if let team = populated.uploadParams["team"] {
+         teamPopup.selectItem(withTitle: team as! String)
+         popUpSelectionDidChange(teamPopup)
+         var str = populated.dstPath
+         if str.last == "/" {
+         str = String(str.dropLast())
+         }
+         var selectedDir = str.components(separatedBy: "/").last
+         if  selectedDir == StringConstant().reportNotesFilePath {
+         selectedDir = StringConstant().reportNotesType
+         }
+         for i in 0 ..< selectedArray.count where selectedArray[i] == selectedDir {
+         
+         guard let fileType = deduceFileType(forRow: i) else { return }
+         let urlString = populated.srcPath.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)
+         guard let urlDir = URL(string: urlString!) else { return }
+         let outputFiles = prepareUploadFiles(fileType: fileType, inputDirs: [urlDir])
+         populateSelectedArray(forRow: i, files: outputFiles)
+         break
+         }
+         }
+         
     }
     
     override func viewDidAppear() {
@@ -473,10 +477,10 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
         if byBlockRadio.state == NSControl.StateValue.on {
             if block.isEmpty {
                 if(self.blocksCombo.numberOfItems > 0) {
-                    showPopoverMessage(positioningView: blocksCombo, msg: "Invalid params for Block")
+                    showPopoverMessage(positioningView: blocksCombo, msg: "Blocks are not associated with this season")
                     return
                 }else{
-                    showPopoverMessage(positioningView: blocksCombo, msg: "Block are not associated with this season")
+                    showPopoverMessage(positioningView: blocksCombo, msg: "Blocks are not associated with this season")
                     return
                 }
             }
@@ -484,7 +488,7 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
         } else {
             if episode.isEmpty {
                 if(self.blocksCombo.numberOfItems > 0) {
-                    showPopoverMessage(positioningView: episodesCombo, msg: "Invalid params for Episode")
+                    showPopoverMessage(positioningView: episodesCombo, msg: "Episodes are not associated with this season")
                     return
                 }else{
                     showPopoverMessage(positioningView: episodesCombo, msg: "Episodes are not associated with this season")
@@ -523,6 +527,10 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
             return
         }
         
+        if !checkAllDirPathExist() {
+            showPopoverMessage(positioningView: teamPopup, msg: StringConstant().dirPathNotExist)
+            return
+        }
         
         if blockOrEpisode == nil {
             return
@@ -580,7 +588,7 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
                 if(self.blocksCombo.numberOfItems > 0) {
                     return
                 }else{
-                    showPopoverMessage(positioningView: blocksCombo, msg: "Block are not associated with this season")
+                    showPopoverMessage(positioningView: blocksCombo, msg: "Blocks are not associated with this season")
                     return
                 }
             }
@@ -754,12 +762,12 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
                             selectedSeasonIndex = tempIndex
                         }else{
                             tempIndex = +1
-                         }
+                        }
                     }
                     self.seasonsCombo.addItem(withObjectValue: key)
                     self.seasonsCombo.isEnabled = true
                     self.uploadButton.isEnabled = true
-                 }
+                }
                 
                 if self.seasonsCombo.numberOfItems > 0 {
                     self.seasonsCombo.selectItem(at: selectedSeasonIndex)
@@ -1371,6 +1379,19 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
         self.progressFetch.startAnimation(true)
         self.btnReloadSeason.isHidden = true
         fetchSeasonsAndEpisodes(showId: self.showId)
+    }
+    
+    func checkAllDirPathExist() -> Bool {
+        for item in selectedFilePathsArray {
+            print("File Path item :\(item)")
+            for (key,_) in item {
+                if !isCheckDirExist(dirPath: key){
+                  return false
+                }
+            }
+            
+        }
+        return true
     }
 }
 

@@ -31,5 +31,5 @@ class StringConstant {
     var retry = "Retry"
     var pause = "Pause"
     var resume = "Resume"
-
+    var dirPathNotExist = "Folder can't be found"
 }

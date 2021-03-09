@@ -271,3 +271,23 @@ func writeFile(strToWrite : String) {
         
     }
 }
+
+func isCheckDirExist(dirPath : String) -> Bool {
+    
+    let fileManager = FileManager.default
+    var isDir : ObjCBool = true
+    if fileManager.fileExists(atPath: dirPath, isDirectory:&isDir) {
+        if isDir.boolValue {
+            // file exists and is a directory
+        } else {
+            // file exists and is not a directory
+          
+        }
+    } else {
+        // file does not exist
+        return false
+    }
+    
+    return true
+    
+}

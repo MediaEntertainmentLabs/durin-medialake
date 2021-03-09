@@ -29,3 +29,4 @@
 
 "in progress string" = "In Progress";
 "paused string" = "Paused";
+"dirPathNotExist" = "Folder can't be found";
