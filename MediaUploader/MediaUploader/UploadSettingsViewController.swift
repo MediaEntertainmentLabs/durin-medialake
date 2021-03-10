@@ -225,82 +225,54 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
         if let unit = populated.uploadParams["unit"] {
             unitPopup.selectItem(withTitle: unit as! String)
         }
-        /*
-         var out_episodes = [(String,String)]()
-         if let episode = populated.uploadParams["blockOrEpisode"], let episodeId = populated.uploadParams["episodeId"]{
-         out_episodes.append((episode as! String ,episodeId as! String))
-         episodesCombo.addItem(withObjectValue:episode)
-         }
-         
-         var out_blocks = [(String,String)]()
-         if let block = populated.uploadParams["blockOrEpisode"], let blockId = populated.uploadParams["blockId"] {
-         out_blocks.append((block as! String ,blockId as! String))
-         blocksCombo.addItem(withObjectValue:block)
-         }
-         
-         
-         if let seasonName = populated.uploadParams["season"], let sessionId = populated.uploadParams["seasonId"],let lastShootDay = populated.uploadParams["shootDay"] {
-         self.seasons = [seasonName as! String : ((sessionId as! String), out_episodes , out_blocks , lastShootDay as! String, lastShootDay as! String)]
-         
-         for (key,_) in self.seasons {
-         self.seasonsCombo.addItem(withObjectValue: key)
-         self.seasonsCombo.isEnabled = true
-         self.uploadButton.isEnabled = true
-         }
-         if self.seasonsCombo.numberOfItems > 0 {
-         self.seasonsCombo.selectItem(at: 0)
-         }
-         }
-         */
-         if populated.isBlock {
-         blocksCombo.isHidden = false
-         blocksCombo.isEnabled = blocksCombo.numberOfItems > 0
-         blocksComboLabel.isHidden = false
-         episodesCombo.isHidden = true
-         episodesComboLabel .isHidden = true
-         byBlockRadio.state = NSControl.StateValue(rawValue: 1)
-         
-         if blocksCombo.numberOfItems > 0 {
-         blocksCombo.selectItem(at: 0)
-         }
-         
-         } else  {
-         episodesCombo.isHidden = false
-         episodesCombo.isEnabled = episodesCombo.numberOfItems > 0
-         episodesComboLabel .isHidden = false
-         blocksCombo.isHidden = true
-         blocksComboLabel.isHidden = true
-         byEpisodeRadio.state = NSControl.StateValue(rawValue: 1)
-         if episodesCombo.numberOfItems > 0 {
-         episodesCombo.selectItem(at: 0)
-         }
-         
-         }
-         
         
+        if populated.isBlock {
+            blocksCombo.isHidden = false
+            blocksCombo.isEnabled = blocksCombo.numberOfItems > 0
+            blocksComboLabel.isHidden = false
+            episodesCombo.isHidden = true
+            episodesComboLabel .isHidden = true
+            byBlockRadio.state = NSControl.StateValue(rawValue: 1)
+            
+            if blocksCombo.numberOfItems > 0 {
+                blocksCombo.selectItem(at: 0)
+            }
+            
+        } else  {
+            episodesCombo.isHidden = false
+            episodesCombo.isEnabled = episodesCombo.numberOfItems > 0
+            episodesComboLabel .isHidden = false
+            blocksCombo.isHidden = true
+            blocksComboLabel.isHidden = true
+            byEpisodeRadio.state = NSControl.StateValue(rawValue: 1)
+            if episodesCombo.numberOfItems > 0 {
+                episodesCombo.selectItem(at: 0)
+            }
+            
+        }
         
-         if let team = populated.uploadParams["team"] {
-         teamPopup.selectItem(withTitle: team as! String)
-         popUpSelectionDidChange(teamPopup)
-         var str = populated.dstPath
-         if str.last == "/" {
-         str = String(str.dropLast())
-         }
-         var selectedDir = str.components(separatedBy: "/").last
-         if  selectedDir == StringConstant().reportNotesFilePath {
-         selectedDir = StringConstant().reportNotesType
-         }
-         for i in 0 ..< selectedArray.count where selectedArray[i] == selectedDir {
-         
-         guard let fileType = deduceFileType(forRow: i) else { return }
-         let urlString = populated.srcPath.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)
-         guard let urlDir = URL(string: urlString!) else { return }
-         let outputFiles = prepareUploadFiles(fileType: fileType, inputDirs: [urlDir])
-         populateSelectedArray(forRow: i, files: outputFiles)
-         break
-         }
-         }
-         
+        if let team = populated.uploadParams["team"] {
+            teamPopup.selectItem(withTitle: team as! String)
+            popUpSelectionDidChange(teamPopup)
+            var str = populated.dstPath
+            if str.last == "/" {
+                str = String(str.dropLast())
+            }
+            var selectedDir = str.components(separatedBy: "/").last
+            if  selectedDir == StringConstant().reportNotesFilePath {
+                selectedDir = StringConstant().reportNotesType
+            }
+            for i in 0 ..< selectedArray.count where selectedArray[i] == selectedDir {
+                
+                guard let fileType = deduceFileType(forRow: i) else { return }
+                let urlString = populated.srcPath.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)
+                guard let urlDir = URL(string: urlString!) else { return }
+                let outputFiles = prepareUploadFiles(fileType: fileType, inputDirs: [urlDir])
+                populateSelectedArray(forRow: i, files: outputFiles)
+                break
+            }
+        }
+        
     }
     
     override func viewDidAppear() {
@@ -1386,10 +1358,9 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
             print("File Path item :\(item)")
             for (key,_) in item {
                 if !isCheckDirExist(dirPath: key){
-                  return false
+                    return false
                 }
             }
-            
         }
         return true
     }

@@ -291,3 +291,24 @@ func isCheckDirExist(dirPath : String) -> Bool {
     return true
     
 }
+
+func removeDot(dirNameArray :[String]) -> String {
+    print("dirNameArray : \(dirNameArray)")
+    var updatedArray = [String]()
+    var retVal = String()
+    for dirName in dirNameArray {
+        if dirName .contains(".") {
+            let arr = dirName.components(separatedBy:".")
+            if(arr.count > 0){
+                updatedArray.append(arr[0])
+            }
+        }else {
+            updatedArray.append(dirName)
+        }
+    }
+    
+    if updatedArray.count > 0{
+        retVal = (updatedArray.joined(separator: "/")).addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
+    }
+   return retVal;
+}

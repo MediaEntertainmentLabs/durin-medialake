@@ -87,9 +87,9 @@ class IconViewController: NSViewController {
         
         let tableRecord = notification.userInfo?["record"] as? UploadTableRow
         
-//        if uploadSettingsViewController != nil {
-//            return
-//        }
+        if uploadSettingsViewController != nil {
+            return
+        }
         
         uploadSettingsViewController = UploadSettingsViewController()
         
@@ -501,7 +501,16 @@ class IconViewController: NSViewController {
                 
                 for v in pendingUploads![type]! {
                     let pathElements = v.srcPath.components(separatedBy: "/")
-                    let tail : String = pathElements.last!
+                    var tail : String = pathElements.last!
+                    var arr = [String]()
+                    if tail.contains(".")
+                    {
+                        arr = tail.components(separatedBy: ".")
+                    }
+                    if arr.count > 0{
+                        tail = arr[0]
+                    }
+                    print("dst :\(String(describing: "\(v.dstPath)\(tail)".addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)))")
                     if let dst = "\(v.dstPath)\(tail)".addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) {
                         let checkPathOperation = CheckPathExistsOperation(showName: showName, showId: self.showId(showName: showName), srcDir: dst) { (result) in
                             if result == true {
@@ -593,7 +602,7 @@ class IconViewController: NSViewController {
         if sasToken == nil {
             return
         }
-    
+        
         let uploadOperation = self.createUploadDirTask(showName: resumeUpload.showName, folderLayoutStr: resumeUpload.dstPath, sasToken: sasToken, isResume: true, uploadRecords: [resumeUpload])
         self.uploadQueue.addOperations(uploadOperation, waitUntilFinished: false)
     }
@@ -698,7 +707,15 @@ class IconViewController: NSViewController {
             }
             let sasSplit = sasToken.components(separatedBy: "?")
             guard let dstPath = uploadRecord.dstPath.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)  else { return false }
-            guard let srcPath = uploadRecord.srcPath.components(separatedBy: "/").last!.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else { return false }
+            guard var srcPath = uploadRecord.srcPath.components(separatedBy: "/").last!.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else { return false }
+            var arr = [String]()
+            if srcPath.contains(".") {
+                arr = srcPath.components(separatedBy: ".")
+            }
+            if arr.count > 0 {
+                srcPath = arr[0]
+            }
+            
             let sasTokenWithDestPath = sasSplit[0] + "/\(dstPath)\(srcPath)" + "?" + sasSplit[1]
             
             print("------------ remove DIR:", sasTokenWithDestPath)
