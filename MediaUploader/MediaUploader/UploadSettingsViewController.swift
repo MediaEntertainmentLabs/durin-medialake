@@ -402,16 +402,9 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
             for scanItem in scanItems {
                 let filename = URL(fileURLWithPath: scanItem.key).lastPathComponent
                 let filefolder = URL(fileURLWithPath: scanItem.key).deletingLastPathComponent()
-                
-                var parsed = filefolder.path.replacingOccurrences(of: pathURL.deletingLastPathComponent!.path, with: "")
-                if parsed.hasPrefix("/") {
-                    parsed = String(parsed.dropFirst()) + "/"
-                }
-                // WARNING: special requirement to be compliant with backend we need to trim trailinig dot for each folder
-                //          if folder name ends with dot.
-                parsed = parsed.replacingOccurrences(of: "./", with: "/")
-                
-                let filePath = parsed.isEmpty ? filename : parsed + filename
+                let rmvDot:String  = removeDot(dirNameArray:filefolder.relativeString.components(separatedBy: "/"))
+                let rmvDotLastDir = URL(fileURLWithPath: rmvDot).lastPathComponent
+                let filePath = rmvDotLastDir+"/"+filename
                 let item : [String : Any] = ["name":filename,
                                              "filePath":fileDirPath + "/" + filePath,
                                              "filesize":scanItem.value,

@@ -11,7 +11,9 @@ func uploadShowErrorAndNotify(error : Error, params : [String:Any], operation : 
     
     postUploadFailureTask(params: params) { (result) in
         if !result {
-            _ = dialogOKCancel(question: "Warning", text: "Unable to send error report!")
+             DispatchQueue.main.async {
+                _ = dialogOKCancel(question: "Warning", text: "Unable to send error report!")
+            }
         }
     }
     
@@ -42,7 +44,9 @@ func uploadShowFetchSASTokenErrorAndNotify(error: Error, recoveryContext: [Strin
     
     postUploadFailureTask(params: params) { (result) in
         if !result {
+            DispatchQueue.main.async {
             _ = dialogOKCancel(question: "Warning", text: "Unable to send error report!")
+            }
         }
     }
 }

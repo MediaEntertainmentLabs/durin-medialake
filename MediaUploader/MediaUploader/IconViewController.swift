@@ -468,8 +468,6 @@ class IconViewController: NSViewController {
         var json : [String:Any] = json_main
         json["files"] = jsonRecords
         
-        jsonFromDict(from: json)
-        
         guard let jsonData = try? JSONSerialization.data(withJSONObject: json, options: [.sortedKeys, .prettyPrinted]) else { return }
         
         var metadataPath : URL!
@@ -502,13 +500,12 @@ class IconViewController: NSViewController {
                 for v in pendingUploads![type]! {
                     let pathElements = v.srcPath.components(separatedBy: "/")
                     var tail : String = pathElements.last!
-                    var arr = [String]()
-                    if tail.contains(".")
-                    {
-                        arr = tail.components(separatedBy: ".")
-                    }
-                    if arr.count > 0{
-                        tail = arr[0]
+                     if tail.hasSuffix(".") {
+                        let rmvDot:String  = removeDot(dirNameArray:pathElements)
+                        let rmvDotLastDir = URL(fileURLWithPath: rmvDot).lastPathComponent
+                        if(!rmvDotLastDir.isEmpty) {
+                            tail = rmvDotLastDir
+                        }
                     }
                     print("dst :\(String(describing: "\(v.dstPath)\(tail)".addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)))")
                     if let dst = "\(v.dstPath)\(tail)".addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) {
@@ -708,12 +705,13 @@ class IconViewController: NSViewController {
             let sasSplit = sasToken.components(separatedBy: "?")
             guard let dstPath = uploadRecord.dstPath.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)  else { return false }
             guard var srcPath = uploadRecord.srcPath.components(separatedBy: "/").last!.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else { return false }
-            var arr = [String]()
-            if srcPath.contains(".") {
-                arr = srcPath.components(separatedBy: ".")
-            }
-            if arr.count > 0 {
-                srcPath = arr[0]
+            
+            if srcPath.hasSuffix(".") {
+                let rmvDot:String  = removeDot(dirNameArray:uploadRecord.srcPath.components(separatedBy: "/"))
+                let rmvDotLastDir = URL(fileURLWithPath: rmvDot).lastPathComponent
+                if(!rmvDotLastDir.isEmpty) {
+                    srcPath = rmvDotLastDir
+                }
             }
             
             let sasTokenWithDestPath = sasSplit[0] + "/\(dstPath)\(srcPath)" + "?" + sasSplit[1]
