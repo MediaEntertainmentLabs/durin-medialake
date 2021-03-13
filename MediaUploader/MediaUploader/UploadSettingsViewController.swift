@@ -409,10 +409,12 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
                 }
                 // WARNING: special requirement to be compliant with backend we need to trim trailinig dot for each folder
                 //          if folder name ends with dot.
-                parsed = parsed.replacingOccurrences(of: "./", with: "/")
+                //   parsed = parsed.replacingOccurrences(of: "./", with: "/")
+                //  let filePath = parsed.isEmpty ? filename : parsed + filename
+                //   print("filePath : \(filePath)")
                 
-                let filePath = parsed.isEmpty ? filename : parsed + filename
-                
+                let rmvDot:String  = removeDot(dirNameArray:parsed.components(separatedBy: "/"))
+                let filePath = rmvDot+filename
                 let item : [String : Any] = ["name":filename,
                                              "filePath":fileDirPath + "/" + filePath,
                                              "filesize":scanItem.value,

@@ -297,26 +297,13 @@ func removeDot(dirNameArray :[String]) -> String {
     var retVal = String()
     for dirName in dirNameArray {
         if dirName.hasSuffix(".") {
-            updatedArray.append(removedDotRepetition(str: dirName))
+            updatedArray.append((dirName.trimmingCharacters(in:CharacterSet(charactersIn: "."))))
         }else {
             updatedArray.append(dirName)
         }
     }
     if updatedArray.count > 0{
-        retVal = (updatedArray.joined(separator: "/")).addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
+         retVal = updatedArray.joined(separator: "/")
     }
-   return retVal;
-}
-
-func removedDotRepetition(str:String) -> String{
-    var dotStr = str
-    if str.hasSuffix(".") {
-        dotStr.removeLast(1)
-    }
-    if dotStr.hasSuffix(".")
-    {
-        let str = removedDotRepetition(str: dotStr)
-        return str
-    }
-    return dotStr
+    return retVal;
 }
