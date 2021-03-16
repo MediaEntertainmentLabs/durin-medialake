@@ -388,6 +388,8 @@ class IconViewController: NSViewController {
                     // create UI row in TableView (one per each folder being upload) before all upload tasks will be created
                     let uploadRecord = UploadTableRow(showName: showName, uploadParams: json_main, srcPath: dir, dstPath: folderLayoutStr, isExistRemotely: false,isBlock: isBlock,seasonId: season.1)
                     pendingUploads![type]!.append(uploadRecord)
+                    
+                    writeFile(strToWrite: dir, className: "IconViewController", functionName: "OnstartUploadShow")
                     NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.AddUploadTask),
                                                     object: nil,
                                                     userInfo: ["uploadRecord" : uploadRecord])
@@ -679,6 +681,7 @@ class IconViewController: NSViewController {
         
         var uploadOperations = [FileUploadOperation]()
         for uploadRecord in uploadRecords {
+            writeFile(strToWrite: uploadRecord.srcPath, className: "iCONViewController", functionName: "createUploadDirTask")
             var args = ["copy", uploadRecord.srcPath, sasTokenWithDestPath, "--recursive", "--put-md5"]
             if isResume {
                 args.append("--overwrite=false")
@@ -717,6 +720,8 @@ class IconViewController: NSViewController {
             let sasTokenWithDestPath = sasSplit[0] + "/\(dstPath)\(srcPath)" + "?" + sasSplit[1]
             
             print("------------ remove DIR:", sasTokenWithDestPath)
+            
+            writeFile(strToWrite: sasTokenWithDestPath, className: "iCOnViewController", functionName: "removeDirTask")
             
             let removeOperation = FileUploadOperation(showId: self.showId(showName: showName),
                                                       cdsUserId: LoginViewController.cdsUserId!,

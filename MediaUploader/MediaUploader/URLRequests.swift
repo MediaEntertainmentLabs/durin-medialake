@@ -38,6 +38,7 @@ func postUploadFailureTask(params: [String:Any], completion: @escaping (_ result
     let task = URLSession.shared.dataTask(with: request) { data, response, error in
             if error != nil {
                 print("Error: \(String(describing: error))")
+                writeFile(strToWrite: (String(describing: error)), className: "URLRequest", functionName: "postUploadFailureTask")
                 completion(false)
                 return
             }
@@ -46,6 +47,7 @@ func postUploadFailureTask(params: [String:Any], completion: @escaping (_ result
                 if httpResponse.statusCode != 200 {
                     if let data = data, let dataString = String(data: data, encoding: .utf8) {
                         print("Response: \(dataString)")
+                        writeFile(strToWrite: dataString, className: "URLRequest", functionName: "postUploadFailureTask")
                     }
                     completion(false)
                     return
@@ -80,6 +82,7 @@ func fetchListAPI_URLs(userApiURLs: String, completion: @escaping (_ shows: [Str
                     // Convert HTTP Response Data to a simple String
                     if let data = data, let dataString = String(data: data, encoding: .utf8) {
                         print("Response: \(dataString)")
+                        writeFile(strToWrite: dataString, className: "URLRequest", functionName: "fetchListAPI_URLs")
                     }
                     throw OutlineViewController.NameConstants.kFetchListOfShowsFailedStr
                 }
@@ -92,8 +95,10 @@ func fetchListAPI_URLs(userApiURLs: String, completion: @escaping (_ shows: [Str
             
         } catch let error as NSError {
             completion(["error" : OutlineViewController.NameConstants.kFetchListOfShowsFailedStr])
+            writeFile(strToWrite: error.localizedDescription, className: "URLRequest", functionName: "fetchListAPI_URLs")
             print("\(error)")
         } catch let error  {
+            writeFile(strToWrite: error.localizedDescription, className: "URLRequest", functionName: "fetchListAPI_URLs")
             completion(["error": error])
         }
     }
@@ -116,6 +121,7 @@ func fetchShowContentTask(sasURI : String, completion: @escaping (_ data: [Strin
                     // Convert HTTP Response Data to a simple String
                     if let data = data, let dataString = String(data: data, encoding: .utf8) {
                         print("Response: \(dataString)")
+                        writeFile(strToWrite: dataString, className: "URLRequest", functionName: "fetchShowContentTask")
                     }
                     throw OutlineViewController.NameConstants.kFetchShowContentFailedStr
                 }
@@ -125,9 +131,11 @@ func fetchShowContentTask(sasURI : String, completion: @escaping (_ data: [Strin
             completion(["data" : data])
             
         } catch let error as NSError {
+            writeFile(strToWrite: error.localizedDescription, className: "URLRequest", functionName: "fetchShowContentTask")
             completion(["error" : OutlineViewController.NameConstants.kFetchShowContentFailedStr])
             print("\(error)")
         } catch let error  {
+            writeFile(strToWrite: error.localizedDescription, className: "URLRequest", functionName: "fetchShowContentTask")
             completion(["error": error])
         }
     }
@@ -141,7 +149,13 @@ func fetchSASTokenURLTask(showId: String, synchronous: Bool, completion: @escapi
     let jsonData = try? JSONSerialization.data(withJSONObject: json, options: .prettyPrinted)
     
     guard let SASTokenURI = LoginViewController.generateSASTokenURI else { completion(["error": OutlineViewController.NameConstants.kFetchListOfShowsFailedStr]); return }
-    guard let url = URL(string: SASTokenURI) else { completion(["error": OutlineViewController.NameConstants.kFetchListOfShowsFailedStr]); return }
+    guard let url = URL(string: SASTokenURI) else {
+        
+        writeFile(strToWrite: SASTokenURI as String, className: "URLRequest", functionName: "fetchSASTokenURLTask")
+        completion(["error": OutlineViewController.NameConstants.kFetchListOfShowsFailedStr]);
+        return
+        
+    }
     
     var request = URLRequest(url: url)
     request.httpMethod = "POST"
@@ -154,6 +168,7 @@ func fetchSASTokenURLTask(showId: String, synchronous: Bool, completion: @escapi
         do {
             if error != nil {
                 print("Error: \(String(describing: error))")
+                writeFile(strToWrite: String(describing: error), className: "URLRequest", functionName: "fetchSASTokenURLTask")
                 throw OutlineViewController.NameConstants.kFetchShowContentFailedStr
             }
 
@@ -162,6 +177,7 @@ func fetchSASTokenURLTask(showId: String, synchronous: Bool, completion: @escapi
                     // Convert HTTP Response Data to a simple String
                     if let data = data, let dataString = String(data: data, encoding: .utf8) {
                         print("Response: \(dataString)")
+                        writeFile(strToWrite: dataString, className: "URLRequest", functionName: "fetchShowContentTask")
                     }
                     throw OutlineViewController.NameConstants.kFetchShowContentFailedStr
                 }
@@ -233,7 +249,11 @@ func fetchListOfShowsTask(completion: @escaping (_ shows: [String:Any]) -> Void)
     let json: [String: String] = ["userId" : LoginViewController.cdsUserId!]
     let jsonData = try? JSONSerialization.data(withJSONObject: json, options: .prettyPrinted)
     
-    guard let showForUserURI = LoginViewController.getShowForUserURI else { completion(["error": OutlineViewController.NameConstants.kFetchListOfShowsFailedStr]); return }
+    guard let showForUserURI = LoginViewController.getShowForUserURI else {
+        writeFile(strToWrite:"Unable to get showForUserAPI", className: "URLRequest", functionName: "fetchListOfShowsTask")
+        completion(["error": OutlineViewController.NameConstants.kFetchListOfShowsFailedStr]);
+        return
+     }
     guard let url = URL(string: showForUserURI) else { completion(["error": OutlineViewController.NameConstants.kFetchListOfShowsFailedStr]); return }
     
     var request = URLRequest(url: url)
@@ -253,6 +273,8 @@ func fetchListOfShowsTask(completion: @escaping (_ shows: [String:Any]) -> Void)
                     // Convert HTTP Response Data to a simple String
                     if let data = data, let dataString = String(data: data, encoding: .utf8) {
                         print("Response: \(dataString)")
+                        writeFile(strToWrite:dataString, className: "URLRequest", functionName: "fetchListOfShowsTask")
+                        
                     }
                     throw OutlineViewController.NameConstants.kFetchListOfShowsFailedStr
                 }
@@ -292,13 +314,16 @@ func fetchListOfShowsTask(completion: @escaping (_ shows: [String:Any]) -> Void)
                 } else {
                     if let string = String(bytes: data, encoding: .utf8) {
                         print (" ---------------- Response JSON \(string)")
+                        writeFile(strToWrite:string, className: "URLRequest", functionName: "fetchListOfShowsTask")
                         throw OutlineViewController.NameConstants.kFetchListOfShowsFailedStr
                     }
                 }
             }
             
         } catch let error as NSError {
+            writeFile(strToWrite:OutlineViewController.NameConstants.kFetchListOfShowsFailedStr, className: "URLRequest", functionName: "fetchListOfShowsTask")
             completion(["error" : OutlineViewController.NameConstants.kFetchListOfShowsFailedStr])
+            
             print("\(error)")
         } catch let error  {
             completion(["error": error])
@@ -332,6 +357,7 @@ func fetchSeasonsAndEpisodesTask(showId: String, completion: @escaping (_ shows:
                     // Convert HTTP Response Data to a simple String
                     if let data = data, let dataString = String(data: data, encoding: .utf8) {
                         print("Response \(httpResponse.statusCode): \(dataString)")
+                        writeFile(strToWrite:dataString, className: "URLRequest", functionName: "fetchSeasonsAndEpisodesTask")
                     }
                     throw OutlineViewController.NameConstants.kFetchListOfSeasonsFailedStr
                 }
@@ -344,12 +370,27 @@ func fetchSeasonsAndEpisodesTask(showId: String, completion: @escaping (_ shows:
             
             let responseJSON = try JSONSerialization.jsonObject(with: data) as! [String:Any]
             jsonFromDict(from: responseJSON)
-
-            guard let seasons = responseJSON["seasons"] as? [[String:Any]] else { throw OutlineViewController.NameConstants.kFetchListOfSeasonsFailedStr }
-            guard let episodes = responseJSON["episodes"] as? [[String:String]] else { throw OutlineViewController.NameConstants.kFetchListOfSeasonsFailedStr }
-            guard let blocks = responseJSON["blocks"] as? [[String:String]] else { throw OutlineViewController.NameConstants.kFetchListOfSeasonsFailedStr }
-            guard let lastShootDay = responseJSON["lastShootDay"] as? String else { throw OutlineViewController.NameConstants.kFetchListOfSeasonsFailedStr }
-            guard let shootDayFormat = responseJSON["shootDayFormat"] as? String else { throw OutlineViewController.NameConstants.kFetchListOfSeasonsFailedStr }
+            
+            guard let seasons = responseJSON["seasons"] as? [[String:Any]] else {
+                writeFile(strToWrite:OutlineViewController.NameConstants.kFetchListOfSeasonsFailedStr , className: "URLRequest", functionName: "fetchSeasonsAndEpisodesTask")
+                throw OutlineViewController.NameConstants.kFetchListOfSeasonsFailedStr
+            }
+            guard let episodes = responseJSON["episodes"] as? [[String:String]] else {
+                writeFile(strToWrite:"Unable to find episodes in show", className: "URLRequest", functionName: "fetchSeasonsAndEpisodesTask")
+                throw OutlineViewController.NameConstants.kFetchListOfSeasonsFailedStr
+            }
+            guard let blocks = responseJSON["blocks"] as? [[String:String]] else {
+                writeFile(strToWrite:"Unable to find blocks in show", className: "URLRequest", functionName: "fetchSeasonsAndEpisodesTask")
+                throw OutlineViewController.NameConstants.kFetchListOfSeasonsFailedStr
+            }
+            guard let lastShootDay = responseJSON["lastShootDay"] as? String else {
+                writeFile(strToWrite:"Unable to find last shoot day in show", className: "URLRequest", functionName: "fetchSeasonsAndEpisodesTask")
+                throw OutlineViewController.NameConstants.kFetchListOfSeasonsFailedStr
+            }
+            guard let shootDayFormat = responseJSON["shootDayFormat"] as? String else {
+                writeFile(strToWrite:"Unable to find last shoot dat format in show", className: "URLRequest", functionName: "fetchSeasonsAndEpisodesTask")
+                throw OutlineViewController.NameConstants.kFetchListOfSeasonsFailedStr
+            }
           
             for season in seasons {
                 var out_episodes = [(String,String)]()
@@ -370,6 +411,7 @@ func fetchSeasonsAndEpisodesTask(showId: String, completion: @escaping (_ shows:
             completion(["data": result])
             
         } catch let error as NSError {
+            writeFile(strToWrite:OutlineViewController.NameConstants.kFetchListOfSeasonsFailedStr, className: "URLRequest", functionName: "fetchSeasonsAndEpisodesTask")
             completion(["error" : OutlineViewController.NameConstants.kFetchListOfSeasonsFailedStr])
             print("\(error)")
         } catch let error  {
