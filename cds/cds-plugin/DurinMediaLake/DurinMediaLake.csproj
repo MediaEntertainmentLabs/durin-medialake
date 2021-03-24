@@ -82,6 +82,7 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target AfterTargets="Build" Name="ILMerge">
+		<MakeDir Directories="bin\Debug\Drop"/>
     <!-- the ILMergePath property points to the location of ILMerge.exe console application -->
     <Exec Command="$(ILMergeConsolePath) /out:bin\Debug\Drop\Microsoft.Media.DurinMediaLake.dll /keyfile:MicrosoftMediaDurinMediaLake.snk bin\Debug\Microsoft.Media.DurinMediaLake.dll bin\Debug\Newtonsoft.Json.dll" />
   </Target>
