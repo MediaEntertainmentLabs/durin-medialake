@@ -8,7 +8,7 @@
 ### Deploy Connections
 Click below to deploy connection objects in the azure. Once you click on the button below, you will be redirected to azure portal. Please select the subscription and resource group(prefer to create new), click on review + create, then hit on create button. Sooner the deployment will start for connection objects. Now wait unless it completes. See the attached image for the reference.
 
-[![Deploy Connection](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fv-sosah%2FAzureMediaDeployment%2Fmain%2Fdeployment%2Fdeployconnection.json)
+[![Deploy Connection](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FMediaEntertainmentLabs%2Fdurin-medialake%2Fmain%2Fdeployment%2Fdeployconnection.json)
 
 <img src="images/step1.jpg" width="500"/>
 
@@ -28,7 +28,7 @@ Click the below button, it will again  redirect you to azure portal, Please sele
  * <b> Unique Name:- Unique name can be found in your CDS tenant(login to cds) -> Setting-> Customization -> Developer Resource -> Unique name. Attached the image for the reference </b>
  * <b>CRM Identifier:- Look at the Endpoint Address, it would be some thing like https://disco.crm4.dynamics.com/api/discovery . Crm4 is Crm Identifier here</b>. 
 
-[![Deploy Component](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fv-sosah%2FAzureMediaDeployment%2Fmain%2Fdeployment%2Fdeploy.json)
+[![Deploy Component](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FMediaEntertainmentLabs%2Fdurin-medialake%2Fmain%2Fdeployment%2Fdeploy.json)
 
 
 <img src="images/step2.jpg" width="900"/>
