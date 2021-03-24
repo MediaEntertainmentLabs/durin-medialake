@@ -76,8 +76,22 @@ func dialogOKCancel(question: String, text: String) -> Bool {
     alert.messageText = question
     alert.informativeText = text
     alert.alertStyle = NSAlert.Style.critical
-    alert.addButton(withTitle: "OK")
+    alert.addButton(withTitle:StringConstant().strOk)
     return alert.runModal() == NSApplication.ModalResponse.alertFirstButtonReturn
+}
+
+func dialogOverwrite(question: String, text: String) -> NSApplication.ModalResponse {
+    let alert = NSAlert()
+    alert.accessoryView = NSView(frame: NSMakeRect(0, 0, 500.0, 0))
+    
+    alert.messageText = question
+    alert.informativeText = text
+    alert.alertStyle = NSAlert.Style.critical
+    alert.addButton(withTitle:StringConstant().replace)
+    alert.addButton(withTitle:StringConstant().append)
+    let modalResult = alert.runModal()
+
+    return modalResult
 }
 
 func showPopoverMessage(positioningView: NSView, msg: String) {
@@ -93,8 +107,7 @@ func showPopoverMessage(positioningView: NSView, msg: String) {
 
 func configURLPath() -> URL? {
     if let localConfigPath = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first {
-        
-        do{
+        do {
             try FileManager.default.createDirectory(atPath: localConfigPath.appendingPathComponent(Bundle.main.bundleIdentifier!).path, withIntermediateDirectories: true, attributes: nil)
         } catch {
             print("Error: \(error.localizedDescription)")

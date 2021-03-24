@@ -13,6 +13,7 @@ final class FileUploadOperation: AsyncOperation {
     enum UploadType {
         case kMetadataJsonUpload
         case kDataUpload
+        case kDataRemove
     }
     
     private let showId: String
@@ -22,7 +23,7 @@ final class FileUploadOperation: AsyncOperation {
     var uploadRecord : UploadTableRow?
     var completionStatus : Int
 
-    private let args: [String]
+    var args: [String]
     private let step: FileUploadOperation.UploadType
     
     // upload being performed in two steps:
@@ -45,10 +46,10 @@ final class FileUploadOperation: AsyncOperation {
     override func main() {
         let (_, error, status) = runAzCopyCommand(cmd: LoginViewController.azcopyPath.path, args: self.args)
         
- 
         if status == 0 {
-            
-            if self.step == UploadType.kMetadataJsonUpload {
+            if self.step == UploadType.kDataRemove {
+                print ("------------  Remove of data completed successfully!")
+            } else if self.step == UploadType.kMetadataJsonUpload {
                 print ("------------  Completed successfully: \(sasToken) ")
                 print ("------------  Cleanup of ", self.args[1])
                 removeFile(path: self.args[1])
@@ -252,7 +253,8 @@ final class FileUploadOperation: AsyncOperation {
         let resultString = getCompletionStatusString(inputString: inputString)
         if !resultString.isEmpty {
             
-            if resultString != "Completed" {
+            // CompletedWithSkipped will occur if dir remotely exist but we choose Append mode at start of Upload
+            if resultString != "Completed" && resultString != "CompletedWithSkipped" {
                 if self.step == UploadType.kMetadataJsonUpload {
                     for dep in self.dependens {
                         guard let uploadRecord = dep.uploadRecord else { continue }

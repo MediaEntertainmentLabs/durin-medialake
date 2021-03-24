@@ -15,11 +15,7 @@ class RightPaneToolPalette: NSViewController {
         super.viewDidLoad()
 
     }
-    
-    @IBAction func onRefreshListShowButtonClick(_ sender: Any) {
-        NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.LoginSuccessfull), object: nil)
-        NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.ClearShowContent), object: nil)
-    }
+ 
     
     @IBAction func onRefreshShowContent(_ sender: Any) {
         NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.RefreshShowContent), object: nil)

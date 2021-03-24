@@ -13,13 +13,14 @@ class UploadTableRow : NSObject {
     let showName: String
     let srcPath: String
     let dstPath: String
+    var isExistRemotely: Bool
     var uploadProgress: Double
     var completionStatusString: String
     
     // metadata
     let uploadParams: [String:String] // we need to keep JSON params to send error report in case of failure occured
     
-    init(showName: String, uploadParams: [String:String], srcPath: String, dstPath: String) {
+    init(showName: String, uploadParams: [String:String], srcPath: String, dstPath: String, isExistRemotely: Bool) {
         self.showName = showName
         self.srcPath = srcPath
         self.dstPath = dstPath
@@ -27,6 +28,7 @@ class UploadTableRow : NSObject {
         self.completionStatusString = "In progress"
         
         self.uploadParams = uploadParams
+        self.isExistRemotely = isExistRemotely
         
         super.init()
     }
@@ -100,7 +102,8 @@ class UploadWindowViewController: NSViewController {
     @objc private func onAddUploadTask(_ notification: Notification) {
         let uploadTableRecord  = notification.userInfo?["uploadRecord"] as! UploadTableRow
         DispatchQueue.main.async {
-            self.uploadContent.addObject(uploadTableRecord)
+          //  self.uploadContent.addObject(uploadTableRecord)
+            self.uploadContent.insert(uploadTableRecord, atArrangedObjectIndex: 0)  // updated due to sorted by new uploaded files comes top
         }
     }
     

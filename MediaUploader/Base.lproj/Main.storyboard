@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.Storyboard.XIB" version="3.0" toolsVersion="17156" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" initialViewController="mO3-XG-UoB">
+<document type="com.apple.InterfaceBuilder3.Cocoa.Storyboard.XIB" version="3.0" toolsVersion="17701" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" initialViewController="mO3-XG-UoB">
     <dependencies>
         <deployment identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="17156"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="17701"/>
         <capability name="System colors introduced in macOS 10.14" minToolsVersion="10.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
@@ -793,13 +793,13 @@ Gw
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <subviews>
                             <scrollView borderType="none" autohidesScrollers="YES" horizontalLineScroll="26" horizontalPageScroll="10" verticalLineScroll="26" verticalPageScroll="10" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="CHu-nw-35Q">
-                                <rect key="frame" x="0.0" y="35" width="454" height="57"/>
+                                <rect key="frame" x="0.0" y="35" width="454" height="49"/>
                                 <clipView key="contentView" drawsBackground="NO" id="fsf-IO-o13">
-                                    <rect key="frame" x="0.0" y="0.0" width="454" height="57"/>
+                                    <rect key="frame" x="0.0" y="0.0" width="454" height="49"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
                                         <outlineView verticalHuggingPriority="750" ambiguous="YES" allowsExpansionToolTips="YES" columnAutoresizingStyle="lastColumnOnly" selectionHighlightStyle="sourceList" columnReordering="NO" columnResizing="NO" autosaveColumns="NO" autosaveName="OutlineView" rowHeight="24" rowSizeStyle="systemDefault" viewBased="YES" floatsGroupRows="NO" indentationPerLevel="14" autosaveExpandedItems="YES" outlineTableColumn="Yhw-Gl-L8c" id="sIF-82-mv6">
-                                            <rect key="frame" x="0.0" y="0.0" width="516" height="57"/>
+                                            <rect key="frame" x="0.0" y="0.0" width="516" height="49"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                             <size key="intercellSpacing" width="3" height="2"/>
                                             <color key="backgroundColor" name="_sourceListBackgroundColor" catalog="System" colorSpace="catalog"/>
@@ -921,7 +921,7 @@ Gw
                                     <nil key="backgroundColor"/>
                                 </clipView>
                                 <scroller key="horizontalScroller" wantsLayer="YES" verticalHuggingPriority="750" horizontal="YES" id="7gv-i5-061">
-                                    <rect key="frame" x="0.0" y="41" width="454" height="16"/>
+                                    <rect key="frame" x="0.0" y="33" width="454" height="16"/>
                                     <autoresizingMask key="autoresizingMask"/>
                                 </scroller>
                                 <scroller key="verticalScroller" hidden="YES" wantsLayer="YES" verticalHuggingPriority="750" doubleValue="1" horizontal="NO" id="dq0-bi-yT0">
@@ -955,11 +955,11 @@ Gw
             <objects>
                 <viewController storyboardIdentifier="popover" id="97f-mf-2CR" customClass="PopoverViewController" customModule="MediaUploader" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" id="xSV-ui-Mpx">
-                        <rect key="frame" x="0.0" y="0.0" width="294" height="69"/>
+                        <rect key="frame" x="0.0" y="0.0" width="400" height="69"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <subviews>
                             <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="bFw-4R-aIU">
-                                <rect key="frame" x="129" y="27" width="37" height="16"/>
+                                <rect key="frame" x="182" y="27" width="37" height="16"/>
                                 <textFieldCell key="cell" lineBreakMode="clipping" title="Label" id="BgC-nz-tGW">
                                     <font key="font" usesAppearanceFont="YES"/>
                                     <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
@@ -1292,15 +1292,31 @@ Gw
                                     <rect key="frame" x="-100" y="-100" width="233" height="15"/>
                                     <autoresizingMask key="autoresizingMask"/>
                                 </scroller>
-                                <scroller key="verticalScroller" hidden="YES" wantsLayer="YES" verticalHuggingPriority="750" doubleValue="1" horizontal="NO" id="Vmg-47-0Di">
-                                    <rect key="frame" x="234" y="1" width="15" height="143"/>
+                                <scroller key="verticalScroller" hidden="YES" wantsLayer="YES" verticalHuggingPriority="750" horizontal="NO" id="Vmg-47-0Di">
+                                    <rect key="frame" x="433" y="1" width="16" height="248"/>
                                     <autoresizingMask key="autoresizingMask"/>
                                 </scroller>
                             </scrollView>
+                            <button toolTip="Refresh list of shows" translatesAutoresizingMaskIntoConstraints="NO" id="5sd-tK-Cr4">
+                                <rect key="frame" x="415" y="2" width="25" height="30"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="30" id="MOd-wh-bd3"/>
+                                    <constraint firstAttribute="width" constant="25" id="dh3-yQ-Uyu"/>
+                                </constraints>
+                                <buttonCell key="cell" type="square" bezelStyle="shadowlessSquare" image="ShowRefresh" imagePosition="only" alignment="center" imageScaling="proportionallyUpOrDown" inset="2" id="QAT-Tm-NMO">
+                                    <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                    <font key="font" metaFont="system"/>
+                                </buttonCell>
+                                <connections>
+                                    <action selector="onRefreshListShowButtonClick:" target="BmI-2U-XZL" id="xG0-8p-fQI"/>
+                                </connections>
+                            </button>
                         </subviews>
                         <constraints>
                             <constraint firstAttribute="bottom" secondItem="fgs-tW-IpS" secondAttribute="bottom" id="8b8-SP-IJF"/>
                             <constraint firstItem="fgs-tW-IpS" firstAttribute="top" secondItem="OMh-On-7sr" secondAttribute="top" id="Abk-vf-DCE"/>
+                            <constraint firstAttribute="trailing" secondItem="5sd-tK-Cr4" secondAttribute="trailing" constant="10" id="HZ4-Wg-Scm"/>
+                            <constraint firstAttribute="bottom" secondItem="5sd-tK-Cr4" secondAttribute="bottom" constant="2" id="SKP-Xk-tcg"/>
                             <constraint firstAttribute="trailing" secondItem="fgs-tW-IpS" secondAttribute="trailing" id="gZB-IS-bGy"/>
                             <constraint firstItem="fgs-tW-IpS" firstAttribute="leading" secondItem="OMh-On-7sr" secondAttribute="leading" id="o9G-FO-CX1"/>
                         </constraints>
@@ -1516,13 +1532,13 @@ Gw
                         <autoresizingMask key="autoresizingMask"/>
                         <subviews>
                             <scrollView autohidesScrollers="YES" horizontalLineScroll="19" horizontalPageScroll="10" verticalLineScroll="19" verticalPageScroll="10" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Ipl-qN-HN2">
-                                <rect key="frame" x="0.0" y="0.0" width="801" height="130"/>
+                                <rect key="frame" x="0.0" y="0.0" width="801" height="52"/>
                                 <clipView key="contentView" drawsBackground="NO" copiesOnScroll="NO" id="mLV-4j-h8G">
-                                    <rect key="frame" x="1" y="0.0" width="799" height="129"/>
+                                    <rect key="frame" x="1" y="0.0" width="799" height="51"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
                                         <tableView verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnAutoresizingStyle="lastColumnOnly" columnSelection="YES" multipleSelection="NO" autosaveColumns="NO" rowSizeStyle="automatic" headerView="O7Q-W7-2Qo" viewBased="YES" id="P59-Hu-cD3">
-                                            <rect key="frame" x="0.0" y="0.0" width="1104" height="104"/>
+                                            <rect key="frame" x="0.0" y="0.0" width="1104" height="26"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                             <size key="intercellSpacing" width="3" height="2"/>
                                             <color key="backgroundColor" name="unemphasizedSelectedTextBackgroundColor" catalog="System" colorSpace="catalog"/>
@@ -1759,7 +1775,7 @@ Gw
                                     <nil key="backgroundColor"/>
                                 </clipView>
                                 <scroller key="horizontalScroller" wantsLayer="YES" verticalHuggingPriority="750" horizontal="YES" id="6fe-PL-tlE">
-                                    <rect key="frame" x="1" y="113" width="799" height="16"/>
+                                    <rect key="frame" x="1" y="35" width="799" height="16"/>
                                     <autoresizingMask key="autoresizingMask"/>
                                 </scroller>
                                 <scroller key="verticalScroller" hidden="YES" wantsLayer="YES" verticalHuggingPriority="750" horizontal="NO" id="EQz-zL-mCn">
@@ -1802,7 +1818,7 @@ Gw
                         <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
                         <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
                         <rect key="contentRect" x="425" y="461" width="480" height="270"/>
-                        <rect key="screenRect" x="0.0" y="0.0" width="2560" height="1417"/>
+                        <rect key="screenRect" x="0.0" y="0.0" width="1440" height="877"/>
                         <view key="contentView" id="F0E-CB-fD2">
                             <rect key="frame" x="0.0" y="0.0" width="480" height="270"/>
                             <autoresizingMask key="autoresizingMask"/>
@@ -1816,9 +1832,32 @@ Gw
             </objects>
             <point key="canvasLocation" x="-597" y="2829"/>
         </scene>
+        <!--ALE Selection-->
+        <scene sceneID="IsF-kr-hB6">
+            <objects>
+                <windowController storyboardIdentifier="ALESelectionWindow" showSeguePresentationStyle="single" id="yVm-w6-IGB" userLabel="ALE Selection" customClass="WindowController" customModule="MediaUploader" customModuleProvider="target" sceneMemberID="viewController">
+                    <window key="window" title="ALE File Selection" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" visibleAtLaunch="NO" frameAutosaveName="" animationBehavior="default" id="NE2-17-8aC">
+                        <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
+                        <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
+                        <rect key="contentRect" x="425" y="461" width="480" height="270"/>
+                        <rect key="screenRect" x="0.0" y="0.0" width="1440" height="877"/>
+                        <view key="contentView" id="g35-Gu-12i">
+                            <rect key="frame" x="0.0" y="0.0" width="480" height="270"/>
+                            <autoresizingMask key="autoresizingMask"/>
+                        </view>
+                        <connections>
+                            <outlet property="delegate" destination="yVm-w6-IGB" id="P2C-aB-Xoy"/>
+                        </connections>
+                    </window>
+                </windowController>
+                <customObject id="ish-Bm-6P6" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="-1166" y="1230"/>
+        </scene>
     </scenes>
     <resources>
         <image name="NSShareTemplate" width="11" height="16"/>
         <image name="NSTouchBarGoBackTemplate" width="10" height="30"/>
+        <image name="ShowRefresh" width="56.5" height="45"/>
     </resources>
 </document>
