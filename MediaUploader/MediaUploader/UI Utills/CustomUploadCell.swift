@@ -21,7 +21,6 @@ class CustomUploadCell: NSTableCellView {
     weak var delegate: FileBrowseDelegate?
 
     @IBAction func buttonTapped(_ sender: NSButton) {
-       // print("buttonTapped")
         delegate?.didFileBrowseTapped(sender)
     }
     override func draw(_ dirtyRect: NSRect) {

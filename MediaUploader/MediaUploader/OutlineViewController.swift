@@ -26,6 +26,8 @@ class OutlineViewController: NSViewController,
         static let kFetchShowContentFailedStr = NSLocalizedString("fetch show content fail string", comment: "")
         static let kFetchListOfSeasonsFailedStr = NSLocalizedString("fetch seasons fail string", comment: "")
         static let kUploadShowFailedStr = NSLocalizedString("upload show fail string", comment: "")
+        static let kInProgressStr = NSLocalizedString("in progress string", comment: "")
+        static let kPausedStr = NSLocalizedString("paused string", comment: "")
     }
         
     // The data source backing of the NSOutlineView.

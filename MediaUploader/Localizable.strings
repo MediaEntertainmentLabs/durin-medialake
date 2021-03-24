@@ -27,3 +27,6 @@
 "fetch seasons fail string" = "Failed to fetch seasons!";
 "upload show fail string" = "Failed to upload show!";
 
+"in progress string" = "In Progress";
+"paused string" = "Paused";
+"dirPathNotExist" = "Folder can't be found";

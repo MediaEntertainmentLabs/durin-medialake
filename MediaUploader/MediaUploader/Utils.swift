@@ -54,9 +54,9 @@ class TreeElement {
 
 
 extension NSMutableAttributedString {
-
+    
     public func setAsLink(textToFind:String, linkURL:String) -> Bool {
-
+        
         let foundRange = self.mutableString.range(of: textToFind)
         if foundRange.location != NSNotFound {
             self.addAttribute(.link, value: linkURL, range: foundRange)
@@ -90,7 +90,7 @@ func dialogOverwrite(question: String, text: String) -> NSApplication.ModalRespo
     alert.addButton(withTitle:StringConstant().replace)
     alert.addButton(withTitle:StringConstant().append)
     let modalResult = alert.runModal()
-
+    
     return modalResult
 }
 
@@ -194,4 +194,112 @@ func removeFile(path: String) {
     } catch let error as NSError {
         print("An error took place: \(error)")
     }
+}
+
+
+func jsonFromDict(from object:Any) -> String {
+    
+    let retString = ""
+    do {
+        let jsonData = try JSONSerialization.data(withJSONObject: object, options: .prettyPrinted)
+        // here "jsonData" is the dictionary encoded in JSON data
+        let decoded = try JSONSerialization.jsonObject(with: jsonData, options: [])
+        // here "decoded" is of type `Any`, decoded from JSON data
+        
+        print("metadata::\(decoded)");
+        
+    } catch {
+        print(error.localizedDescription)
+    }
+    
+    return retString;
+}
+
+func equal(_ a: Double, _ b: Double) -> Bool {
+    return fabs(a - b) < Double.ulpOfOne
+}
+
+func dateFromString(strDate :String)->Date{
+    
+    let dateFormatterGet = DateFormatter()
+    dateFormatterGet.dateFormat = "MM-dd-yyyy hh:mm a"
+    
+    let date: Date? = dateFormatterGet.date(from:strDate)
+    return date!
+}
+
+func stringFromDate(date :Date)->String{
+    
+    let dateFormatter = DateFormatter()
+    dateFormatter.dateFormat = "MM-dd-yyyy hh:mm a"
+    
+    let strDate: String? = dateFormatter.string(from: date)
+    return strDate!
+}
+
+func writeFile(strToWrite : String , className:String , functionName:String ) {
+    let dir:NSURL = FileManager.default.urls(for: FileManager.SearchPathDirectory.documentDirectory, in: FileManager.SearchPathDomainMask.userDomainMask).last! as NSURL
+    let fileurl =  dir.appendingPathComponent("MediaUploader_log.txt")
+    let urlString = fileurl!.path.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)
+    //_ = dialogOKCancel(question: "Warning", text: urlString!)
+    let date = stringFromDate(date: Date()) //string.data(using: String.Encoding.utf8, allowLossyConversion: false)!
+    
+    let stringToWrite =  "\n \(date) : \(className) : \(functionName) : \(strToWrite)"
+    if FileManager.default.fileExists(atPath: fileurl!.path) {
+        var _:NSError?
+        let urlString = fileurl!.path.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)
+        let file: FileHandle? = FileHandle(forUpdatingAtPath: urlString!)
+        
+        if file == nil {
+            print("File open failed")
+        } else {
+            let data = (stringToWrite).data(using: String.Encoding(rawValue: String.Encoding.utf8.rawValue))
+            file?.seekToEndOfFile()
+            file?.write(data!)
+            file?.closeFile()
+        }
+     }
+    else {
+        var _:NSError?
+        do {
+            try stringToWrite.write(to: fileurl!, atomically: false, encoding: .utf8)
+        }
+        catch {/* error handling here */}
+    }
+}
+
+func isCheckDirExist(dirPath : String) -> Bool {
+    
+    let fileManager = FileManager.default
+    var isDir : ObjCBool = true
+    if fileManager.fileExists(atPath: dirPath, isDirectory:&isDir) {
+        if isDir.boolValue {
+            // file exists and is a directory
+        } else {
+            // file exists and is not a directory
+            
+        }
+    } else {
+        // file does not exist
+        return false
+    }
+    
+    return true
+    
+}
+
+func removeDot(dirNameArray :[String]) -> String {
+    var updatedArray = [String]()
+    var retVal = String()
+    for dirName in dirNameArray {
+        if dirName.hasSuffix(".") {
+            updatedArray.append((dirName.trimmingCharacters(in:CharacterSet(charactersIn: "."))))
+        }else {
+            updatedArray.append(dirName)
+        }
+    }
+    if updatedArray.count > 0{
+        retVal = updatedArray.joined(separator: "/")
+    }
+    return retVal;
 }

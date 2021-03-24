@@ -11,6 +11,7 @@
                 <outlet property="batchPopup" destination="2bX-SP-uOK" id="dFt-F4-PmZ"/>
                 <outlet property="blocksCombo" destination="JCQ-gC-YWP" id="u0l-GV-vOx"/>
                 <outlet property="blocksComboLabel" destination="91a-3J-doT" id="CGQ-Jy-gTM"/>
+                <outlet property="btnReloadSeason" destination="bbj-Nn-iKk" id="Fw7-bZ-ioa"/>
                 <outlet property="byBlockRadio" destination="cWY-BQ-sOb" id="xDN-mY-22d"/>
                 <outlet property="byEpisodeRadio" destination="P8G-DZ-esU" id="4Uz-IR-u5V"/>
                 <outlet property="emailField" destination="leY-ZZ-OjU" id="bFS-XJ-9ae"/>
@@ -189,6 +190,20 @@
                 <progressIndicator hidden="YES" wantsLayer="YES" maxValue="100" indeterminate="YES" controlSize="small" style="spinning" translatesAutoresizingMaskIntoConstraints="NO" id="cNg-vX-dEX">
                     <rect key="frame" x="1000" y="644" width="16" height="16"/>
                 </progressIndicator>
+                <button hidden="YES" translatesAutoresizingMaskIntoConstraints="NO" id="bbj-Nn-iKk">
+                    <rect key="frame" x="998" y="640" width="20" height="20"/>
+                    <constraints>
+                        <constraint firstAttribute="width" constant="20" id="JVj-Xo-5S9"/>
+                        <constraint firstAttribute="height" constant="20" id="zr9-hf-V0g"/>
+                    </constraints>
+                    <buttonCell key="cell" type="square" bezelStyle="shadowlessSquare" image="NSRefreshTemplate" imagePosition="only" alignment="center" imageScaling="proportionallyUpOrDown" inset="2" id="XYz-ol-Afn">
+                        <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                        <font key="font" metaFont="system"/>
+                    </buttonCell>
+                    <connections>
+                        <action selector="btnReloadSesionClicked:" target="-2" id="g0u-85-qFJ"/>
+                    </connections>
+                </button>
                 <popUpButton verticalHuggingPriority="750" verticalCompressionResistancePriority="753" translatesAutoresizingMaskIntoConstraints="NO" id="Htg-Oe-dih">
                     <rect key="frame" x="138" y="465" width="860" height="25"/>
                     <popUpButtonCell key="cell" type="push" title="unit" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" selectedItem="cZv-mo-UT5" id="Nb8-Sg-v6A">
@@ -404,6 +419,7 @@
                 <constraint firstItem="leY-ZZ-OjU" firstAttribute="trailing" secondItem="Zhs-ns-EOz" secondAttribute="trailing" id="AEd-Rn-Tpr"/>
                 <constraint firstItem="6L9-aV-Tn1" firstAttribute="top" secondItem="OXj-So-RmE" secondAttribute="bottom" constant="10" id="AjB-pO-7Ch"/>
                 <constraint firstItem="TKp-Pa-0dS" firstAttribute="height" secondItem="RhC-na-pE6" secondAttribute="height" id="AmV-dw-b60"/>
+                <constraint firstItem="bbj-Nn-iKk" firstAttribute="firstBaseline" secondItem="b2A-cj-Dku" secondAttribute="firstBaseline" id="Ayx-Hp-1XM"/>
                 <constraint firstItem="tHf-cq-O5I" firstAttribute="trailing" secondItem="Zhs-ns-EOz" secondAttribute="trailing" id="BYk-Pg-0y3"/>
                 <constraint firstItem="2bX-SP-uOK" firstAttribute="leading" secondItem="Zhs-ns-EOz" secondAttribute="leading" id="E0S-HG-Pfw"/>
                 <constraint firstItem="dpN-iF-7yA" firstAttribute="centerY" secondItem="glB-kk-lts" secondAttribute="centerY" id="Ee1-LF-UxO"/>
@@ -438,6 +454,7 @@
                 <constraint firstItem="JCQ-gC-YWP" firstAttribute="trailing" secondItem="dpN-iF-7yA" secondAttribute="trailing" id="bjt-NZ-YFH"/>
                 <constraint firstItem="JCQ-gC-YWP" firstAttribute="leading" secondItem="6L9-aV-Tn1" secondAttribute="leading" id="btm-Fe-zui"/>
                 <constraint firstItem="Htg-Oe-dih" firstAttribute="leading" secondItem="Zhs-ns-EOz" secondAttribute="leading" id="c5c-C2-gFF"/>
+                <constraint firstItem="bbj-Nn-iKk" firstAttribute="centerX" secondItem="cNg-vX-dEX" secondAttribute="centerX" id="ebe-E9-LFR"/>
                 <constraint firstAttribute="trailing" secondItem="Zhs-ns-EOz" secondAttribute="trailing" constant="200" id="hzv-6O-oNS"/>
                 <constraint firstItem="qKB-Uz-BRP" firstAttribute="leading" secondItem="RhC-na-pE6" secondAttribute="leading" id="ibJ-Ol-dBj"/>
                 <constraint firstItem="cNg-vX-dEX" firstAttribute="centerY" secondItem="b2A-cj-Dku" secondAttribute="centerY" id="irg-P2-gvb"/>
@@ -470,5 +487,6 @@
     </objects>
     <resources>
         <image name="MacBrowseIcon" width="20" height="20"/>
+        <image name="NSRefreshTemplate" width="11" height="15"/>
     </resources>
 </document>

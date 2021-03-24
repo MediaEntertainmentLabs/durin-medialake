@@ -27,4 +27,9 @@ class StringConstant {
     var enterNumberToRemove = "Kindly enter number to remove charecter from left / right side"
     var lblPresent = "   Present"
     var noItem = "No Items"
+    var restart = "Restart"
+    var retry = "Retry"
+    var pause = "Pause"
+    var resume = "Resume"
+    var dirPathNotExist = "Folder can't be found"
 }

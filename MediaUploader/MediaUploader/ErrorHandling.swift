@@ -7,20 +7,25 @@
 
 import Cocoa
 
-func uploadShowErrorAndNotify(error : Error, params : [String:String], operation : FileUploadOperation?) {
+func uploadShowErrorAndNotify(error : Error, params : [String:Any], operation : FileUploadOperation?) {
     
     postUploadFailureTask(params: params) { (result) in
         if !result {
-            _ = dialogOKCancel(question: "Warning", text: "Unable to send error report!")
+            writeFile(strToWrite: "Unable to send error report!", className:"ErrorHandling", functionName: "uploadShowErrorAndNotify")
+//             DispatchQueue.main.async {
+//                _ = dialogOKCancel(question: "Warning", text: "Unable to send error report!")
+//            }
         }
     }
     
     AppDelegate.lastError = AppDelegate.ErrorStatus.kFailedUploadShowSASToken
     
+    writeFile(strToWrite: error.localizedDescription, className: "iCONViewController", functionName: "onUploadFailed")
+   
     if operation != nil {
         NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.OnUploadFailed),
                                         object: nil,
-                                        userInfo: ["failedOperation" : operation])
+                                        userInfo: ["failedOperation" : operation as Any])
     }
 }
 
@@ -42,7 +47,10 @@ func uploadShowFetchSASTokenErrorAndNotify(error: Error, recoveryContext: [Strin
     
     postUploadFailureTask(params: params) { (result) in
         if !result {
-            _ = dialogOKCancel(question: "Warning", text: "Unable to send error report!")
+            writeFile(strToWrite: "Unable to send error report!", className:"ErrorHandling", functionName: "uploadShowFetchSASTokenErrorAndNotify")
+//            DispatchQueue.main.async {
+//            _ = dialogOKCancel(question: "Warning", text: "Unable to send error report!")
+//            }
         }
     }
 }

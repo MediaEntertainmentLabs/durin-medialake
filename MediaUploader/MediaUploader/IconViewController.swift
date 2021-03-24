@@ -58,6 +58,18 @@ class IconViewController: NSViewController {
         
         NotificationCenter.default.addObserver(
             self,
+            selector: #selector(onResumeUploadShow(_:)),
+            name: Notification.Name(WindowViewController.NotificationNames.OnResumeUploadShow),
+            object: nil)
+        
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(onPauseUploadShow(_:)),
+            name: Notification.Name(WindowViewController.NotificationNames.OnPauseUploadShow),
+            object: nil)
+        
+        NotificationCenter.default.addObserver(
+            self,
             selector: #selector(onShowUploadSettings(_:)),
             name: Notification.Name(WindowViewController.NotificationNames.ShowUploadSettings),
             object: nil)
@@ -72,36 +84,54 @@ class IconViewController: NSViewController {
     }
     
     @objc func onShowUploadSettings(_ notification: NSNotification) {
-        if(uploadSettingsViewController == nil && currentSelectionIndex != nil) {
-            uploadSettingsViewController = UploadSettingsViewController()
+        
+        let tableRecord = notification.userInfo?["record"] as? UploadTableRow
+        
+        if uploadSettingsViewController != nil {
+            return
+        }
+        
+        uploadSettingsViewController = UploadSettingsViewController()
+        
+        if currentSelectionIndex != nil {
             guard let item = collectionView.item(at: self.currentSelectionIndex) else { return }
             guard let selected = item as? CollectionViewItem else { return }
             guard let node = selected.node else { return }
             
             uploadSettingsViewController.showId = node.identifier // showId
+            uploadSettingsViewController.showName = node.title // showName
+        }
+        
+        if tableRecord != nil {
+            uploadSettingsViewController.populated = tableRecord
+            uploadSettingsViewController.showId = tableRecord?.uploadParams["showId"] as! String
+            uploadSettingsViewController.showName = tableRecord?.showName
+            uploadSettingsViewController.dataFromCoredata = true
+        }
+        
+        if currentSelectionIndex == nil && tableRecord == nil {
+            return
+        }
+        
+        let storyboard = NSStoryboard(name: "Main", bundle: nil)
+        guard let uploadSettingsWindowController = storyboard.instantiateController(withIdentifier: "UploadSettingsWindow") as? NSWindowController else { return }
+        if let uploadSettingsWindow = uploadSettingsWindowController.window {
+            //let application = NSApplication.shared
+            //application.runModal(for: downloadWindow)
+            uploadSettingsWindow.level = NSWindow.Level.modalPanel
             
-            let storyboard = NSStoryboard(name: "Main", bundle: nil)
-            guard let uploadSettingsWindowController = storyboard.instantiateController(withIdentifier: "UploadSettingsWindow") as? NSWindowController else { return }
-            if let uploadSettingsWindow = uploadSettingsWindowController.window {
-                //let application = NSApplication.shared
-                //application.runModal(for: downloadWindow)
-                uploadSettingsWindow.level = NSWindow.Level.modalPanel
-                
-                uploadSettingsWindow.contentMinSize = NSSize(width: 650, height: 680)
-                uploadSettingsWindow.contentMaxSize = NSSize(width: 1115, height: 1115)
-                
-                let controller =  NSWindowController(window: uploadSettingsWindow)
-                uploadSettingsWindow.contentViewController = uploadSettingsViewController
-                controller.showWindow(self)
-                
-                NotificationCenter.default.addObserver(
-                    self,
-                    selector: #selector(resetViewController(_:)),
-                    name: Notification.Name(WindowViewController.NotificationNames.DismissUploadSettingsDialog),
-                    object: nil)
-            }
+            uploadSettingsWindow.contentMinSize = NSSize(width: 650, height: 680)
+            uploadSettingsWindow.contentMaxSize = NSSize(width: 1115, height: 1115)
             
-            uploadSettingsViewController.showNameField.stringValue = node.title
+            let controller =  NSWindowController(window: uploadSettingsWindow)
+            uploadSettingsWindow.contentViewController = uploadSettingsViewController
+            controller.showWindow(self)
+            
+            NotificationCenter.default.addObserver(
+                self,
+                selector: #selector(resetViewController(_:)),
+                name: Notification.Name(WindowViewController.NotificationNames.DismissUploadSettingsDialog),
+                object: nil)
         }
     }
     
@@ -356,8 +386,10 @@ class IconViewController: NSViewController {
                     
                     
                     // create UI row in TableView (one per each folder being upload) before all upload tasks will be created
-                    let uploadRecord = UploadTableRow(showName: showName, uploadParams: json_main, srcPath: dir, dstPath: folderLayoutStr, isExistRemotely: false)
+                    let uploadRecord = UploadTableRow(showName: showName, uploadParams: json_main, srcPath: dir, dstPath: folderLayoutStr, isExistRemotely: false,isBlock: isBlock,seasonId: season.1)
                     pendingUploads![type]!.append(uploadRecord)
+                    
+                    writeFile(strToWrite: dir, className: "IconViewController", functionName: "OnstartUploadShow")
                     NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.AddUploadTask),
                                                     object: nil,
                                                     userInfo: ["uploadRecord" : uploadRecord])
@@ -420,7 +452,7 @@ class IconViewController: NSViewController {
             
             // metadata.json upload task is root task, all data tasks are subtasks
             // sasToken is unavailable here, will be filled in latter
-            let op = self.createUploadDirTask(showName: showName, folderLayoutStr: folderLayoutStr, sasToken: sasToken, uploadRecords: pendingUploads![type]!)
+            let op = self.createUploadDirTask(showName: showName, folderLayoutStr: folderLayoutStr, sasToken: sasToken, isResume: false, uploadRecords: pendingUploads![type]!)
             dataSubTasks.append(contentsOf: op)
             
             for item in value {    // Item is having array of dictionary
@@ -437,9 +469,7 @@ class IconViewController: NSViewController {
         
         var json : [String:Any] = json_main
         json["files"] = jsonRecords
-        
         jsonFromDict(from: json)
-        
         guard let jsonData = try? JSONSerialization.data(withJSONObject: json, options: [.sortedKeys, .prettyPrinted]) else { return }
         
         var metadataPath : URL!
@@ -460,6 +490,8 @@ class IconViewController: NSViewController {
         
         DispatchQueue.global(qos: .background).async {
             
+            let checkPathQueue = OperationQueue()
+            
             var dialogMessage : String = ""
             var isExistRemotely: Bool = false
             for (type, value) in files {
@@ -469,7 +501,15 @@ class IconViewController: NSViewController {
                 
                 for v in pendingUploads![type]! {
                     let pathElements = v.srcPath.components(separatedBy: "/")
-                    let tail : String = pathElements.last!
+                    var tail : String = pathElements.last!
+                     if tail.hasSuffix(".") {
+                        let rmvDot:String  = removeDot(dirNameArray:pathElements)
+                        let rmvDotLastDir = URL(fileURLWithPath: rmvDot).lastPathComponent
+                        if(!rmvDotLastDir.isEmpty) {
+                            tail = rmvDotLastDir
+                        }
+                    }
+                    print("dst :\(String(describing: "\(v.dstPath)\(tail)".addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)))")
                     if let dst = "\(v.dstPath)\(tail)".addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) {
                         let checkPathOperation = CheckPathExistsOperation(showName: showName, showId: self.showId(showName: showName), srcDir: dst) { (result) in
                             if result == true {
@@ -478,12 +518,12 @@ class IconViewController: NSViewController {
                                 dialogMessage += "\r\n\(v.dstPath)\(tail)"
                             }
                         }
-                        self.uploadQueue.addOperations([checkPathOperation], waitUntilFinished: false)
+                        checkPathQueue.addOperations([checkPathOperation], waitUntilFinished: false)
                     }
                 }
             }
             
-            self.uploadQueue.waitUntilAllOperationsAreFinished()
+            checkPathQueue.waitUntilAllOperationsAreFinished()
             
             // default just fallback to upload step
             var modalResult: NSApplication.ModalResponse = NSApplication.ModalResponse.alertSecondButtonReturn
@@ -520,11 +560,12 @@ class IconViewController: NSViewController {
                         fallthrough
                         
                     default:
+                        let timestamp = String(format:"%2X", Int(Date().timeIntervalSince1970 * 1000)) // in millsecs
                         self.uploadMetadataJsonOperation(showName: showName,
                                                          sasToken: sasToken,
                                                          dataFiles: filesToUpload,
                                                          metadataFilePath: metadataPath.path,
-                                                         dstPath: metadatafolderLayout + "metadata.json",
+                                                         dstPath: metadatafolderLayout + "\(timestamp)_metadata.json",
                                                          dependens : dataSubTasks,
                                                          appendOnly : appendOnly,
                                                          recoveryContext : recoveryContext)
@@ -535,23 +576,38 @@ class IconViewController: NSViewController {
         }
     }
     
-    func jsonFromDict(from object:Any) -> String {
+    @objc func onResumeUploadShow(_ notification: NSNotification) throws {
         
-        let retString = " "
-        do {
-            let jsonData = try JSONSerialization.data(withJSONObject: object, options: .prettyPrinted)
-            // here "jsonData" is the dictionary encoded in JSON data
-            let decoded = try JSONSerialization.jsonObject(with: jsonData, options: [])
-            // here "decoded" is of type `Any`, decoded from JSON data
-            
-            print("metadata::\(decoded)");
-            
-            //  return decoded
-        } catch {
-            print(error.localizedDescription)
+        guard let resumeUpload = notification.userInfo?["resumeUpload"] as? UploadTableRow else { return }
+        
+        //let recoveryContext : [String : Any] = ["resumeUpload": resumeUpload]
+        
+        var sasToken : String!
+        
+        fetchSASToken(showName: resumeUpload.showName, showId: self.showId(showName: resumeUpload.showName), synchronous: false) { (result,state) in
+            switch state {
+            case .pending:
+                return
+            case .cached:
+                sasToken = result
+            case .completed:
+                NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.OnResumeUploadShow),
+                                                object: nil,
+                                                userInfo: ["resumeUpload": resumeUpload])
+            }
         }
         
-        return retString;
+        // async wait for token to aquire in background
+        if sasToken == nil {
+            return
+        }
+        
+        let uploadOperation = self.createUploadDirTask(showName: resumeUpload.showName, folderLayoutStr: resumeUpload.dstPath, sasToken: sasToken, isResume: true, uploadRecords: [resumeUpload])
+        self.uploadQueue.addOperations(uploadOperation, waitUntilFinished: false)
+    }
+    
+    @objc func onPauseUploadShow(_ notification: NSNotification) throws {
+        // TODO: not implemented yet
     }
     
     func uploadMetadataJsonOperation(showName: String,
@@ -562,6 +618,8 @@ class IconViewController: NSViewController {
                                      dependens : [FileUploadOperation],
                                      appendOnly: Bool,
                                      recoveryContext : [String : Any]) {
+        
+        print("------------ uploadMetadataJsonOperation: metadataFilePath: \(metadataFilePath), dstPath: \(dstPath)")
         
         if appendOnly == true {
             for op in dependens {
@@ -614,7 +672,7 @@ class IconViewController: NSViewController {
         }
     }
     
-    func createUploadDirTask(showName: String, folderLayoutStr: String, sasToken: String, uploadRecords : [UploadTableRow]) -> [FileUploadOperation] {
+    func createUploadDirTask(showName: String, folderLayoutStr: String, sasToken: String, isResume: Bool, uploadRecords : [UploadTableRow]) -> [FileUploadOperation] {
         print("------------ upload DIR:", sasToken)
         
         let dstPath = "/" + folderLayoutStr
@@ -623,13 +681,18 @@ class IconViewController: NSViewController {
         
         var uploadOperations = [FileUploadOperation]()
         for uploadRecord in uploadRecords {
+            writeFile(strToWrite: uploadRecord.srcPath, className: "iCONViewController", functionName: "createUploadDirTask")
+            var args = ["copy", uploadRecord.srcPath, sasTokenWithDestPath, "--recursive", "--put-md5"]
+            if isResume {
+                args.append("--overwrite=false")
+            }
             uploadOperations.append(FileUploadOperation(showId: self.showId(showName: showName),
                                                         cdsUserId: LoginViewController.cdsUserId!,
                                                         sasToken: sasToken,
                                                         step: FileUploadOperation.UploadType.kDataUpload,
                                                         uploadRecord : uploadRecord,
                                                         dependens: [],
-                                                        args: ["copy", uploadRecord.srcPath, sasTokenWithDestPath, "--recursive", "--put-md5"]))
+                                                        args: args))
         }
         return uploadOperations
     }
@@ -644,10 +707,21 @@ class IconViewController: NSViewController {
             }
             let sasSplit = sasToken.components(separatedBy: "?")
             guard let dstPath = uploadRecord.dstPath.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)  else { return false }
-            guard let srcPath = uploadRecord.srcPath.components(separatedBy: "/").last!.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else { return false }
+            guard var srcPath = uploadRecord.srcPath.components(separatedBy: "/").last!.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else { return false }
+            
+            if srcPath.hasSuffix(".") {
+                let rmvDot:String  = removeDot(dirNameArray:uploadRecord.srcPath.components(separatedBy: "/"))
+                let rmvDotLastDir = URL(fileURLWithPath: rmvDot).lastPathComponent
+                if(!rmvDotLastDir.isEmpty) {
+                    srcPath = rmvDotLastDir
+                }
+            }
+            
             let sasTokenWithDestPath = sasSplit[0] + "/\(dstPath)\(srcPath)" + "?" + sasSplit[1]
             
             print("------------ remove DIR:", sasTokenWithDestPath)
+            
+            writeFile(strToWrite: sasTokenWithDestPath, className: "iCOnViewController", functionName: "removeDirTask")
             
             let removeOperation = FileUploadOperation(showId: self.showId(showName: showName),
                                                       cdsUserId: LoginViewController.cdsUserId!,
@@ -690,6 +764,16 @@ class IconViewController: NSViewController {
         NotificationCenter.default.removeObserver(
             self,
             name: Notification.Name(WindowViewController.NotificationNames.OnStartUploadShow),
+            object: nil)
+        
+        NotificationCenter.default.removeObserver(
+            self,
+            name: Notification.Name(WindowViewController.NotificationNames.OnResumeUploadShow),
+            object: nil)
+        
+        NotificationCenter.default.removeObserver(
+            self,
+            name: Notification.Name(WindowViewController.NotificationNames.OnPauseUploadShow),
             object: nil)
         
         NotificationCenter.default.removeObserver(
