@@ -1,0 +1,86 @@
+﻿<RibbonDiffXml xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <CustomActions>
+    <CustomAction Id="media.media_season.CopyTo.Button.CustomAction" Location="Mscrm.HomepageGrid.media_season.MainTab.Management.Controls._children" Sequence="55">
+      <CommandUIDefinition>
+        <SplitButton Command="media.media_season.bnCopyTo.Command" Id="media.media_season.CopyTo.Button" LabelText="$LocLabels:media.media_season.CopyTo.Button.LabelText" Sequence="55" TemplateAlias="o2" ModernImage="$webresource:media_copyfile">
+          <Menu Id="media.media_season.CopyTo.Button.Menu">
+            <MenuSection Id="media.media_season.CopyTo.Section" Sequence="5" DisplayMode="Menu16">
+              <Controls Id="media.media_season.CopyTo.Section.Controls">
+                <Button Command="media.media_season.btnCopyToVendor.Command" Id="media.media_season.btnVendorLocation.Button" LabelText="$LocLabels:media.media_season.btnVendorLocation.Button.LabelText" Sequence="10" ModernImage="$webresource:media_vendor_16x16.png"/>
+                <Button Command="media.media_season.CopyToNexis.Command" Id="media.media_season.btnNexis.Button" LabelText="$LocLabels:media.media_season.btnNexis.Button.LabelText" Sequence="15" ModernImage="$webresource:media_NexisIcon"/>
+              </Controls>
+            </MenuSection>
+          </Menu>
+        </SplitButton>
+      </CommandUIDefinition>
+    </CustomAction>
+  </CustomActions>
+  <Templates>
+    <RibbonTemplates Id="Mscrm.Templates" />
+  </Templates>
+  <CommandDefinitions>
+    <CommandDefinition Id="media.media_season.btnCopyToVendor.Command">
+      <EnableRules>
+        <EnableRule Id="media.media_season.btnCopyTo.EnableRule" />
+      </EnableRules>
+      <DisplayRules />
+      <Actions>
+        <JavaScriptFunction FunctionName="DurinMedia.CopyVendorUtility.ShowVendorDialog" Library="$webresource:media_CopyToVendor.js">
+          <CrmParameter Value="SelectedControlSelectedItemReferences" />
+          <CrmParameter Value="SelectedControl" />
+        </JavaScriptFunction>
+      </Actions>
+    </CommandDefinition>
+    <CommandDefinition Id="media.media_season.bnCopyTo.Command">
+      <EnableRules>
+        <EnableRule Id="media.media_season.btnCopyTo.EnableRule" />
+      </EnableRules>
+      <DisplayRules />
+      <Actions />
+    </CommandDefinition>
+    <CommandDefinition Id="media.media_season.CopyToNexis.Command">
+      <EnableRules>
+        <EnableRule Id="media.media_season.btnCopyTo.EnableRule" />
+      </EnableRules>
+      <DisplayRules />
+      <Actions>
+        <JavaScriptFunction FunctionName="DurinMedia.CopyVendorUtility.CopyToNexis" Library="$webresource:media_CopyToVendor.js">
+          <CrmParameter Value="SelectedControlSelectedItemReferences" />
+          <CrmParameter Value="SelectedControl" />
+        </JavaScriptFunction>
+      </Actions>
+    </CommandDefinition>
+  </CommandDefinitions>
+  <RuleDefinitions>
+    <TabDisplayRules />
+    <DisplayRules />
+    <EnableRules>
+      <EnableRule Id="media.media_season.btnCopyTo.EnableRule">
+        <SelectionCountRule AppliesTo="PrimaryEntity" Minimum="1" />
+      </EnableRule>
+    </EnableRules>
+  </RuleDefinitions>
+  <LocLabels>
+    <LocLabel Id="media.media_season.btnCopyVendor.Button.LabelText">
+      <Titles>
+        <Title description="Copy to Vendor" languagecode="1033" />
+      </Titles>
+    </LocLabel>
+    <LocLabel Id="media.media_season.CopyTo.Button.LabelText">
+      <Titles>
+        <Title description="Copy To" languagecode="1033" />
+      </Titles>
+    </LocLabel>
+    <LocLabel Id="media.media_season.btnVendorLocation.Button.LabelText">
+      <Titles>
+        <Title description="Vendor Location" languagecode="1033" />
+      </Titles>
+    </LocLabel>
+    <LocLabel Id="media.media_season.btnNexis.Button.LabelText">
+      <Titles>
+        <Title description="Nexis" languagecode="1033" />
+      </Titles>
+    </LocLabel>
+  </LocLabels>
+</RibbonDiffXml>

@@ -1,0 +1,216 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"crmOrgName": {
+			"type": "string",
+			"metadata": {
+				"description": "description"
+			}
+		},
+		"storageName": {
+			"type": "string",
+			"metadata": {
+				"description": "description"
+			}
+		},
+		"connection_commondataservice": {
+			"type": "string",
+			"defaultValue": "[concat(subscription().id,'/resourceGroups/',resourceGroup().name,'/providers/Microsoft.Web/connections/commondataservice')]"
+		},
+		"storageAccounts_durinmediastorage": {
+			"defaultValue": "[concat(subscription().id,'/resourceGroups/',resourceGroup().name,'/providers/Microsoft.Storage/storageAccounts/',parameters('storageName'))]",
+			"type": "String"
+		},
+		"connections_azureeventgrid": {
+			"defaultValue": "[concat(subscription().id,'/resourceGroups/',resourceGroup().name,'/providers/Microsoft.Web/connections/azureeventgrid')]",
+			"type": "String"
+		},
+		"crmIdentifier": {
+			"type": "string",
+			"metadata": {
+				"description": "description"
+			}
+		}
+	},
+	"functions": [
+		{
+			"namespace": "durin",
+			"members": {
+				"wrapInQuote": {
+					"parameters": [
+						{
+							"name": "text",
+							"type": "string"
+						}
+					],
+					"output": {
+						"value": "[concat('''', parameters('text'),'''')]",
+						"type": "string"
+					}
+				}
+			}
+		}
+	],
+	"variables": {
+		"org": "[durin.wrapInQuote(concat(parameters('crmOrgName'),'.',parameters('crmIdentifier')))]"
+	},
+	"resources": [
+		{
+			"type": "Microsoft.Logic/workflows",
+			"apiVersion": "2017-07-01",
+			"name": "Logic-OnBlobDelete",
+			"location": "[resourceGroup().location]",
+			"properties": {
+				"state": "Enabled",
+				"definition": {
+					"$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+					"contentVersion": "1.0.0.0",
+					"parameters": {
+						"$connections": {
+							"defaultValue": {},
+							"type": "Object"
+						}
+					},
+					"triggers": {
+						"When_a_resource_event_occurs": {
+							"splitOn": "@triggerBody()",
+							"type": "ApiConnectionWebhook",
+							"inputs": {
+								"body": {
+									"properties": {
+										"destination": {
+											"endpointType": "webhook",
+											"properties": {
+												"endpointUrl": "@{listCallbackUrl()}"
+											}
+										},
+										"filter": {
+											"includedEventTypes": [
+												"Microsoft.Storage.BlobDeleted"
+											]
+										},
+										"topic": "[parameters('storageAccounts_durinmediastorage')]"
+									}
+								},
+								"host": {
+									"connection": {
+										"name": "@parameters('$connections')['azureeventgrid']['connectionId']"
+									}
+								},
+								"path": "[concat(subscription().id,'/providers/@{encodeURIComponent(',durin.wrapInQuote('Microsoft.Storage.StorageAccounts'),')}/resource/eventSubscriptions')]",
+								"queries": {
+									"x-ms-api-version": "2017-06-15-preview"
+								}
+							},
+							"runtimeConfiguration": {
+								"secureData": {
+									"properties": [
+										"inputs",
+										"outputs"
+									]
+								}
+							}
+						}
+					},
+					"actions": {
+						"BlobPath": {
+							"runAfter": {},
+							"type": "Compose",
+							"inputs": "@join(skip(split(replace(triggerBody()?['data']?['url'],'//','@'),'/'),1),'/')",
+							"runtimeConfiguration": {
+								"secureData": {
+									"properties": [
+										"inputs"
+									]
+								}
+							}
+						},
+						"Fetch_Asset_file_record": {
+							"runAfter": {
+								"BlobPath": [
+									"Succeeded"
+								]
+							},
+							"type": "ApiConnection",
+							"inputs": {
+								"host": {
+									"connection": {
+										"name": "@parameters('$connections')['commondataservice']['connectionId']"
+									}
+								},
+								"method": "get",
+								"path": "[concat('/v2/datasets/@{encodeURIComponent(encodeURIComponent(',variables('org'),'))}/tables/@{encodeURIComponent(encodeURIComponent(',durin.wrapInQuote('media_assetfileses'),'))}/items')]",
+								"queries": {
+									"$filter": "media_blobpath eq '@{outputs('BlobPath')}' and statecode eq 0",
+									"$top": 1
+								}
+							},
+							"runtimeConfiguration": {
+								"secureData": {
+									"properties": [
+										"inputs",
+										"outputs"
+									]
+								}
+							}
+						},
+						"Iterate_all_asset_file": {
+							"foreach": "@body('Fetch_Asset_file_record')?['value']",
+							"actions": {
+								"Update_Asset_file_to_inactive": {
+									"runAfter": {},
+									"type": "ApiConnection",
+									"inputs": {
+										"body": {
+											"statecode": 1
+										},
+										"host": {
+											"connection": {
+												"name": "@parameters('$connections')['commondataservice']['connectionId']"
+											}
+										},
+										"method": "patch",
+										"path": "[concat('/v2/datasets/@{encodeURIComponent(encodeURIComponent(',variables('org'),'))}/tables/@{encodeURIComponent(encodeURIComponent(',durin.wrapInQuote('media_assetfileses'),'))}/items/@{encodeURIComponent(encodeURIComponent(items(',durin.wrapInQuote('Iterate_all_asset_file'),')?[',durin.wrapInQuote('media_assetfilesid'),']))}')]"
+									},
+									"runtimeConfiguration": {
+										"secureData": {
+											"properties": [
+												"inputs",
+												"outputs"
+											]
+										}
+									}
+								}
+							},
+							"runAfter": {
+								"Fetch_Asset_file_record": [
+									"Succeeded"
+								]
+							},
+							"type": "Foreach"
+						}
+					},
+					"outputs": {}
+				},
+				"parameters": {
+					"$connections": {
+						"value": {
+							"commondataservice": {
+								"connectionId": "[parameters('connection_commondataservice')]",
+								"connectionName": "commondataservice",
+								"id": "[concat(subscription().id, '/providers/Microsoft.Web/locations/', resourceGroup().location, '/managedApis/commondataservice')]"
+							},
+							"azureeventgrid": {
+								"connectionId": "[parameters('connections_azureeventgrid')]",
+								"connectionName": "azureeventgrid",
+								"id": "[concat(subscription().id, '/providers/Microsoft.Web/locations/', resourceGroup().location, '/managedApis/azureeventgrid')]"
+							}
+						}
+					}
+				}
+			}
+		}
+	],
+	"outputs": {}
+}

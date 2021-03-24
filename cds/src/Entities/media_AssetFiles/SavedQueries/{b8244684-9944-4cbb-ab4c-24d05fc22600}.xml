@@ -1,0 +1,55 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<savedqueries xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <savedquery>
+    <IsCustomizable>0</IsCustomizable>
+    <CanBeDeleted>0</CanBeDeleted>
+    <isquickfindquery>0</isquickfindquery>
+    <isprivate>0</isprivate>
+    <isdefault>1</isdefault>
+    <savedqueryid>{b8244684-9944-4cbb-ab4c-24d05fc22600}</savedqueryid>
+    <layoutxml>
+      <grid name="resultset" jump="media_name" select="1" icon="1" preview="1">
+        <row name="result" id="media_assetfilesid">
+          <cell name="media_name" width="228" />
+          <cell name="media_asset" width="128" />
+          <cell name="media_asset.media_assetcontainer" width="100" />
+          <cell name="media_filetype" width="100" />
+          <cell name="media_uploadstatus" width="100" />
+          <cell name="media_checksumstatus" width="100" />
+          <cell name="media_metadatastatus" width="100" />
+          <cell name="media_virusscanstatus" width="100" />
+          <cell name="createdon" width="125" />
+        </row>
+      </grid>
+    </layoutxml>
+    <querytype>0</querytype>
+    <fetchxml>
+      <fetch version="1.0" mapping="logical">
+        <entity name="media_assetfiles">
+          <attribute name="media_assetfilesid" />
+          <attribute name="media_name" />
+          <attribute name="createdon" />
+          <order attribute="media_name" descending="false" />
+          <filter type="and">
+            <condition attribute="statecode" operator="eq" value="0" />
+          </filter>
+          <attribute name="media_asset" />
+          <attribute name="media_filetype" />
+          <attribute name="media_checksumstatus" />
+          <attribute name="media_metadatastatus" />
+          <attribute name="media_virusscanstatus" />
+          <attribute name="media_uploadstatus" />
+          <attribute name="media_blobpath" />
+          <attribute name="media_alefileid"/>
+          <link-entity name="media_asset" from="media_assetid" to="media_asset" visible="false" link-type="outer" alias="media_asset">
+            <attribute name="media_assetcontainer" />
+          </link-entity>
+        </entity>
+      </fetch>
+    </fetchxml>
+    <IntroducedVersion>1.0.0.0</IntroducedVersion>
+    <LocalizedNames>
+      <LocalizedName description="Active Asset Files" languagecode="1033" />
+    </LocalizedNames>
+  </savedquery>
+</savedqueries>

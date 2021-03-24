@@ -1,0 +1,130 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<forms xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <systemform>
+    <formid>{6c122703-efa8-4595-96fa-544a1aab80ac}</formid>
+    <IntroducedVersion>1.0</IntroducedVersion>
+    <FormPresentation>1</FormPresentation>
+    <FormActivationState>1</FormActivationState>
+    <form headerdensity="HighWithControls">
+      <tabs>
+        <tab verticallayout="true" id="{8c31e4c3-e11e-4084-84fd-ffe1f08cb83c}" IsUserDefined="1">
+          <labels>
+            <label description="General" languagecode="1033" />
+          </labels>
+          <columns>
+            <column width="100%">
+              <sections>
+                <section showlabel="false" showbar="false" IsUserDefined="0" id="{29a348b0-da3e-43c7-abc5-41dbf12613da}">
+                  <labels>
+                    <label description="General" languagecode="1033" />
+                  </labels>
+                  <rows>
+                    <row>
+                      <cell id="{fb157d37-6257-4059-a822-0d277389834b}">
+                        <labels>
+                          <label description="Name" languagecode="1033" />
+                        </labels>
+                        <control id="media_name" classid="{4273EDBD-AC1D-40d3-9FB2-095C621B552D}" datafieldname="media_name" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{1175f5ad-2c7b-48af-b84a-c7485505ed49}" locklevel="0">
+                        <labels>
+                          <label description="Season" languagecode="1033" />
+                        </labels>
+                        <control id="media_season" classid="{270BD3DB-D9AF-4782-9025-509E298DEC0A}" datafieldname="media_season" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{6f27dfb8-ebe9-4bc6-8c38-52a98b70c318}">
+                        <labels>
+                          <label description="Owner" languagecode="1033" />
+                        </labels>
+                        <control id="ownerid" classid="{270BD3DB-D9AF-4782-9025-509E298DEC0A}" datafieldname="ownerid" />
+                      </cell>
+                    </row>
+                  </rows>
+                </section>
+                <section name="Assets" id="844dd2b2-62df-4562-86c6-2e12c65bce97" IsUserDefined="0" locklevel="0" showlabel="true" showbar="false" layout="varwidth" celllabelalignment="Left" celllabelposition="Left" columns="1" labelwidth="115">
+                  <labels>
+                    <label description="Assets" languagecode="1033" />
+                  </labels>
+                  <rows>
+                    <row>
+                      <cell locklevel="0" id="{fa598e21-2d4c-4ba1-9d41-53ae7b9dd11a}" rowspan="1" colspan="1" showlabel="false">
+                        <labels>
+                          <label description="Assets" languagecode="1033" />
+                        </labels>
+                        <control id="Assets" classid="{E7A81278-8635-4D9E-8D4D-59480B391C5B}" indicationOfSubgrid="true">
+                          <parameters>
+                            <TargetEntityType>media_asset</TargetEntityType>
+                            <ViewId>{63F62624-A771-4C0C-B73E-D0747AC7E221}</ViewId>
+                            <EnableViewPicker>true</EnableViewPicker>
+                            <RelationshipName>media_Asset_Block_media_Block</RelationshipName>
+                          </parameters>
+                        </control>
+                      </cell>
+                    </row>
+                  </rows>
+                </section>
+              </sections>
+            </column>
+          </columns>
+        </tab>
+      </tabs>
+      <header id="{1d836431-2ac2-4b7c-b025-faeac3d05ba0}" celllabelposition="Top" columns="111" labelwidth="115" celllabelalignment="Left">
+        <rows>
+          <row>
+            <cell id="{69fc74a8-5ba6-45c2-86d4-ca9aa4060030}" showlabel="false">
+              <labels>
+                <label description="" languagecode="1033" />
+              </labels>
+            </cell>
+            <cell id="{986250a3-f4ed-4a94-89dd-e2b328561718}" showlabel="false">
+              <labels>
+                <label description="" languagecode="1033" />
+              </labels>
+            </cell>
+            <cell id="{7fc1e173-6711-4a2b-a9c2-bd76e016b9ef}" showlabel="false">
+              <labels>
+                <label description="" languagecode="1033" />
+              </labels>
+            </cell>
+          </row>
+        </rows>
+      </header>
+      <footer id="{ab976044-153f-42e9-9426-5637e51b9749}" celllabelposition="Top" columns="111" labelwidth="115" celllabelalignment="Left">
+        <rows>
+          <row>
+            <cell id="{f19d4468-6988-494f-a889-4b59009e3bb7}" showlabel="false">
+              <labels>
+                <label description="" languagecode="1033" />
+              </labels>
+            </cell>
+            <cell id="{89c77a65-b49d-420e-9a23-d8cb0370f5ad}" showlabel="false">
+              <labels>
+                <label description="" languagecode="1033" />
+              </labels>
+            </cell>
+            <cell id="{f6d7b7e7-be9b-4459-bf6e-595a257beae8}" showlabel="false">
+              <labels>
+                <label description="" languagecode="1033" />
+              </labels>
+            </cell>
+          </row>
+        </rows>
+      </footer>
+      <DisplayConditions Order="0" FallbackForm="true">
+        <Everyone />
+      </DisplayConditions>
+    </form>
+    <IsCustomizable>1</IsCustomizable>
+    <CanBeDeleted>1</CanBeDeleted>
+    <LocalizedNames>
+      <LocalizedName description="Information" languagecode="1033" />
+    </LocalizedNames>
+    <Descriptions>
+      <Description description="A form for this entity." languagecode="1033" />
+    </Descriptions>
+  </systemform>
+</forms>

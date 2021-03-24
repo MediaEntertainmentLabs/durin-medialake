@@ -1,0 +1,80 @@
+<html>
+
+<head>
+    <script src="/WebResources/media_CopyToVendor.js"></script>
+    <style>
+        #vendor-list-control>p {
+            margin: 10px 0px;
+            font-family: "Segoe UI Regular", SegoeUI, "Segoe UI";
+        }
+    </style>
+</head>
+
+<body>
+    <div id="vendor-list-control">
+    </div>
+</body>
+<script>
+    var type = parent.Xrm.Page.getAttribute('media_type').getValue();
+    if (type == 'vendor') {
+        DurinMedia.CopyVendorUtility.GetVendorList().then(data => {
+            if (data.value.length > 0) {
+                data.value.forEach((x) => {
+                    buildVendorNode({ name: x.media_Vendor.media_name, value: x.media_Vendor.media_vendorid, location: x.media_Vendor.media_folderpath });
+                })
+            } else {
+                BuildNoRecordMessage()
+            }
+        })
+    } else {
+        DurinMedia.CopyVendorUtility.GetNexisList().then(data => {
+            if (data.value.length > 0) {
+                data.value.forEach((x) => {
+                    buildVendorNode({ name: x.media_Nexis.media_name, value: x.media_Nexis.media_nexisid, location: x.media_Nexis.media_linkedservicename });
+                })
+            } else {
+                BuildNoRecordMessage()
+            }
+        })
+
+    }
+
+    function BuildNoRecordMessage() {
+        var para = document.createElement("p");
+        para.style.color = 'red';
+        para.innerText = `There are no ${type == 'vendor' ? 'vendors' : 'nexis storages'} mapped to this show. Please associate ${type == 'vendor' ? 'vendors' : 'nexis storage'} to Shows.`;
+        document.querySelector("#vendor-list-control").appendChild(para);
+    }
+
+    function buildVendorNode({ name, value, location }) {
+        var para = document.createElement("p");
+        var checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.value = value;
+        checkbox.id = value;
+        checkbox.name = name;
+        checkbox.setAttribute("data-location", location);
+        checkbox.onchange = (ev) => {
+            var selectedLocations = [];
+            document.querySelectorAll("#vendor-list-control input:checked").forEach(x => {
+                var location = x.getAttribute('data-location');
+                if (location) {
+                    selectedLocations.push({
+                        id: x.id,
+                        name: x.name,
+                        path: location
+                    });
+                }
+            })
+            parent.Xrm.Page.getAttribute("media_selectedLocation").setValue(JSON.stringify(selectedLocations));
+        }
+        var label = document.createElement("label");
+        label.setAttribute("for", value);
+        label.innerText = name;
+        para.appendChild(checkbox);
+        para.appendChild(label);
+        document.querySelector("#vendor-list-control").appendChild(para);
+    }
+</script>
+
+</html>

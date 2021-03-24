@@ -1,0 +1,118 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"crmOrgName": {
+			"type": "string",
+			"metadata": {
+				"description": "description"
+			}
+		},
+		"crmIdentifier": {
+			"type": "string",
+			"metadata": {
+				"description": "crmIdentifier"
+			}
+		},
+		"dataFactoryName": {
+			"type": "string",
+			"metadata": {
+				"description": "description"
+			}
+		},
+		"blobStorageAccount": {
+			"type": "string",
+			"metadata": {
+				"description": "Name of the Azure storage account."
+			}
+		}
+	},
+	"functions": [
+		{
+			"namespace": "durin",
+			"members": {
+				"wrapInQuote": {
+					"parameters": [
+						{
+							"name": "text",
+							"type": "string"
+						}
+					],
+					"output": {
+						"value": "[concat('''', parameters('text'),'''')]",
+						"type": "string"
+					}
+				}
+			}
+		}
+	],
+	"variables": {
+		"org": "[durin.wrapInQuote(concat(parameters('crmOrgName'),'.',parameters('crmIdentifier')))]"
+	},
+	"resources": [
+		{
+			"type": "Microsoft.Logic/workflows",
+			"apiVersion": "2017-07-01",
+			"name": "Logic-ReadAzureConfiguration",
+			"location": "[resourceGroup().location]",
+			"properties": {
+				"definition": {
+					"$schema": "https://schema.management.azure.com/schemas/2016-06-01/Microsoft.Logic.json",
+					"contentVersion": "1.0.0.0",
+					"parameters": {},
+					"triggers": {
+						"manual": {
+							"type": "Request",
+							"kind": "Http",
+							"inputs": {
+								"schema": {}
+                            },
+                            "runtimeConfiguration": {
+                                "secureData": {
+                                    "properties": [
+                                        "inputs",
+                                        "outputs"
+                                    ]
+                                }
+							}
+						}
+					},
+					"actions": {
+						"Response": {
+							"runAfter": {},
+							"type": "Response",
+							"kind": "Http",
+							"inputs": {
+								"body": {
+									"AadClientId": "92ea57a5-102d-40b7-aa5b-0bfa12be2765",
+									"AadSecret": "f.ICB5M2_Jk9-JiFwuv4Bh7okboTp.dwwv",
+									"AadTenantDomain": "microsoft.onmicrosoft.com",
+									"api-version": "2018-06-01",
+									"BlobLinkedServiceName": "Durin Media Source",
+									"DestinationBlobLinkedServiceName": "Vendor Storage",
+									"FactoryName": "[parameters('dataFactoryName')]",
+									"Location": "[resourceGroup().location]",
+									"OnPremLinkedServiceName": "Azure Nexis",
+									"ResourceGroup": "[resourceGroup().name]",
+									"SourceBlobLinkedServiceName": "Durin Media Source",
+									"StorageAccountName": "[parameters('blobStorageAccount')]",
+									"SubscriptionId": "[subscription().subscriptionId]"
+								},
+								"statusCode": 200
+							},
+							"runtimeConfiguration": {
+								"secureData": {
+									"properties": [
+										"inputs"
+									]
+								}
+							}
+						}
+					},
+					"outputs": {}
+				},
+				"parameters": {}
+			}
+		}
+	]
+}

@@ -1,0 +1,512 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "connection_commondataservice": {
+            "type": "string",
+            "defaultValue": "[concat(subscription().id,'/resourceGroups/',resourceGroup().name,'/providers/Microsoft.Web/connections/commondataservice')]"
+        },
+        "connection_virustotal": {
+            "type": "string",
+            "defaultValue": "[concat(subscription().id,'/resourceGroups/',resourceGroup().name,'/providers/Microsoft.Web/connections/virustotal')]"
+        },
+        "crmOrgName": {
+            "type": "string",
+            "metadata": {
+                "description": "description"
+            }
+        },
+        "crmIdentifier": {
+            "type": "string",
+            "metadata": {
+                "description": "description"
+            }
+        }
+    },
+    "functions": [
+        {
+            "namespace": "durin",
+            "members": {
+                "wrapInQuote": {
+                    "parameters": [
+                        {
+                            "name": "text",
+                            "type": "string"
+                        }
+                    ],
+                    "output": {
+                        "value": "[concat('''', parameters('text'),'''')]",
+                        "type": "string"
+                    }
+                }
+            }
+        }
+    ],
+    "variables": {
+         "org": "[durin.wrapInQuote(concat(parameters('crmOrgName'),'.',parameters('crmIdentifier')))]"
+    },
+    "resources": [
+        {
+            "name": "Logic-AntiVirusScan",
+            "type": "Microsoft.Logic/workflows",
+            "apiVersion": "2017-07-01",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "definition": {
+                    "$schema": "https://schema.management.azure.com/schemas/2016-06-01/Microsoft.Logic.json",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {
+                        "$connections": {
+                            "defaultValue": {},
+                            "type": "Object"
+                        }
+                    },
+                    "triggers": {
+                        "manual": {
+                            "type": "Request",
+                            "kind": "Http",
+                            "inputs": {
+                                "schema": {
+                                    "properties": {
+                                        "BlobUri": {
+                                            "type": "string"
+                                        },
+                                        "RecordId": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            },
+                            "runtimeConfiguration": {
+                                "secureData": {
+                                    "properties": [
+                                        "inputs",
+                                        "outputs"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "actions": {
+                        "Condition_-_Check_BlobUri_and_RecordId": {
+                            "actions": {
+                                "Condition_-_Check_for_ErrorMessage": {
+                                    "actions": {
+                                        "Create_error_log_record": {
+                                            "runAfter": {
+                                                "Update_asset_file_record_status_Virus_Scan_Failed": [
+                                                    "Succeeded",
+                                                    "Failed"
+                                                ]
+                                            },
+                                            "type": "ApiConnection",
+                                            "inputs": {
+                                                "body": {
+                                                    "_media_assetfiles_value": "@triggerBody()?['RecordId']",
+                                                    "media_description": "@variables('ErrorMessage')",
+                                                    "media_name": "Error occured during Antivirus Scan"
+                                                },
+                                                "host": {
+                                                    "connection": {
+                                                        "name": "@parameters('$connections')['commondataservice']['connectionId']"
+                                                    }
+                                                },
+                                                "method": "post",
+                                                "path": "[concat('/v2/datasets/@{encodeURIComponent(encodeURIComponent(',variables('org'),'))}/tables/@{encodeURIComponent(encodeURIComponent(',durin.wrapInQuote('media_asseterrorlogs'),'))}/items')]"
+                                            },
+                                            "runtimeConfiguration": {
+                                                "secureData": {
+                                                    "properties": [
+                                                        "inputs",
+                                                        "outputs"
+                                                    ]
+                                                }
+                                            }
+                                        },
+                                        "Response_failure": {
+                                            "runAfter": {
+                                                "Create_error_log_record": [
+                                                    "Succeeded",
+                                                    "Failed"
+                                                ]
+                                            },
+                                            "type": "Response",
+                                            "kind": "Http",
+                                            "inputs": {
+                                                "body": {
+                                                    "Message": "AntiVirus Scan Failed"
+                                                },
+                                                "statusCode": 500
+                                            },
+                                            "runtimeConfiguration": {
+                                                "secureData": {
+                                                    "properties": [
+                                                        "inputs"
+                                                    ]
+                                                }
+                                            }
+                                        },
+                                        "Update_asset_file_record_status_Virus_Scan_Failed": {
+                                            "runAfter": {},
+                                            "type": "ApiConnection",
+                                            "inputs": {
+                                                "body": {
+                                                    "media_virusscanstatus": 207940002
+                                                },
+                                                "host": {
+                                                    "connection": {
+                                                        "name": "@parameters('$connections')['commondataservice']['connectionId']"
+                                                    }
+                                                },
+                                                "method": "patch",
+                                                "path": "[concat('/v2/datasets/@{encodeURIComponent(encodeURIComponent(',variables('org'),'))}/tables/@{encodeURIComponent(encodeURIComponent(',durin.wrapInQuote('media_assetfileses'),'))}/items/@{encodeURIComponent(encodeURIComponent(triggerBody()?[',durin.wrapInQuote('RecordId'),']))}')]"
+                                            },
+                                            "runtimeConfiguration": {
+                                                "secureData": {
+                                                    "properties": [
+                                                        "inputs",
+                                                        "outputs"
+                                                    ]
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "runAfter": {
+                                        "Scope": [
+                                            "Succeeded",
+                                            "Failed"
+                                        ]
+                                    },
+                                    "else": {
+                                        "actions": {
+                                            "Response_success": {
+                                                "runAfter": {},
+                                                "type": "Response",
+                                                "kind": "Http",
+                                                "inputs": {
+                                                    "body": {
+                                                        "Message": "AntiVirus Scan completed Successfully"
+                                                    },
+                                                    "statusCode": 200
+                                                },
+                                                "runtimeConfiguration": {
+                                                    "secureData": {
+                                                        "properties": [
+                                                            "inputs"
+                                                        ]
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "expression": {
+                                        "and": [
+                                            {
+                                                "greater": [
+                                                    "@length(variables('ErrorMessage'))",
+                                                    0
+                                                ]
+                                            }
+                                        ]
+                                    },
+                                    "type": "If"
+                                },
+                                "Scope": {
+                                    "actions": {
+                                        "Analyse_an_URL": {
+                                            "runAfter": {},
+                                            "type": "ApiConnection",
+                                            "inputs": {
+                                                "body": {
+                                                    "$content-type": "multipart/form-data",
+                                                    "$multipart": [
+                                                        {
+                                                            "body": "@triggerBody()?['BlobUri']",
+                                                            "headers": {
+                                                                "Content-Disposition": "form-data; name=\"url\""
+                                                            }
+                                                        }
+                                                    ]
+                                                },
+                                                "host": {
+                                                    "connection": {
+                                                        "name": "@parameters('$connections')['virustotal']['connectionId']"
+                                                    }
+                                                },
+                                                "method": "post",
+                                                "path": "/api/v3/urls"
+                                            },
+                                            "runtimeConfiguration": {
+                                                "secureData": {
+                                                    "properties": [
+                                                        "inputs",
+                                                        "outputs"
+                                                    ]
+                                                }
+                                            }
+                                        },
+                                        "Condition_if_file_is_malacious": {
+                                            "actions": {
+                                                "Set_variable_-_Update_Record_VirusFound-_ErrorMessage": {
+                                                    "runAfter": {
+                                                        "Update_record_-_VirusFound": [
+                                                            "Failed",
+                                                            "TimedOut"
+                                                        ]
+                                                    },
+                                                    "type": "SetVariable",
+                                                    "inputs": {
+                                                        "name": "ErrorMessage",
+                                                        "value": "Failed to Update Status of RecordId: @{triggerBody()?['RecordId']}"
+                                                    }
+                                                },
+                                                "Update_record_-_VirusFound": {
+                                                    "runAfter": {},
+                                                    "type": "ApiConnection",
+                                                    "inputs": {
+                                                        "body": {
+                                                            "media_virusscanstatus": 207940000
+                                                        },
+                                                        "host": {
+                                                            "connection": {
+                                                                "name": "@parameters('$connections')['commondataservice']['connectionId']"
+                                                            }
+                                                        },
+                                                        "method": "patch",
+                                                        "path": "[concat('/v2/datasets/@{encodeURIComponent(encodeURIComponent(',variables('org'),'))}/tables/@{encodeURIComponent(encodeURIComponent(',durin.wrapInQuote('media_assetfileses'),'))}/items/@{encodeURIComponent(encodeURIComponent(triggerBody()?[',durin.wrapInQuote('RecordId'),']))}')]"
+                                                    },
+                                                    "runtimeConfiguration": {
+                                                        "secureData": {
+                                                            "properties": [
+                                                                "inputs",
+                                                                "outputs"
+                                                            ]
+                                                        }
+                                                    }
+                                                }
+                                            },
+                                            "runAfter": {
+                                                "Parse_JSON": [
+                                                    "Succeeded"
+                                                ]
+                                            },
+                                            "else": {
+                                                "actions": {
+                                                    "Set_variable_-_Update_Record_VirusNotFound_-_ErrorMessage": {
+                                                        "runAfter": {
+                                                            "Update_record_-_VirusNotFound": [
+                                                                "Failed",
+                                                                "TimedOut"
+                                                            ]
+                                                        },
+                                                        "type": "SetVariable",
+                                                        "inputs": {
+                                                            "name": "ErrorMessage",
+                                                            "value": "Failed to Update Status of RercordId @{triggerBody()?['RecordId']}: "
+                                                        }
+                                                    },
+                                                    "Update_record_-_VirusNotFound": {
+                                                        "runAfter": {},
+                                                        "type": "ApiConnection",
+                                                        "inputs": {
+                                                            "body": {
+                                                                "media_virusscanstatus": 207940001
+                                                            },
+                                                            "host": {
+                                                                "connection": {
+                                                                    "name": "@parameters('$connections')['commondataservice']['connectionId']"
+                                                                }
+                                                            },
+                                                            "method": "patch",
+                                                            "path": "[concat('/v2/datasets/@{encodeURIComponent(encodeURIComponent(',variables('org'),'))}/tables/@{encodeURIComponent(encodeURIComponent(',durin.wrapInQuote('media_assetfileses'),'))}/items/@{encodeURIComponent(encodeURIComponent(triggerBody()?[',durin.wrapInQuote('RecordId'),']))}')]"
+                                                        },
+                                                        "runtimeConfiguration": {
+                                                            "secureData": {
+                                                                "properties": [
+                                                                    "inputs",
+                                                                    "outputs"
+                                                                ]
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            },
+                                            "expression": {
+                                                "and": [
+                                                    {
+                                                        "greater": [
+                                                            "@body('Parse_JSON')?['malicious']",
+                                                            0
+                                                        ]
+                                                    }
+                                                ]
+                                            },
+                                            "type": "If"
+                                        },
+                                        "Parse_JSON": {
+                                            "runAfter": {
+                                                "Retrieve_information_about_a_file_or_URL_analysis": [
+                                                    "Succeeded"
+                                                ]
+                                            },
+                                            "type": "ParseJson",
+                                            "inputs": {
+                                                "content": "@body('Retrieve_information_about_a_file_or_URL_analysis')['data']['attributes']['stats']",
+                                                "schema": {
+                                                    "properties": {
+                                                        "harmless": {
+                                                            "type": "integer"
+                                                        },
+                                                        "malicious": {
+                                                            "type": "integer"
+                                                        },
+                                                        "suspicious": {
+                                                            "type": "integer"
+                                                        },
+                                                        "timeout": {
+                                                            "type": "integer"
+                                                        },
+                                                        "undetected": {
+                                                            "type": "integer"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "runtimeConfiguration": {
+                                                "secureData": {
+                                                    "properties": [
+                                                        "inputs"
+                                                    ]
+                                                }
+                                            }
+                                        },
+                                        "Retrieve_information_about_a_file_or_URL_analysis": {
+                                            "runAfter": {
+                                                "Analyse_an_URL": [
+                                                    "Succeeded"
+                                                ]
+                                            },
+                                            "type": "ApiConnection",
+                                            "inputs": {
+                                                "host": {
+                                                    "connection": {
+                                                        "name": "@parameters('$connections')['virustotal']['connectionId']"
+                                                    }
+                                                },
+                                                "method": "get",
+                                                "path": "/api/v3/analyses/@{encodeURIComponent(body('Analyse_an_URL')?['data']?['id'])}"
+                                            },
+                                            "runtimeConfiguration": {
+                                                "secureData": {
+                                                    "properties": [
+                                                        "inputs",
+                                                        "outputs"
+                                                    ]
+                                                }
+                                            }
+                                        },
+                                        "Set_variable_-_Analyse_URL_-_ErrorMessage": {
+                                            "runAfter": {
+                                                "Analyse_an_URL": [
+                                                    "Failed",
+                                                    "TimedOut"
+                                                ]
+                                            },
+                                            "type": "SetVariable",
+                                            "inputs": {
+                                                "name": "ErrorMessage",
+                                                "value": "Failed to Analyse file for Virus Scan"
+                                            }
+                                        }
+                                    },
+                                    "runAfter": {},
+                                    "type": "Scope"
+                                }
+                            },
+                            "runAfter": {
+                                "Initialize_variable_-_ErrorMessage": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "else": {
+                                "actions": {
+                                    "Response": {
+                                        "runAfter": {},
+                                        "type": "Response",
+                                        "kind": "Http",
+                                        "inputs": {
+                                            "body": {
+                                                "message": "BlobUri and RecordId Required"
+                                            },
+                                            "headers": {
+                                                "Content-Type": "application/json; charset=utf-8"
+                                            },
+                                            "statusCode": 400
+                                        },
+                                        "runtimeConfiguration": {
+                                            "secureData": {
+                                                "properties": [
+                                                    "inputs"
+                                                ]
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "expression": {
+                                "and": [
+                                    {
+                                        "greater": [
+                                            "@length(triggerBody()?['RecordId'])",
+                                            0
+                                        ]
+                                    },
+                                    {
+                                        "greater": [
+                                            "@length(triggerBody()?['BlobUri'])",
+                                            0
+                                        ]
+                                    }
+                                ]
+                            },
+                            "type": "If"
+                        },
+                        "Initialize_variable_-_ErrorMessage": {
+                            "runAfter": {},
+                            "type": "InitializeVariable",
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "ErrorMessage",
+                                        "type": "string"
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    "outputs": {
+                    }
+                },
+                "parameters": {
+                    "$connections": {
+                        "value": {
+                            "commondataservice": {
+                                "connectionId": "[parameters('connection_commondataservice')]",
+                                "connectionName": "commondataservice",
+                                "id": "[concat(subscription().id, '/providers/Microsoft.Web/locations/', resourceGroup().location, '/managedApis/commondataservice')]"
+                            },
+                            "virustotal": {
+                                "connectionId": "[parameters('connection_virustotal')]",
+                                "connectionName": "virustotal",
+                                "id": "[concat(subscription().id, '/providers/Microsoft.Web/locations/', resourceGroup().location, '/managedApis/virustotal')]"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    ],
+    "outputs": {}
+}

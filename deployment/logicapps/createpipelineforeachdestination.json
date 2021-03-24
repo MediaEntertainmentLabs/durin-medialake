@@ -1,0 +1,807 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"workflows_Logic_ReadAzureConfiguration": {
+			"defaultValue": "[concat(subscription().id,'/resourceGroups/',resourceGroup().name,'/providers/Microsoft.Logic/workflows/Logic-ReadAzureConfiguration')]",
+			"type": "String"
+		},
+		"connection_commondataservice": {
+			"type": "string",
+			"defaultValue": "[concat(subscription().id,'/resourceGroups/',resourceGroup().name,'/providers/Microsoft.Web/connections/commondataservice')]"
+		},
+		"crmOrgName": {
+			"type": "string",
+			"metadata": {
+				"description": "description"
+			}
+		},
+		"crmIdentifier": {
+			"type": "string",
+			"metadata": {
+				"description": "crmIdentifier"
+			}
+		}
+	},
+	"functions": [
+		{
+			"namespace": "durin",
+			"members": {
+				"wrapInQuote": {
+					"parameters": [
+						{
+							"name": "text",
+							"type": "string"
+						}
+					],
+					"output": {
+						"value": "[concat('''', parameters('text'),'''')]",
+						"type": "string"
+					}
+				}
+			}
+		}
+	],
+	"variables": {
+		"org": "[durin.wrapInQuote(concat(parameters('crmOrgName'),'.',parameters('crmIdentifier')))]"
+	},
+	"resources": [
+		{
+			"type": "Microsoft.Logic/workflows",
+			"apiVersion": "2017-07-01",
+			"name": "Logic-CreatePipelineForEachDestination",
+			"location": "[resourceGroup().location]",
+			"tags": {
+				"displayName": "LogicApp"
+			},
+			"properties": {
+				"state": "Enabled",
+				"definition": {
+					"$schema": "https://schema.management.azure.com/schemas/2016-06-01/Microsoft.Logic.json",
+					"contentVersion": "1.0.0.0",
+					"parameters": {
+						"$connections": {
+							"defaultValue": {},
+							"type": "Object"
+						}
+					},
+					"triggers": {
+						"manual": {
+							"type": "Request",
+							"kind": "Http",
+							"inputs": {
+								"schema": {
+									"properties": {
+										"assetId": {
+											"type": "string"
+										},
+										"containerName": {
+											"type": "string"
+										},
+										"fileName": {
+											"type": "string"
+										},
+										"folderPath": {
+											"type": "string"
+										}
+									},
+									"type": "object"
+								}
+                            },
+                            "runtimeConfiguration": {
+                                "secureData": {
+                                    "properties": [
+                                        "inputs",
+                                        "outputs"
+                                    ]
+                                }
+							}
+						}
+					},
+					"actions": {
+						"Condition_if_copy_status_record_is_created": {
+							"actions": {
+								"Update_copy_status_record_to_failed": {
+									"runAfter": {},
+									"type": "ApiConnection",
+									"inputs": {
+										"body": {
+											"_ownerid_type": "",
+											"media_errorlog": "Logic App \"CopySourceToDestination\" failed.\nError Details: @{string(body('Filter_error')[0]?['outputs']?['body']?['error'])}",
+											"media_status": 207940002
+										},
+										"host": {
+											"connection": {
+												"name": "@parameters('$connections')['commondataservice']['connectionId']"
+											}
+										},
+										"method": "patch",
+										"path": "[concat('/v2/datasets/@{encodeURIComponent(encodeURIComponent(',variables('org'),'))}/tables/@{encodeURIComponent(encodeURIComponent(',durin.wrapInQuote('media_copystatuses'),'))}/items/@{encodeURIComponent(encodeURIComponent(body(',durin.wrapInQuote('Create_a_new_copy_status_record_'),')?[',durin.wrapInQuote('media_copystatusid'),']))}')]"
+                                    },
+                                    "runtimeConfiguration": {
+                                        "secureData": {
+                                            "properties": [
+                                                "inputs",
+                                                "outputs"
+                                            ]
+                                        }
+									}
+								}
+							},
+							"runAfter": {
+								"Create_a_new_error_log_record": [
+									"Succeeded"
+								]
+							},
+							"expression": {
+								"and": [
+									{
+										"greater": [
+											"@length(body('Create_a_new_copy_status_record_')?['media_copystatusid'])",
+											0
+										]
+									}
+								]
+							},
+							"type": "If",
+							"description": "if copy status record is created then update its status to failed and log error"
+						},
+						"Constants": {
+							"runAfter": {},
+							"type": "ParseJson",
+							"inputs": {
+								"content": {
+									"assetfilesDropdownValue": 207940002,
+									"assetfilesLogicalName": "media_assetfiles",
+									"assetsDropdownValue": 207940001,
+									"nexisDropdownValue": 207940000,
+									"seasonsDropdownValue": 207940000,
+									"vendorDropdownValue": 207940001
+								},
+								"schema": {
+									"properties": {
+										"assetfilesDropdownValue": {
+											"type": "integer"
+										},
+										"assetfilesLogicalName": {
+											"type": "string"
+										},
+										"assetsDropdownValue": {
+											"type": "integer"
+										},
+										"nexisDropdownValue": {
+											"type": "integer"
+										},
+										"seasonsDropdownValue": {
+											"type": "integer"
+										},
+										"vendorDropdownValue": {
+											"type": "integer"
+										}
+									},
+									"type": "object"
+								}
+                            },
+                            "runtimeConfiguration": {
+                                "secureData": {
+                                    "properties": [
+                                        "inputs"
+                                    ]
+                                }
+							}
+						},
+						"Create_a_new_error_log_record": {
+							"runAfter": {
+								"Filter_error": [
+									"Succeeded"
+								]
+							},
+							"type": "ApiConnection",
+							"inputs": {
+								"body": {
+									"_media_asset_value": "@{if(equals(body('Parse_JSON')?['SourceTypeValue'],body('Constants')?['assetsDropdownValue']),body('Parse_JSON')?['source']?['id'],'')}",
+									"_media_assetfiles_value": "@{if(equals(body('Parse_JSON')?['SourceTypeValue'],body('Constants')?['assetfilesDropdownValue']),body('Parse_JSON')?['source']?['id'],'')}",
+									"_media_season_value": "@{if(equals(body('Parse_JSON')?['SourceTypeValue'],body('Constants')?['seasonsDropdownValue']),body('Parse_JSON')?['source']?['id'],'')}",
+									"media_description": "Operation: Copy, \nStatus: Failed,\nSource Name: @{body('Parse_JSON')?['source']?['name']}, \nSource Id: @{body('Parse_JSON')?['source']?['id']},\nDestination Name: @{body('Parse_JSON')?['destination']?['name']},\nFailure Reason: Logic App \"CopySourceToDestination\" failed. \nError Details: @{string(body('Filter_error')[0]?['outputs']?['body']?['error'])}",
+									"media_name": "Copy failed for record: @{body('Parse_JSON')?['source']?['name']}",
+									"media_notificationemail": "@body('Parse_JSON')?['submittedBy']?['email']"
+								},
+								"host": {
+									"connection": {
+										"name": "@parameters('$connections')['commondataservice']['connectionId']"
+									}
+								},
+								"method": "post",
+								"path": "[concat('/v2/datasets/@{encodeURIComponent(encodeURIComponent(',variables('org'),'))}/tables/@{encodeURIComponent(encodeURIComponent(',durin.wrapInQuote('media_asseterrorlogs'),'))}/items')]"
+                            },
+                            "runtimeConfiguration": {
+                                "secureData": {
+                                    "properties": [
+                                        "inputs",
+                                        "outputs"
+                                    ]
+                                }
+							}
+						},
+						"Filter_error": {
+							"runAfter": {
+								"Scope": [
+									"Failed",
+									"Skipped",
+									"TimedOut"
+								]
+							},
+							"type": "Query",
+							"inputs": {
+								"from": "@result('Scope')",
+								"where": "@equals(item()['status'], 'Failed')"
+                            },
+                            "runtimeConfiguration": {
+                                "secureData": {
+                                    "properties": [
+                                        "inputs",
+                                        "outputs"
+                                    ]
+                                }
+							}
+						},
+						"Initialize_variable_DestinationTypeValue": {
+							"runAfter": {
+								"Initialize_variable_RequestBodyParameters": [
+									"Succeeded"
+								]
+							},
+							"type": "InitializeVariable",
+							"inputs": {
+								"variables": [
+									{
+										"name": "DestinationTypeValue",
+										"type": "integer",
+										"value": 0
+									}
+								]
+							}
+						},
+						"Initialize_variable_RequestBodyParameters": {
+							"runAfter": {
+								"Constants": [
+									"Succeeded"
+								]
+							},
+							"type": "InitializeVariable",
+							"inputs": {
+								"variables": [
+									{
+										"name": "RequestBodyParameters",
+										"type": "object",
+										"value": {
+											"activityName": "",
+											"linkedServiceName": "",
+											"location": ""
+										}
+									}
+								]
+							}
+						},
+						"Initialize_variable_configurations": {
+							"runAfter": {
+								"Initialize_variable_DestinationTypeValue": [
+									"Succeeded"
+								]
+							},
+							"type": "InitializeVariable",
+							"inputs": {
+								"variables": [
+									{
+										"name": "configurations",
+										"type": "object"
+									}
+								]
+							}
+						},
+						"Response": {
+							"runAfter": {
+								"Scope": [
+									"Succeeded"
+								]
+							},
+							"type": "Response",
+							"kind": "Http",
+							"inputs": {
+								"body": "@body('HTTP_run_pipeline')",
+								"statusCode": 200
+                            },
+                            "runtimeConfiguration": {
+                                "secureData": {
+                                    "properties": [
+                                        "inputs"
+                                    ]
+                                }
+							}
+						},
+						"Scope": {
+							"actions": {
+								"Compose_Unique_Id": {
+									"runAfter": {
+										"Create_a_new_copy_status_record_": [
+											"Succeeded"
+										]
+									},
+									"type": "Compose",
+                                    "inputs": "@concat(replace(body('Create_a_new_copy_status_record_')?['media_copystatusid'],'-',''),'_',rand(1,100))",
+                                    "runtimeConfiguration": {
+                                        "secureData": {
+                                            "properties": [
+                                                "inputs"
+                                            ]
+                                        }
+                                    }
+								},
+								"Create_a_new_copy_status_record_": {
+									"runAfter": {
+										"Switch_on_destination_type": [
+											"Succeeded"
+										]
+									},
+									"type": "ApiConnection",
+									"inputs": {
+										"body": {
+											"_media_show_value": "@body('Parse_JSON')?['showId']",
+											"_media_submittedby_value": "@body('Parse_JSON')?['submittedBy']?['userId']",
+											"_ownerid_type": "",
+											"media_copystarttime": "@{utcNow()}",
+											"media_destinantiontype": "@variables('DestinationTypeValue')",
+											"media_destinationid": "@body('Parse_JSON')?['destination']?['id']",
+											"media_destinationname": "@body('Parse_JSON')?['destination']?['name']",
+											"media_name": "@{triggerBody()?['source']?['name']}",
+											"media_notificationemail": "@body('Parse_JSON')?['submittedBy']?['email']",
+											"media_sourcetype": "@body('Parse_JSON')?['sourceTypeValue']",
+											"media_status": 207940000
+										},
+										"host": {
+											"connection": {
+												"name": "@parameters('$connections')['commondataservice']['connectionId']"
+											}
+										},
+										"method": "post",
+										"path": "[concat('/v2/datasets/@{encodeURIComponent(encodeURIComponent(',variables('org'),'))}/tables/@{encodeURIComponent(encodeURIComponent(',durin.wrapInQuote('media_copystatuses'),'))}/items')]"
+                                    },
+                                    "runtimeConfiguration": {
+                                        "secureData": {
+                                            "properties": [
+                                                "inputs",
+                                                "outputs"
+                                            ]
+                                        }
+									}
+								},
+								"HTTP_create_output_dataset": {
+									"runAfter": {
+										"Compose_Unique_Id": [
+											"Succeeded"
+										]
+									},
+									"type": "Http",
+									"inputs": {
+										"body": {
+											"name": "@{concat('output',outputs('Compose_Unique_Id'))}",
+											"properties": {
+												"annotations": [],
+												"linkedServiceName": {
+													"referenceName": "@{variables('RequestBodyParameters')?['linkedServiceName']}",
+													"type": "LinkedServiceReference"
+												},
+												"type": "Binary",
+												"typeProperties": {
+													"location": "@variables('RequestBodyParameters')?['location']"
+												}
+											}
+										},
+										"headers": {
+											"Accept": "application/json",
+											"Authorization": "Bearer @{body('Parse_JSON')?['token']}",
+											"Content-Type": "application/json"
+										},
+										"method": "PUT",
+										"uri": "@{concat('https://management.azure.com/subscriptions/', variables('configurations')?['SubscriptionId'], '/resourceGroups/', variables('configurations')?['ResourceGroup'], '/providers/Microsoft.DataFactory/factories/', variables('configurations')?['FactoryName'], '/datasets/output', outputs('Compose_Unique_Id'), '?api-version=', variables('configurations')?['api-version'])}"
+                                    },
+                                    "runtimeConfiguration": {
+                                        "secureData": {
+                                            "properties": [
+                                                "inputs",
+                                                "outputs"
+                                            ]
+                                        }
+									}
+								},
+								"HTTP_create_pipeline": {
+									"runAfter": {
+										"HTTP_create_output_dataset": [
+											"Succeeded"
+										]
+									},
+									"type": "Http",
+									"inputs": {
+										"body": {
+											"name": "@{concat('pipe', outputs('Compose_Unique_Id'))}",
+											"properties": {
+												"activities": [
+													{
+														"dependsOn": [],
+														"inputs": [
+															{
+																"referenceName": "@{body('Parse_JSON')?['inputDataset']}",
+																"type": "DatasetReference"
+															}
+														],
+														"name": "@{variables('RequestBodyParameters')?['activityName']}",
+														"outputs": [
+															{
+																"referenceName": "@{body('HTTP_create_output_dataset')?['name']}",
+																"type": "DatasetReference"
+															}
+														],
+														"policy": {
+															"retry": 0,
+															"retryIntervalInSeconds": 30,
+															"secureInput": false,
+															"secureOutput": false,
+															"timeout": "7.00:00:00"
+														},
+														"type": "Copy",
+														"typeProperties": {
+															"enableStaging": false,
+															"sink": {
+																"storeSettings": {
+																	"type": "FileServerWriteSettings"
+																},
+																"type": "BinarySink"
+															},
+															"source": {
+																"storeSettings": {
+																	"recursive": true,
+																	"type": "AzureBlobStorageReadSettings"
+																},
+																"type": "BinarySource"
+															}
+														},
+														"userProperties": []
+													},
+													{
+														"dependsOn": [
+															{
+																"activity": "@{variables('RequestBodyParameters')?['activityName']}",
+																"dependencyConditions": [
+																	"Succeeded"
+																]
+															}
+														],
+														"name": "Execute Pipeline1",
+														"type": "ExecutePipeline",
+														"typeProperties": {
+															"parameters": {
+																"message": {
+																	"type": "Expression",
+																	"value": "@{concat('dataWritten: @{activity(''',variables('RequestBodyParameters')?['activityName'],''').output.dataWritten} bytes, filesWritten: @{activity(''',variables('RequestBodyParameters')?['activityName'],''').output.filesWritten}, copyDuration: @{activity(''',variables('RequestBodyParameters')?['activityName'],''').output.copyDuration}')}"
+																},
+																"pipelineName": {
+																	"type": "Expression",
+																	"value": "@{concat('@pipeline().Pipeline')}"
+																},
+																"runId": {
+																	"type": "Expression",
+																	"value": "@{concat('@pipeline().RunId')}"
+																},
+																"status": "Succeeded"
+															},
+															"pipeline": {
+																"referenceName": "send_event_pipeline",
+																"type": "PipelineReference"
+															},
+															"waitOnCompletion": true
+														},
+														"userProperties": []
+													},
+													{
+														"dependsOn": [
+															{
+																"activity": "@{variables('RequestBodyParameters')?['activityName']}",
+																"dependencyConditions": [
+																	"Failed"
+																]
+															}
+														],
+														"name": "Execute Pipeline2",
+														"type": "ExecutePipeline",
+														"typeProperties": {
+															"parameters": {
+																"message": {
+																	"type": "Expression",
+																	"value": "@{concat('@{activity(''',variables('RequestBodyParameters')?['activityName'],''').error.message}')}"
+																},
+																"pipelineName": {
+																	"type": "Expression",
+																	"value": "@{concat('@pipeline().Pipeline')}"
+																},
+																"runId": {
+																	"type": "Expression",
+																	"value": "@{concat('@pipeline().RunId')}"
+																},
+																"status": "Failed"
+															},
+															"pipeline": {
+																"referenceName": "send_event_pipeline",
+																"type": "PipelineReference"
+															},
+															"waitOnCompletion": true
+														},
+														"userProperties": []
+													}
+												],
+												"annotations": []
+											}
+										},
+										"headers": {
+											"Accept": "application/json",
+											"Authorization": "Bearer @{body('Parse_JSON')?['token']}",
+											"Content-Type": "application/json"
+										},
+										"method": "PUT",
+										"uri": "@{concat('https://management.azure.com/subscriptions/', variables('configurations')?['SubscriptionId'], '/resourceGroups/', variables('configurations')?['ResourceGroup'], '/providers/Microsoft.DataFactory/factories/', variables('configurations')?['FactoryName'], '/pipelines/pipe', outputs('Compose_Unique_Id'), '?api-version=', variables('configurations')?['api-version'])}"
+                                    },
+                                    "runtimeConfiguration": {
+                                        "secureData": {
+                                            "properties": [
+                                                "inputs",
+                                                "outputs"
+                                            ]
+                                        }
+									}
+								},
+								"HTTP_run_pipeline": {
+									"runAfter": {
+										"HTTP_create_pipeline": [
+											"Succeeded"
+										]
+									},
+									"type": "Http",
+									"inputs": {
+										"headers": {
+											"Accept": "application/json",
+											"Authorization": "Bearer @{body('Parse_JSON')?['token']}",
+											"Content-Type": "application/json"
+										},
+										"method": "POST",
+										"uri": "@{concat('https://management.azure.com/subscriptions/', variables('configurations')?['SubscriptionId'], '/resourceGroups/', variables('configurations')?['ResourceGroup'], '/providers/Microsoft.DataFactory/factories/', variables('configurations')?['FactoryName'], '/pipelines/', body('HTTP_create_pipeline')?['name'], '/createRun?api-version=', variables('configurations')?['api-version'])}"
+                                    },
+                                    "runtimeConfiguration": {
+                                        "secureData": {
+                                            "properties": [
+                                                "inputs",
+                                                "outputs"
+                                            ]
+                                        }
+									}
+								},
+								"Logic-ReadAzureConfiguration": {
+									"runAfter": {
+										"Parse_JSON": [
+											"Succeeded"
+										]
+									},
+									"type": "Workflow",
+									"inputs": {
+										"host": {
+											"triggerName": "manual",
+											"workflow": {
+												"id": "[parameters('workflows_Logic_ReadAzureConfiguration')]"
+											}
+                                        }
+                                    },
+                                    "runtimeConfiguration": {
+                                        "secureData": {
+                                            "properties": [
+                                                "inputs",
+                                                "outputs"
+                                            ]
+										}
+									}
+								},
+								"Parse_JSON": {
+									"runAfter": {},
+									"type": "ParseJson",
+									"inputs": {
+										"content": "@triggerBody()",
+										"schema": {
+											"properties": {
+												"SourceTypeValue": {
+													"type": "integer"
+												},
+												"destination": {
+													"properties": {
+														"id": {
+															"type": "string"
+														},
+														"name": {
+															"type": "string"
+														},
+														"path": {
+															"type": "string"
+														}
+													},
+													"type": "object"
+												},
+												"destinationType": {
+													"type": "string"
+												},
+												"inputDataset": {
+													"type": "string"
+												},
+												"showId": {
+													"type": "string"
+												},
+												"source": {
+													"properties": {
+														"aleId": {
+															"type": "string"
+														},
+														"fileName": {
+															"type": "string"
+														},
+														"id": {
+															"type": "string"
+														},
+														"name": {
+															"type": "string"
+														},
+														"path": {
+															"type": "string"
+														}
+													},
+													"type": "object"
+												},
+												"submittedBy": {
+													"properties": {
+														"email": {
+															"type": "string"
+														},
+														"userId": {
+															"type": "string"
+														}
+													},
+													"type": "object"
+												},
+												"token": {
+													"type": "string"
+												}
+											},
+											"type": "object"
+										}
+                                    },
+                                    "runtimeConfiguration": {
+                                        "secureData": {
+                                            "properties": [
+                                                "inputs"
+                                            ]
+                                        }
+									}
+								},
+								"Set_variable_configurations": {
+									"runAfter": {
+										"Logic-ReadAzureConfiguration": [
+											"Succeeded"
+										]
+									},
+									"type": "SetVariable",
+									"inputs": {
+										"name": "configurations",
+										"value": "@body('Logic-ReadAzureConfiguration')"
+									}
+								},
+								"Switch_on_destination_type": {
+									"runAfter": {
+										"Set_variable_configurations": [
+											"Succeeded"
+										]
+									},
+									"cases": {
+										"Case_nexis": {
+											"case": "nexis",
+											"actions": {
+												"Set_variable_DestinationTypeValue_for_Nexis": {
+													"runAfter": {
+														"Set_variable_RequestBodyParameters_for_Nexis": [
+															"Succeeded"
+														]
+													},
+													"type": "SetVariable",
+													"inputs": {
+														"name": "DestinationTypeValue",
+														"value": "@body('Constants')?['nexisDropdownValue']"
+													}
+												},
+												"Set_variable_RequestBodyParameters_for_Nexis": {
+													"runAfter": {},
+													"type": "SetVariable",
+													"inputs": {
+														"name": "RequestBodyParameters",
+														"value": {
+															"activityName": "CopyFromBlobToFileSystem",
+															"linkedServiceName": "@{body('Parse_JSON')?['destination']?['path']}",
+															"location": {
+																"fileName": "@{body('Parse_JSON')?['source']?['fileName']}",
+																"folderPath": "@{body('Parse_JSON')?['source']?['path']}",
+																"type": "FileServerLocation"
+															}
+														}
+													}
+												}
+											}
+										},
+										"Case_vendor_cloud": {
+											"case": "vendor",
+											"actions": {
+												"Set_variable_DestinationTypeValue_for_Vendor": {
+													"runAfter": {
+														"Set_variable_RequestBodyParameters_for_Vendor": [
+															"Succeeded"
+														]
+													},
+													"type": "SetVariable",
+													"inputs": {
+														"name": "DestinationTypeValue",
+														"value": "@body('Constants')?['vendorDropdownValue']"
+													}
+												},
+												"Set_variable_RequestBodyParameters_for_Vendor": {
+													"runAfter": {},
+													"type": "SetVariable",
+													"inputs": {
+														"name": "RequestBodyParameters",
+														"value": {
+															"activityName": "CopyFromBlobToBlob",
+															"linkedServiceName": "@{variables('configurations')?['DestinationBlobLinkedServiceName']}",
+															"location": {
+																"container": "@{body('Parse_JSON')?['destination']?['path']}",
+																"fileName": "@{body('Parse_JSON')?['source']?['fileName']}",
+																"folderPath": "@{body('Parse_JSON')?['source']?['path']}",
+																"type": "AzureBlobStorageLocation"
+															}
+														}
+													}
+												}
+											}
+										}
+									},
+									"default": {
+										"actions": {}
+									},
+									"expression": "@toLower(trim(body('Parse_JSON')?['destinationType']))",
+									"type": "Switch"
+								}
+							},
+							"runAfter": {
+								"Initialize_variable_configurations": [
+									"Succeeded"
+								]
+							},
+							"type": "Scope"
+						}
+					},
+					"outputs": {}
+				},
+				"parameters": {
+					"$connections": {
+						"value": {
+							"commondataservice": {
+								"connectionId": "[parameters('connection_commondataservice')]",
+								"connectionName": "commondataservice",
+								"id": "[concat(subscription().id, '/providers/Microsoft.Web/locations/', resourceGroup().location, '/managedApis/commondataservice')]"
+							}
+						}
+					}
+				}
+			}
+		}
+	]
+}

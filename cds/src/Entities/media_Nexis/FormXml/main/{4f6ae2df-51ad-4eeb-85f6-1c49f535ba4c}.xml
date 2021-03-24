@@ -1,0 +1,149 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<forms xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <systemform>
+    <formid>{4f6ae2df-51ad-4eeb-85f6-1c49f535ba4c}</formid>
+    <IntroducedVersion>1.0.0.0</IntroducedVersion>
+    <FormPresentation>1</FormPresentation>
+    <FormActivationState>1</FormActivationState>
+    <form headerdensity="HighWithControls">
+      <tabs>
+        <tab verticallayout="true" id="{4f41ac0b-240c-40ab-8296-1988cfd6dca2}" IsUserDefined="1">
+          <labels>
+            <label description="General" languagecode="1033" />
+          </labels>
+          <columns>
+            <column width="100%">
+              <sections>
+                <section showlabel="false" showbar="false" IsUserDefined="0" id="{f38e7532-ddf4-4734-915c-806c0783407c}">
+                  <labels>
+                    <label description="General" languagecode="1033" />
+                  </labels>
+                  <rows>
+                    <row>
+                      <cell id="{35c34918-35a8-4e42-abf3-082c3c52954f}">
+                        <labels>
+                          <label description="Name" languagecode="1033" />
+                        </labels>
+                        <control id="media_name" classid="{4273EDBD-AC1D-40d3-9FB2-095C621B552D}" datafieldname="media_name" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{27ac46b0-9ac5-4e94-9408-c81f73d1e66d}" locklevel="0">
+                        <labels>
+                          <label description="Linked Service Name" languagecode="1033" />
+                        </labels>
+                        <control id="media_linkedservicename" classid="{4273EDBD-AC1D-40D3-9FB2-095C621B552D}" datafieldname="media_linkedservicename" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{bed95bd5-825d-4f50-a03e-3397084172d1}" locklevel="0">
+                        <labels>
+                          <label description="Owner Email" languagecode="1033" />
+                        </labels>
+                        <control id="media_owneremail" classid="{ADA2203E-B4CD-49BE-9DDF-234642B43B52}" datafieldname="media_owneremail" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{23621674-e2f4-418e-939c-5c80cab41a15}" visible="false">
+                        <labels>
+                          <label description="Owner" languagecode="1033" />
+                        </labels>
+                        <control id="ownerid" classid="{270BD3DB-D9AF-4782-9025-509E298DEC0A}" datafieldname="ownerid" />
+                      </cell>
+                    </row>
+                  </rows>
+                </section>
+                <section name="null_section_3" id="c20673b9-2332-471f-a45a-85fe566cb74d" IsUserDefined="0" locklevel="0" showlabel="true" showbar="false" layout="varwidth" celllabelalignment="Left" celllabelposition="Left" columns="1" labelwidth="115">
+                  <labels>
+                    <label description="Show Nexis Mapping" languagecode="1033" />
+                  </labels>
+                  <rows>
+                    <row>
+                      <cell locklevel="0" id="{fa90f847-fcf9-421d-9c93-573a877f0aa8}" rowspan="1" colspan="1" showlabel="false">
+                        <labels>
+                          <label description="Show Nexis Mapping" languagecode="1033" />
+                        </labels>
+                        <control id="Show Nexis Mapping" classid="{E7A81278-8635-4D9E-8D4D-59480B391C5B}" indicationOfSubgrid="true">
+                          <parameters>
+                            <ViewId>{AEC05693-8823-4826-AE6A-EB3B13B49701}</ViewId>
+                            <IsUserView>false</IsUserView>
+                            <RelationshipName>media_ShowNexisMapping_Nexis_media_Nexis</RelationshipName>
+                            <TargetEntityType>media_shownexismapping</TargetEntityType>
+                            <AutoExpand>Fixed</AutoExpand>
+                            <EnableQuickFind>false</EnableQuickFind>
+                            <EnableViewPicker>false</EnableViewPicker>
+                            <ViewIds>{AEC05693-8823-4826-AE6A-EB3B13B49701}</ViewIds>
+                            <EnableJumpBar>false</EnableJumpBar>
+                            <ChartGridMode>All</ChartGridMode>
+                            <VisualizationId />
+                            <IsUserChart>false</IsUserChart>
+                            <EnableChartPicker>true</EnableChartPicker>
+                            <RecordsPerPage>4</RecordsPerPage>
+                            <HeaderColorCode>#F3F3F3</HeaderColorCode>
+                          </parameters>
+                        </control>
+                      </cell>
+                    </row>
+                  </rows>
+                </section>
+              </sections>
+            </column>
+          </columns>
+        </tab>
+      </tabs>
+      <header id="{08628cd6-f9e2-4bdf-b2b6-9e5272ccffdd}" celllabelposition="Top" columns="111" labelwidth="115" celllabelalignment="Left">
+        <rows>
+          <row>
+            <cell id="{bef13a86-85a3-47d6-87d0-7704db0eebce}" showlabel="false">
+              <labels>
+                <label description="" languagecode="1033" />
+              </labels>
+            </cell>
+            <cell id="{31a6c881-f0e6-465f-9fc7-4737dd1f5f46}" showlabel="false">
+              <labels>
+                <label description="" languagecode="1033" />
+              </labels>
+            </cell>
+            <cell id="{0a21f16f-845b-49d4-9470-75da962d017e}" showlabel="false">
+              <labels>
+                <label description="" languagecode="1033" />
+              </labels>
+            </cell>
+          </row>
+        </rows>
+      </header>
+      <footer id="{2637bcee-34a5-4aa3-b5c0-347c0229a504}" celllabelposition="Top" columns="111" labelwidth="115" celllabelalignment="Left">
+        <rows>
+          <row>
+            <cell id="{f800d78c-77fb-4403-8ace-d2f23ff5eb48}" showlabel="false">
+              <labels>
+                <label description="" languagecode="1033" />
+              </labels>
+            </cell>
+            <cell id="{ad9d7068-5a82-4691-9b90-3fd3c23f49a2}" showlabel="false">
+              <labels>
+                <label description="" languagecode="1033" />
+              </labels>
+            </cell>
+            <cell id="{70896be8-99af-4393-a9b3-850d82ab1e79}" showlabel="false">
+              <labels>
+                <label description="" languagecode="1033" />
+              </labels>
+            </cell>
+          </row>
+        </rows>
+      </footer>
+      <DisplayConditions Order="0" FallbackForm="true">
+        <Everyone />
+      </DisplayConditions>
+    </form>
+    <IsCustomizable>1</IsCustomizable>
+    <CanBeDeleted>1</CanBeDeleted>
+    <LocalizedNames>
+      <LocalizedName description="Information" languagecode="1033" />
+    </LocalizedNames>
+    <Descriptions>
+      <Description description="A form for this entity." languagecode="1033" />
+    </Descriptions>
+  </systemform>
+</forms>

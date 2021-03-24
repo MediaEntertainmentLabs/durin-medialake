@@ -1,0 +1,54 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<savedqueries xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <savedquery>
+    <IsCustomizable>0</IsCustomizable>
+    <CanBeDeleted>0</CanBeDeleted>
+    <isquickfindquery>0</isquickfindquery>
+    <isprivate>0</isprivate>
+    <isdefault>1</isdefault>
+    <savedqueryid>{63f62624-a771-4c0c-b73e-d0747ac7e221}</savedqueryid>
+    <layoutxml>
+      <grid name="resultset" jump="media_name" select="1" icon="1" preview="1">
+        <row name="result" id="media_assetid">
+          <cell name="media_name" width="157" />
+          <cell name="media_assetcontainer" width="100" />
+          <cell name="media_season" width="100" />
+          <cell name="media_episode" width="100" />
+          <cell name="media_block" width="100" />
+          <cell name="media_batch" width="100" />
+          <cell name="media_unit" width="100" />
+          <cell name="media_team" width="100" />
+          <cell name="media_assetstatus" width="100" />
+          <cell name="createdon" width="125" />
+        </row>
+      </grid>
+    </layoutxml>
+    <querytype>0</querytype>
+    <fetchxml>
+      <fetch version="1.0" mapping="logical">
+        <entity name="media_asset">
+          <attribute name="media_assetid" />
+          <attribute name="media_name" />
+          <attribute name="createdon" />
+          <filter type="and">
+            <condition attribute="statecode" operator="eq" value="0" />
+          </filter>
+          <attribute name="media_assetcontainer" />
+          <attribute name="media_assetstatus" />
+          <attribute name="media_episode" />
+          <attribute name="media_team" />
+          <attribute name="media_batch" />
+          <attribute name="media_unit" />
+          <attribute name="media_season" />
+          <order attribute="createdon" descending="true" />
+          <attribute name="media_block" />
+          <attribute name="media_blobpath" />
+        </entity>
+      </fetch>
+    </fetchxml>
+    <IntroducedVersion>1.0.0.0</IntroducedVersion>
+    <LocalizedNames>
+      <LocalizedName description="Active Assets" languagecode="1033" />
+    </LocalizedNames>
+  </savedquery>
+</savedqueries>

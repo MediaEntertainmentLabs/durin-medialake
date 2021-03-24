@@ -1,0 +1,181 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ImportExportXml version="9.1.0.26442" SolutionPackageVersion="9.1" languagecode="1033" generatedBy="CrmLive"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <SolutionManifest>
+    <UniqueName>DurinMediaLake</UniqueName>
+    <LocalizedNames>
+      <LocalizedName description="Durin Media Lake" languagecode="1033" />
+    </LocalizedNames>
+    <Descriptions />
+    <Version>1.0.0.1</Version>
+    <Managed>2</Managed>
+    <Publisher>
+      <UniqueName>durinmedialake</UniqueName>
+      <LocalizedNames>
+        <LocalizedName description="Durin Media Lake" languagecode="1033" />
+      </LocalizedNames>
+      <Descriptions />
+      <EMailAddress xsi:nil="true"></EMailAddress>
+      <SupportingWebsiteUrl xsi:nil="true"></SupportingWebsiteUrl>
+      <CustomizationPrefix>media</CustomizationPrefix>
+      <CustomizationOptionValuePrefix>20794</CustomizationOptionValuePrefix>
+      <Addresses>
+        <Address>
+          <AddressNumber>1</AddressNumber>
+          <AddressTypeCode>1</AddressTypeCode>
+          <City xsi:nil="true"></City>
+          <County xsi:nil="true"></County>
+          <Country xsi:nil="true"></Country>
+          <Fax xsi:nil="true"></Fax>
+          <FreightTermsCode xsi:nil="true"></FreightTermsCode>
+          <ImportSequenceNumber xsi:nil="true"></ImportSequenceNumber>
+          <Latitude xsi:nil="true"></Latitude>
+          <Line1 xsi:nil="true"></Line1>
+          <Line2 xsi:nil="true"></Line2>
+          <Line3 xsi:nil="true"></Line3>
+          <Longitude xsi:nil="true"></Longitude>
+          <Name xsi:nil="true"></Name>
+          <PostalCode xsi:nil="true"></PostalCode>
+          <PostOfficeBox xsi:nil="true"></PostOfficeBox>
+          <PrimaryContactName xsi:nil="true"></PrimaryContactName>
+          <ShippingMethodCode>1</ShippingMethodCode>
+          <StateOrProvince xsi:nil="true"></StateOrProvince>
+          <Telephone1 xsi:nil="true"></Telephone1>
+          <Telephone2 xsi:nil="true"></Telephone2>
+          <Telephone3 xsi:nil="true"></Telephone3>
+          <TimeZoneRuleVersionNumber xsi:nil="true"></TimeZoneRuleVersionNumber>
+          <UPSZone xsi:nil="true"></UPSZone>
+          <UTCOffset xsi:nil="true"></UTCOffset>
+          <UTCConversionTimeZoneCode xsi:nil="true"></UTCConversionTimeZoneCode>
+        </Address>
+        <Address>
+          <AddressNumber>2</AddressNumber>
+          <AddressTypeCode>1</AddressTypeCode>
+          <City xsi:nil="true"></City>
+          <County xsi:nil="true"></County>
+          <Country xsi:nil="true"></Country>
+          <Fax xsi:nil="true"></Fax>
+          <FreightTermsCode xsi:nil="true"></FreightTermsCode>
+          <ImportSequenceNumber xsi:nil="true"></ImportSequenceNumber>
+          <Latitude xsi:nil="true"></Latitude>
+          <Line1 xsi:nil="true"></Line1>
+          <Line2 xsi:nil="true"></Line2>
+          <Line3 xsi:nil="true"></Line3>
+          <Longitude xsi:nil="true"></Longitude>
+          <Name xsi:nil="true"></Name>
+          <PostalCode xsi:nil="true"></PostalCode>
+          <PostOfficeBox xsi:nil="true"></PostOfficeBox>
+          <PrimaryContactName xsi:nil="true"></PrimaryContactName>
+          <ShippingMethodCode>1</ShippingMethodCode>
+          <StateOrProvince xsi:nil="true"></StateOrProvince>
+          <Telephone1 xsi:nil="true"></Telephone1>
+          <Telephone2 xsi:nil="true"></Telephone2>
+          <Telephone3 xsi:nil="true"></Telephone3>
+          <TimeZoneRuleVersionNumber xsi:nil="true"></TimeZoneRuleVersionNumber>
+          <UPSZone xsi:nil="true"></UPSZone>
+          <UTCOffset xsi:nil="true"></UTCOffset>
+          <UTCConversionTimeZoneCode xsi:nil="true"></UTCConversionTimeZoneCode>
+        </Address>
+      </Addresses>
+    </Publisher>
+    <RootComponents>
+      <RootComponent type="1" schemaName="media_asset" behavior="0" />
+      <RootComponent type="1" schemaName="media_assetcontainer" behavior="0" />
+      <RootComponent type="1" schemaName="media_asseterrorlog" behavior="0" />
+      <RootComponent type="1" schemaName="media_assetfiles" behavior="0" />
+      <RootComponent type="1" schemaName="media_assetmetadata" behavior="0" />
+      <RootComponent type="1" schemaName="media_assettype" behavior="0" />
+      <RootComponent type="1" schemaName="media_block" behavior="0" />
+      <RootComponent type="1" schemaName="media_camerarawfilemetadata" behavior="0" />
+      <RootComponent type="1" schemaName="media_episode" behavior="0" />
+      <RootComponent type="1" schemaName="media_metadata" behavior="0" />
+      <RootComponent type="1" schemaName="media_season" behavior="0" />
+      <RootComponent type="1" schemaName="media_showvendormapping" behavior="0" />
+      <RootComponent type="1" schemaName="media_studio" behavior="0" />
+      <RootComponent type="1" schemaName="media_track" behavior="0" />
+      <RootComponent type="1" schemaName="media_nexis" behavior="0" />
+      <RootComponent type="1" schemaName="media_vendor" behavior="0" />
+      <RootComponent type="1" schemaName="media_shownexismapping" behavior="0" />
+      <RootComponent type="1" schemaName="media_copystatus" behavior="0" />
+      <RootComponent type="1" schemaName="systemuser" behavior="0" />
+      <RootComponent type="9" schemaName="media_assetstatus" behavior="0" />
+      <RootComponent type="9" schemaName="media_checksumstatus" behavior="0" />
+      <RootComponent type="9" schemaName="media_copydestination" behavior="0" />
+      <RootComponent type="9" schemaName="media_copystatus" behavior="0" />
+      <RootComponent type="9" schemaName="media_filesizestatus" behavior="0" />
+      <RootComponent type="9" schemaName="media_metadatastatus" behavior="0" />
+      <RootComponent type="9" schemaName="media_type" behavior="0" />
+      <RootComponent type="9" schemaName="media_status" behavior="0" />
+      <RootComponent type="9" schemaName="media_uploadstatus" behavior="0" />
+      <RootComponent type="9" schemaName="media_virusscanstatus" behavior="0" />
+      <RootComponent type="9" schemaName="media_destinantiontype" behavior="0" />
+      <RootComponent type="9" schemaName="media_sourcetype" behavior="0" />
+      <RootComponent type="1" schemaName="media_copyrequest" behavior="0" />
+      <RootComponent type="29" id="{76bc9a4d-7167-eb11-a812-0022480855c2}" behavior="0" />
+      <RootComponent type="29" id="{e20e4144-ff74-eb11-a812-002248097e89}" behavior="0" />
+      <RootComponent type="60" id="{19ac851e-c3c4-446a-8659-220b0bdc2340}" behavior="0" />
+      <RootComponent type="60" id="{531ec6d7-9bd6-4a66-a48b-4f5231529bc4}" behavior="0" />
+      <RootComponent type="60" id="{596be284-371e-4638-a5af-3fd22be03810}" behavior="0" />
+      <RootComponent type="60" id="{67bc2b1e-a9d0-4db1-b3fe-410a6e67392d}" behavior="0" />
+      <RootComponent type="60" id="{6c122703-efa8-4595-96fa-544a1aab80ac}" behavior="0" />
+      <RootComponent type="60" id="{7b21b814-0f9f-4913-9512-fbb44f3c9930}" behavior="0" />
+      <RootComponent type="60" id="{80618147-09bd-4187-b81c-9f61085094cf}" behavior="0" />
+      <RootComponent type="60" id="{9f312bc5-caf4-440c-8b87-b276bc9d94c5}" behavior="0" />
+      <RootComponent type="60" id="{a59e94d2-39a9-4025-89df-898b2373d63c}" behavior="0" />
+      <RootComponent type="60" id="{ae2fb61d-aeb1-43bf-89b2-f2f4d63344bf}" behavior="0" />
+      <RootComponent type="60" id="{b19b1c52-d65b-eb11-a812-0022480918d2}" behavior="0" />
+      <RootComponent type="60" id="{c4c77f28-5973-40fd-a2f6-69449dbe3ec7}" behavior="0" />
+      <RootComponent type="60" id="{cc827918-8966-41ef-aa42-5745e1a28a3f}" behavior="0" />
+      <RootComponent type="60" id="{ce32e288-cdc0-4b8b-8b1b-0bc2a1281fa1}" behavior="0" />
+      <RootComponent type="60" id="{d34c6a3c-b574-488f-84d1-f19c86d87f54}" behavior="0" />
+      <RootComponent type="60" id="{e7da96d4-414f-4763-9417-09c3b34730ff}" behavior="0" />
+      <RootComponent type="60" id="{f7bc7d25-6852-441d-a98e-92dd1fcd1646}" behavior="0" />
+      <RootComponent type="60" id="{f8959496-faab-4c8b-a091-577ba27399a6}" behavior="0" />
+      <RootComponent type="61" schemaName="media_AppLogo" behavior="0" />
+      <RootComponent type="61" schemaName="media_assetfile_16x16.png" behavior="0" />
+      <RootComponent type="61" schemaName="media_asset_16x16.png" behavior="0" />
+      <RootComponent type="61" schemaName="media_BlockIcon" behavior="0" />
+      <RootComponent type="61" schemaName="media_configuration16x16.png" behavior="0" />
+      <RootComponent type="61" schemaName="media_copyfile" behavior="0" />
+      <RootComponent type="61" schemaName="media_durinutility.js" behavior="0" />
+      <RootComponent type="61" schemaName="media_CopyToVendor.js" behavior="0" />
+      <RootComponent type="61" schemaName="media_episode_16x16.png" behavior="0" />
+      <RootComponent type="61" schemaName="media_SessionIcon" behavior="0" />
+      <RootComponent type="61" schemaName="media_show16x16.png" behavior="0" />
+      <RootComponent type="61" schemaName="media_studio_icon.png" behavior="0" />
+      <RootComponent type="61" schemaName="media_vendor_16x16.png" behavior="0" />
+      <RootComponent type="61" schemaName="media_details_16x16.png" behavior="0" />
+      <RootComponent type="61" schemaName="media_NexisIcon" behavior="0" />
+      <RootComponent type="62" schemaName="media_DurinMediaLake" behavior="0" />
+      <RootComponent type="80" schemaName="media_DurinMediaLake" behavior="0" />
+      <RootComponent type="91" id="{e7c9341c-a5f5-4120-ba12-bd62a5096e00}" schemaName="Microsoft.Media.DurinMediaLake, Version=1.0.0.0, Culture=neutral, PublicKeyToken=809b50fade28e4c2" behavior="0" />
+      <RootComponent type="92" id="{73670712-026a-eb11-a812-000d3a3b10f8}" behavior="0" />
+      <RootComponent type="92" id="{9d4de34a-026a-eb11-a812-000d3a3b10f8}" behavior="0" />
+      <RootComponent type="92" id="{b9a4642a-026a-eb11-a812-000d3a3b10f8}" behavior="0" />
+      <RootComponent type="431" schemaName="media_assetcontainer media_logo" behavior="0" />
+      <RootComponent type="431" schemaName="media_studio media_logo" behavior="0" />
+      <RootComponent type="432" schemaName="media_assetcontainer" behavior="0" />
+      <RootComponent type="432" schemaName="media_studio" behavior="0" />
+      <RootComponent type="61" schemaName="media_copyVendorLocation.html" behavior="0" />
+      <RootComponent type="60" id="{c074db67-1d58-4bf6-ad58-246a6e28ba63}" behavior="0" />
+      <RootComponent type="60" id="{dea2d740-e85b-eb11-a812-0022480918d2}" behavior="0" />
+      <RootComponent type="60" id="{2a11c560-0275-eb11-a812-002248097e89}" behavior="0" />
+      <RootComponent type="60" id="{0314cb1e-4577-eb11-a812-002248097ea6}" behavior="0" />
+      <RootComponent type="60" id="{5a6c1043-4477-eb11-a812-002248097ea6}" behavior="0" />
+    </RootComponents>
+    <MissingDependencies>
+      <MissingDependency>
+        <Required key="0" type="1" schemaName="bot" displayName="Chatbot" solution="PowerVirtualAgents (1.1.2.208)" />
+        <Dependent key="1" type="1" schemaName="systemuser" displayName="User" />
+      </MissingDependency>
+      <MissingDependency>
+        <Required key="2" type="1" schemaName="usermobileofflineprofilemembership" displayName="UserMobileOfflineProfileMembership" solution="MobileOfflineMembership (1.0.0.1)" />
+        <Dependent key="1" type="1" schemaName="systemuser" displayName="User" />
+      </MissingDependency>
+      <MissingDependency>
+        <Required key="3" type="61" schemaName="msdyn_/Images/AppModule_Default_Icon.png" displayName="msdyn_/Images/AppModule_Default_Icon.png" solution="AppModuleWebResources (2.5)" />
+        <Dependent key="4" type="80" schemaName="media_DurinMediaLake" displayName="Durin Media Lake" />
+      </MissingDependency>
+    </MissingDependencies>
+  </SolutionManifest>
+</ImportExportXml>

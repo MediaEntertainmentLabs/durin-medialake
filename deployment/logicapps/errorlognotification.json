@@ -1,0 +1,443 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"connection_commondataservice": {
+			"type": "string",
+			"defaultValue": "[concat(subscription().id,'/resourceGroups/',resourceGroup().name,'/providers/Microsoft.Web/connections/commondataservice')]"
+		},
+		"workflows_Logic_SendEmail": {
+			"defaultValue": "[concat(subscription().id,'/resourceGroups/',resourceGroup().name,'/providers/Microsoft.Logic/workflows/Logic-SendEmail')]",
+			"type": "String"
+		},
+		"crmOrgName": {
+			"type": "string",
+			"metadata": {
+				"description": "description"
+			}
+		},
+		"crmIdentifier": {
+			"type": "string",
+			"metadata": {
+				"description": "crmIdentifier"
+			}
+		}
+	},
+	"functions": [
+		{
+			"namespace": "durin",
+			"members": {
+				"wrapInQuote": {
+					"parameters": [
+						{
+							"name": "text",
+							"type": "string"
+						}
+					],
+					"output": {
+						"value": "[concat('''', parameters('text'),'''')]",
+						"type": "string"
+					}
+				}
+			}
+		}
+	],
+	"variables": {
+		"org": "[durin.wrapInQuote(concat(parameters('crmOrgName'),'.',parameters('crmIdentifier')))]"
+	},
+	"resources": [
+		{
+			"name": "Logic-ErrorLogNotification",
+			"type": "Microsoft.Logic/workflows",
+			"apiVersion": "2017-07-01",
+			"location": "[resourceGroup().location]",
+			"properties": {
+				"definition": {
+					"$schema": "https://schema.management.azure.com/schemas/2016-06-01/Microsoft.Logic.json",
+					"contentVersion": "1.0.0.0",
+					"parameters": {
+						"$connections": {
+							"defaultValue": {},
+							"type": "Object"
+						}
+					},
+					"triggers": {
+						"When_a_record_is_created": {
+							"type": "ApiConnectionWebhook",
+							"inputs": {
+								"body": {
+									"NotificationUrl": "@{listCallbackUrl()}"
+								},
+								"host": {
+									"connection": {
+										"name": "@parameters('$connections')['commondataservice']['connectionId']"
+									}
+								},
+								"path": "[concat('/datasets/@{encodeURIComponent(encodeURIComponent(',variables('org'),'))}/tables/@{encodeURIComponent(encodeURIComponent(',durin.wrapInQuote('media_asseterrorlogs'),'))}/onnewitemswebhook')]",
+								"queries": {
+									"scope": "Organization"
+								}
+							},
+							"runtimeConfiguration": {
+								"secureData": {
+									"properties": [
+										"inputs",
+										"outputs"
+									]
+								}
+							}
+						}
+					},
+					"actions": {
+						"Compose_Email_Body": {
+							"runAfter": {
+								"Condition": [
+									"Succeeded"
+								]
+							},
+							"type": "Compose",
+							"inputs": "@triggerBody()?['media_description']",
+							"runtimeConfiguration": {
+								"secureData": {
+									"properties": [
+										"inputs"
+									]
+								}
+							}
+						},
+						"Compose_ReferredRecordType_": {
+							"runAfter": {
+								"Initialize_variable_Show_Id": [
+									"Succeeded"
+								]
+							},
+							"type": "Compose",
+							"inputs": "@if(equals(triggerBody()?['_media_assetfiles_value'],null),if(equals(triggerBody()?['_media_asset_value'],null),'','asset'),'assetfiles')",
+							"runtimeConfiguration": {
+								"secureData": {
+									"properties": [
+										"inputs"
+									]
+								}
+							}
+						},
+						"Condition": {
+							"actions": {
+								"Get_show": {
+									"runAfter": {},
+									"type": "ApiConnection",
+									"inputs": {
+										"host": {
+											"connection": {
+												"name": "@parameters('$connections')['commondataservice']['connectionId']"
+											}
+										},
+										"method": "get",
+										"path": "[concat('/v2/datasets/@{encodeURIComponent(encodeURIComponent(',variables('org'),'))}/tables/@{encodeURIComponent(encodeURIComponent(',durin.wrapInQuote('media_assetcontainers'),'))}/items/@{encodeURIComponent(encodeURIComponent(variables(',durin.wrapInQuote('ShowId'),')))}')]"
+									},
+									"runtimeConfiguration": {
+										"secureData": {
+											"properties": [
+												"inputs",
+												"outputs"
+											]
+										}
+									}
+								},
+								"Set_variable_RecipientList": {
+									"runAfter": {
+										"Get_show": [
+											"Succeeded"
+										]
+									},
+									"type": "SetVariable",
+									"inputs": {
+										"name": "RecipientsList",
+										"value": "@array(body('Get_show')?['media_notificationemail'])"
+									}
+								}
+							},
+							"runAfter": {
+								"Filter_RecipientList": [
+									"Succeeded"
+								]
+							},
+							"expression": {
+								"and": [
+									{
+										"equals": [
+											"@empty(body('Filter_RecipientList'))",
+											"@true"
+										]
+									}
+								]
+							},
+							"type": "If"
+						},
+						"Filter_RecipientList": {
+							"runAfter": {
+								"Switch_on_ReferredRecordType": [
+									"Succeeded"
+								]
+							},
+							"type": "Query",
+							"inputs": {
+								"from": "@variables('RecipientsList')",
+								"where": "@equals(empty(item()), false)"
+							},
+							"runtimeConfiguration": {
+								"secureData": {
+									"properties": [
+										"inputs",
+										"outputs"
+									]
+								}
+							}
+						},
+						"Initialize_variable_-_DefaultNotificationEmail": {
+							"runAfter": {},
+							"type": "InitializeVariable",
+							"inputs": {
+								"variables": [
+									{
+										"name": "DefaultNotificationEmail",
+										"type": "string"
+									}
+								]
+							}
+						},
+						"Initialize_variable_RecipientsList": {
+							"runAfter": {
+								"Initialize_variable_-_DefaultNotificationEmail": [
+									"Succeeded"
+								]
+							},
+							"type": "InitializeVariable",
+							"inputs": {
+								"variables": [
+									{
+										"name": "RecipientsList",
+										"type": "array",
+										"value": "@createArray(triggerBody()?['media_notificationemail'],variables('DefaultNotificationEmail'))"
+									}
+								]
+							}
+						},
+						"Initialize_variable_Show_Id": {
+							"runAfter": {
+								"Initialize_variable_RecipientsList": [
+									"Succeeded"
+								]
+							},
+							"type": "InitializeVariable",
+							"inputs": {
+								"variables": [
+									{
+										"name": "ShowId",
+										"type": "string"
+									}
+								]
+							}
+						},
+						"Logic-SendEmail": {
+							"runAfter": {
+								"Compose_Email_Body": [
+									"Succeeded"
+								]
+							},
+							"type": "Workflow",
+							"inputs": {
+								"body": {
+									"EmailBody": "@{outputs('Compose_Email_Body')}",
+									"Recipient": "@{join(variables('RecipientsList'),';')}",
+									"Subject": "@{triggerBody()?['media_name']}"
+								},
+								"host": {
+									"triggerName": "manual",
+									"workflow": {
+										"id": "[parameters('workflows_Logic_SendEmail')]"
+									}
+								},
+								"retryPolicy": {
+									"type": "none"
+								}
+							},
+							"runtimeConfiguration": {
+								"secureData": {
+									"properties": [
+										"inputs",
+										"outputs"
+									]
+								}
+							}
+						},
+						"Switch_on_ReferredRecordType": {
+							"runAfter": {
+								"Compose_ReferredRecordType_": [
+									"Succeeded"
+								]
+							},
+							"cases": {
+								"Case_asset": {
+									"case": "asset",
+									"actions": {
+										"Append_to_array_variable_RecipientList": {
+											"runAfter": {
+												"Get_asset_record": [
+													"Succeeded"
+												]
+											},
+											"type": "AppendToArrayVariable",
+											"inputs": {
+												"name": "RecipientsList",
+												"value": "@body('Get_asset_record')?['media_notificationemailaddress']"
+											}
+										},
+										"Get_asset_record": {
+											"runAfter": {},
+											"type": "ApiConnection",
+											"inputs": {
+												"host": {
+													"connection": {
+														"name": "@parameters('$connections')['commondataservice']['connectionId']"
+													}
+												},
+												"method": "get",
+												"path": "[concat('/v2/datasets/@{encodeURIComponent(encodeURIComponent(',variables('org'),'))}/tables/@{encodeURIComponent(encodeURIComponent(',durin.wrapInQuote('media_assets'),'))}/items/@{encodeURIComponent(encodeURIComponent(triggerBody()?[',durin.wrapInQuote('_media_asset_value'),']))}')]"
+											},
+											"runtimeConfiguration": {
+												"secureData": {
+													"properties": [
+														"inputs",
+														"outputs"
+													]
+												}
+											}
+										},
+										"Set_variable_ShowId": {
+											"runAfter": {
+												"Append_to_array_variable_RecipientList": [
+													"Succeeded"
+												]
+											},
+											"type": "SetVariable",
+											"inputs": {
+												"name": "ShowId",
+												"value": "@body('Get_asset_record')?['_media_assetcontainer_value']"
+											}
+										}
+									}
+								},
+								"Case_assetfiles": {
+									"case": "assetfiles",
+									"actions": {
+										"For_each": {
+											"foreach": "@body('List_assetfiles_records')?['value']",
+											"actions": {
+												"Append_to_array_variable_RecipientList_1": {
+													"runAfter": {
+														"Compose_asset": [
+															"Succeeded"
+														]
+													},
+													"type": "AppendToArrayVariable",
+													"inputs": {
+														"name": "RecipientsList",
+														"value": "@string(outputs('Compose_asset')?['media_notificationemaileddress'])"
+													}
+												},
+												"Compose_asset": {
+													"runAfter": {},
+													"type": "Compose",
+													"inputs": "@json(items('For_each')?['media_Asset'])",
+													"runtimeConfiguration": {
+														"secureData": {
+															"properties": [
+																"inputs"
+															]
+														}
+													}
+												},
+												"Set_variable_ShowId_1": {
+													"runAfter": {
+														"Append_to_array_variable_RecipientList_1": [
+															"Succeeded"
+														]
+													},
+													"type": "SetVariable",
+													"inputs": {
+														"name": "ShowId",
+														"value": "@{outputs('Compose_asset')?['_media_assetcontainer_value']}"
+													}
+												}
+											},
+											"runAfter": {
+												"List_assetfiles_records": [
+													"Succeeded"
+												]
+											},
+											"type": "Foreach"
+										},
+										"List_assetfiles_records": {
+											"runAfter": {},
+											"type": "ApiConnection",
+											"inputs": {
+												"host": {
+													"connection": {
+														"name": "@parameters('$connections')['commondataservice']['connectionId']"
+													}
+												},
+												"method": "get",
+												"path": "[concat('/v2/datasets/@{encodeURIComponent(encodeURIComponent(',variables('org'),'))}/tables/@{encodeURIComponent(encodeURIComponent(',durin.wrapInQuote('media_assetfileses'),'))}/items')]",
+												"queries": {
+													"$expand": "media_Asset($select=media_name,media_notificationemailaddress,_media_assetcontainer_value)",
+													"$filter": "media_assetfilesid eq '@{triggerBody()?['_media_assetfiles_value']}'"
+												}
+											},
+											"runtimeConfiguration": {
+												"secureData": {
+													"properties": [
+														"inputs",
+														"outputs"
+													]
+												}
+											}
+										}
+									}
+								}
+							},
+							"default": {
+								"actions": {
+									"Append_to_array_variable_2": {
+										"runAfter": {},
+										"type": "AppendToArrayVariable",
+										"inputs": {
+											"name": "RecipientsList",
+											"value": "@variables('DefaultNotificationEmail')"
+										}
+									}
+								}
+							},
+							"expression": "@outputs('Compose_ReferredRecordType_')",
+							"type": "Switch"
+						}
+					},
+					"outputs": {
+					}
+				},
+				"parameters": {
+					"$connections": {
+						"value": {
+							"commondataservice": {
+								"connectionId": "[parameters('connection_commondataservice')]",
+								"connectionName": "commondataservice",
+								"id": "[concat(subscription().id, '/providers/Microsoft.Web/locations/', resourceGroup().location, '/managedApis/commondataservice')]"
+							}
+						}
+					}
+				}
+			}
+		}
+	],
+	"outputs": {}
+}

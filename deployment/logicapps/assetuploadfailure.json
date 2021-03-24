@@ -1,0 +1,490 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "connection_commondataservice": {
+            "type": "string",
+           "defaultValue":"[concat(subscription().id,'/resourceGroups/',resourceGroup().name,'/providers/Microsoft.Web/connections/commondataservice')]"
+        },
+        "crmOrgName": {
+            "type": "string",
+            "metadata": {
+                "description": "description"
+            }
+        },
+        "crmIdentifier": {
+            "type": "string",
+            "metadata": {
+                "description": "crmIdentifier"
+            }
+        }
+    },
+    "functions": [
+        {
+            "namespace": "durin",
+            "members": {
+                "wrapInQuote": {
+                    "parameters": [
+                        {
+                            "name": "text",
+                            "type": "string"
+                        }
+                    ],
+                    "output": {
+                        "value": "[concat('''', parameters('text'),'''')]",
+                        "type": "string"
+                    }
+                }
+            }
+        }
+    ],
+    "variables": {
+         "org": "[durin.wrapInQuote(concat(parameters('crmOrgName'),'.',parameters('crmIdentifier')))]"
+    },
+    "resources": [
+        {
+            "name": "Logic-AssetUploadFailure",
+            "type": "Microsoft.Logic/workflows",
+            "apiVersion": "2017-07-01",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "definition": {
+                    "$schema": "https://schema.management.azure.com/schemas/2016-06-01/Microsoft.Logic.json",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {
+                        "$connections": {
+                            "defaultValue": {},
+                            "type": "Object"
+                        }
+                    },
+                    "triggers": {
+                        "manual": {
+                            "type": "Request",
+                            "kind": "Http",
+                            "inputs": {
+                                "method": "POST",
+                                "schema": {
+                                    "properties": {
+                                        "batch": {
+                                            "type": "string"
+                                        },
+                                        "blockId": {
+                                            "type": "string"
+                                        },
+                                        "emailbody": {
+                                            "type": "string"
+                                        },
+                                        "episodeId": {
+                                            "type": "string"
+                                        },
+                                        "notificationEmail": {
+                                            "type": "string"
+                                        },
+                                        "seasonId": {
+                                            "type": "string"
+                                        },
+                                        "shootDay": {
+                                            "type": "string"
+                                        },
+                                        "showId": {
+                                            "type": "string"
+                                        },
+                                        "subject": {
+                                            "type": "string"
+                                        },
+                                        "team": {
+                                            "type": "string"
+                                        },
+                                        "unit": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            },
+                            "runtimeConfiguration": {
+                                "secureData": {
+                                    "properties": [
+                                        "inputs",
+                                        "outputs"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "actions": {
+                         "Check_assetid_is_not_empty": {
+                            "actions": {
+                                "Create_error_log": {
+                                    "runAfter": {},
+                                    "type": "ApiConnection",
+                                    "inputs": {
+                                        "body": {
+                                            "_media_asset_value": "@variables('AssetId')",
+                                            "media_description": "@triggerBody()?['emailbody']",
+                                            "media_name": "@triggerBody()?['subject']"
+                                        },
+                                        "host": {
+                                            "connection": {
+                                                "name": "@parameters('$connections')['commondataservice']['connectionId']"
+                                            }
+                                        },
+                                        "method": "post",
+                                        "path": "[concat('/v2/datasets/@{encodeURIComponent(encodeURIComponent(',variables('org'),'))}/tables/@{encodeURIComponent(encodeURIComponent(',durin.wrapInQuote('media_asseterrorlogs'),'))}/items')]"
+                                    },
+                                    "runtimeConfiguration": {
+                                        "secureData": {
+                                            "properties": [
+                                                "inputs",
+                                                "outputs"
+                                            ]
+                                        }
+                                    }
+                                }
+                            },
+                            "runAfter": {
+                                "Scope": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "expression": {
+                                "and": [
+                                    {
+                                        "greater": [
+                                            "@length(variables('AssetId'))",
+                                            0
+                                        ]
+                                    }
+                                ]
+                            },
+                            "type": "If"
+                        },
+                        "Initialize_variable-ErrorMessage": {
+                            "runAfter": {},
+                            "type": "InitializeVariable",
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "ErrorMessage",
+                                        "type": "string"
+                                    }
+                                ]
+                            }
+                        },
+                        "Initialize_variable-UploadedFile": {
+                            "runAfter": {
+                                "Initialize_variable-_AssetId": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "InitializeVariable",
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "UploadedFile",
+                                        "type": "string"
+                                    }
+                                ]
+                            }
+                        },
+                        "Initialize_variable-_AssetId": {
+                            "runAfter": {
+                                "Initialize_variable-ErrorMessage": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "InitializeVariable",
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "AssetId",
+                                        "type": "string"
+                                    }
+                                ]
+                            }
+                        },
+                        "Initialize_variable_-_BlockIdAttr": {
+                            "runAfter": {
+                                "Initialize_variable_-_EpisodeIdAttr": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "InitializeVariable",
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "blockidattr",
+                                        "type": "string",
+                                        "value": "_media_block_value eq '@{triggerBody()?['blockId']}'"
+                                    }
+                                ]
+                            }
+                        },
+                        "Initialize_variable_-_EpisodeIdAttr": {
+                            "runAfter": {
+                                "Initialize_variable-UploadedFile": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "InitializeVariable",
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "episodeidattr",
+                                        "type": "string",
+                                        "value": "_media_episode_value eq '@{triggerBody()?['episodeId']}'"
+                                    }
+                                ]
+                            }
+                        },
+                        "Initialize_variable_-_FilterAttributes": {
+                            "runAfter": {
+                                "Initialize_variable_-_BlockIdAttr": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "InitializeVariable",
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "FilterAttrributes",
+                                        "type": "string",
+                                        "value": "@{if(equals(triggerBody()?['episodeId'],''),variables('blockidattr'),variables('episodeidattr'))}"
+                                    }
+                                ]
+                            }
+                        },
+                        "Response": {
+                            "runAfter": {
+                                "Check_assetid_is_not_empty": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "Response",
+                            "kind": "Http",
+                            "inputs": {
+                                "body": {
+                                    "Message": "Asset status updated successfully"
+                                },
+                                "statusCode": 200
+                            },
+                            "runtimeConfiguration": {
+                                "secureData": {
+                                    "properties": [
+                                        "inputs"
+                                    ]
+                                }
+                            }
+                        },
+                        "Scope": {
+                            "actions": {
+                                "Check_asset_is_exist_or_not": {
+                                    "actions": {
+                                        "Check_uploaded_file_count": {
+                                            "actions": {
+                                                "Set_variable-_Error_message": {
+                                                    "runAfter": {
+                                                        "Update_-_Asset_status_partially_uploaded": [
+                                                            "Failed",
+                                                            "TimedOut"
+                                                        ]
+                                                    },
+                                                    "type": "SetVariable",
+                                                    "inputs": {
+                                                        "name": "ErrorMessage",
+                                                        "value": "Failed to update asset status partially uploaded"
+                                                    }
+                                                },
+                                                "Update_-_Asset_status_partially_uploaded": {
+                                                    "runAfter": {},
+                                                    "type": "ApiConnection",
+                                                    "inputs": {
+                                                        "body": {
+                                                            "media_assetstatus": 207940003
+                                                        },
+                                                        "host": {
+                                                            "connection": {
+                                                                "name": "@parameters('$connections')['commondataservice']['connectionId']"
+                                                            }
+                                                        },
+                                                        "method": "patch",
+                                                        "path": "[concat('/v2/datasets/@{encodeURIComponent(encodeURIComponent(',variables('org'),'))}/tables/@{encodeURIComponent(encodeURIComponent(',durin.wrapInQuote('media_assets'),'))}/items/@{encodeURIComponent(encodeURIComponent(variables(',durin.wrapInQuote('AssetId'),')))}')]"
+                                                    },
+                                                    "runtimeConfiguration": {
+                                                        "secureData": {
+                                                            "properties": [
+                                                                "inputs",
+                                                                "outputs"
+                                                            ]
+                                                        }
+                                                    }
+                                                }
+                                            },
+                                            "runAfter": {
+                                                "Set_variable-UploadedFile": [
+                                                    "Succeeded"
+                                                ]
+                                            },
+                                            "else": {
+                                                "actions": {
+                                                    "Set_variable-Error_Message": {
+                                                        "runAfter": {
+                                                            "Update_-_Asset_status_Upload_error": [
+                                                                "Failed",
+                                                                "TimedOut"
+                                                            ]
+                                                        },
+                                                        "type": "SetVariable",
+                                                        "inputs": {
+                                                            "name": "ErrorMessage",
+                                                            "value": "Failed to update asset status upload error"
+                                                        }
+                                                    },
+                                                    "Update_-_Asset_status_Upload_error": {
+                                                        "runAfter": {},
+                                                        "type": "ApiConnection",
+                                                        "inputs": {
+                                                            "body": {
+                                                                "media_assetstatus": 207940002
+                                                            },
+                                                            "host": {
+                                                                "connection": {
+                                                                    "name": "@parameters('$connections')['commondataservice']['connectionId']"
+                                                                }
+                                                            },
+                                                            "method": "patch",
+                                                            "path": "[concat('/v2/datasets/@{encodeURIComponent(encodeURIComponent(',variables('org'),'))}/tables/@{encodeURIComponent(encodeURIComponent(',durin.wrapInQuote('media_assets'),'))}/items/@{encodeURIComponent(encodeURIComponent(variables(',durin.wrapInQuote('AssetId'),')))}')]"
+                                                        },
+                                                        "runtimeConfiguration": {
+                                                            "secureData": {
+                                                                "properties": [
+                                                                    "inputs",
+                                                                    "outputs"
+                                                                ]
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            },
+                                            "expression": {
+                                                "and": [
+                                                    {
+                                                        "not": {
+                                                            "equals": [
+                                                                "@string(variables('UploadedFile'))",
+                                                                ""
+                                                            ]
+                                                        }
+                                                    },
+                                                    {
+                                                        "greater": [
+                                                            "@int(variables('UploadedFile'))",
+                                                            0
+                                                        ]
+                                                    }
+                                                ]
+                                            },
+                                            "type": "If"
+                                        },
+                                        "Set_variable-AssetId": {
+                                            "runAfter": {},
+                                            "type": "SetVariable",
+                                            "inputs": {
+                                                "name": "AssetId",
+                                                "value": "@{body('Fetch_Asset_record')?['value']?[0]?['media_assetid']}"
+                                            }
+                                        },
+                                        "Set_variable-UploadedFile": {
+                                            "runAfter": {
+                                                "Set_variable-AssetId": [
+                                                    "Succeeded"
+                                                ]
+                                            },
+                                            "type": "SetVariable",
+                                            "inputs": {
+                                                "name": "UploadedFile",
+                                                "value": "@{body('Fetch_Asset_record')?['value']?[0]?['media_uploadedfile']}"
+                                            }
+                                        }
+                                    },
+                                    "runAfter": {
+                                        "Fetch_Asset_record": [
+                                            "Succeeded"
+                                        ]
+                                    },
+                                    "else": {
+                                        "actions": {
+                                            "Set_variable-ErrorMessage": {
+                                                "runAfter": {},
+                                                "type": "SetVariable",
+                                                "inputs": {
+                                                    "name": "ErrorMessage",
+                                                    "value": "Asset record not found"
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "expression": {
+                                        "and": [
+                                            {
+                                                "greater": [
+                                                    "@length(body('Fetch_Asset_record')?['value'])",
+                                                    0
+                                                ]
+                                            }
+                                        ]
+                                    },
+                                    "type": "If"
+                                },
+                                "Fetch_Asset_record": {
+                                    "runAfter": {},
+                                    "type": "ApiConnection",
+                                    "inputs": {
+                                        "host": {
+                                            "connection": {
+                                                "name": "@parameters('$connections')['commondataservice']['connectionId']"
+                                            }
+                                        },
+                                        "method": "get",
+                                        "path": "[concat('/v2/datasets/@{encodeURIComponent(encodeURIComponent(',variables('org'),'))}/tables/@{encodeURIComponent(encodeURIComponent(',durin.wrapInQuote('media_assets'),'))}/items')]",
+                                        "queries": {
+                                            "$filter": "media_shootday eq '@{triggerBody()?['shootDay']}' and media_unit eq '@{triggerBody()?['unit']}' and media_batch eq '@{triggerBody()?['batch']}' and @{variables('FilterAttrributes')}"
+                                        }
+                                    },
+                                    "runtimeConfiguration": {
+                                        "secureData": {
+                                            "properties": [
+                                                "inputs",
+                                                "outputs"
+                                            ]
+                                        }
+                                    }
+                                }
+                            },
+                            "runAfter": {
+                                "Initialize_variable_-_FilterAttributes": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "Scope"
+                        }
+                    },
+                    "outputs": {
+                    }
+                },
+                "parameters": {
+                    "$connections": {
+                        "value": {
+                            "commondataservice": {
+                                "connectionId": "[parameters('connection_commondataservice')]",
+                                "connectionName": "commondataservice",
+                                "id": "[concat(subscription().id, '/providers/Microsoft.Web/locations/', resourceGroup().location, '/managedApis/commondataservice')]"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    ],
+    "outputs": {}
+}

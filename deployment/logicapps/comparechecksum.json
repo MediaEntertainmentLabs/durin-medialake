@@ -1,0 +1,577 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "connection_commondataservice": {
+            "type": "string",
+            "defaultValue": "[concat(subscription().id,'/resourceGroups/',resourceGroup().name,'/providers/Microsoft.Web/connections/commondataservice')]"
+        },
+        "sites_MediaLakeFunction": {
+            "defaultValue": "[concat(subscription().id,'/resourceGroups/',resourceGroup().name,'/providers/Microsoft.Web/sites/',toLower(take(concat('func-', concat('durinmedia',uniqueString(resourceGroup().id))), 60)))]",
+            "type": "String"
+        },
+         "crmOrgName": {
+            "type": "string",
+            "metadata": {
+                "description": "description"
+            }
+        },
+        "crmIdentifier": {
+            "type": "string",
+            "metadata": {
+                "description": "crmIdentifier"
+            }
+        }
+    },
+    "functions": [
+        {
+            "namespace": "durin",
+            "members": {
+                "wrapInQuote": {
+                    "parameters": [
+                        {
+                            "name": "text",
+                            "type": "string"
+                        }
+                    ],
+                    "output": {
+                        "value": "[concat('''', parameters('text'),'''')]",
+                        "type": "string"
+                    }
+                }
+            }
+        }
+    ],
+    "variables": {
+         "org": "[durin.wrapInQuote(concat(parameters('crmOrgName'),'.',parameters('crmIdentifier')))]"
+    },
+    "resources": [
+        {
+            "name": "Logic-CompareCheckSum",
+            "type": "Microsoft.Logic/workflows",
+            "apiVersion": "2017-07-01",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "definition": {
+                    "$schema": "https://schema.management.azure.com/schemas/2016-06-01/Microsoft.Logic.json",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {
+                        "$connections": {
+                            "defaultValue": {},
+                            "type": "Object"
+                        }
+                    },
+                    "triggers": {
+                        "manual": {
+                            "type": "Request",
+                            "kind": "Http",
+                            "inputs": {
+                                "schema": {
+                                    "properties": {
+                                        "BlobPath": {
+                                            "type": "string"
+                                        },
+                                        "RecordId": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            },
+                            "runtimeConfiguration": {
+                                "secureData": {
+                                    "properties": [
+                                        "inputs",
+                                        "outputs"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "actions": {
+                         "Condition_-_Check_BlobPath_and_RecordId": {
+                            "actions": {
+                                "Condition_-_Check_for_ErrorMessage": {
+                                    "actions": {
+                                        "Create_error_log_record": {
+                                            "runAfter": {},
+                                            "type": "ApiConnection",
+                                            "inputs": {
+                                                "body": {
+                                                    "_media_assetfiles_value": "@triggerBody()?['RecordId']",
+                                                    "media_description": "@variables('ErrorMessage')",
+                                                    "media_name": "Error occured while verifying checksum"
+                                                },
+                                                "host": {
+                                                    "connection": {
+                                                        "name": "@parameters('$connections')['commondataservice']['connectionId']"
+                                                    }
+                                                },
+                                                "method": "post",
+                                                "path":  "[concat('/v2/datasets/@{encodeURIComponent(encodeURIComponent(',variables('org'),'))}/tables/@{encodeURIComponent(encodeURIComponent(',durin.wrapInQuote('media_asseterrorlogs'),'))}/items')]"
+                                            },
+                                            "runtimeConfiguration": {
+                                                "secureData": {
+                                                    "properties": [
+                                                        "inputs",
+                                                        "outputs"
+                                                    ]
+                                                }
+                                            }
+                                        },
+                                        "Response_failure": {
+                                            "runAfter": {
+                                                "Create_error_log_record": [
+                                                    "Succeeded"
+                                                ]
+                                            },
+                                            "type": "Response",
+                                            "kind": "Http",
+                                            "inputs": {
+                                                "body": {
+                                                    "Message": "CheckSumVerification Failed"
+                                                },
+                                                "statusCode": 500
+                                            },
+                                            "runtimeConfiguration": {
+                                                "secureData": {
+                                                    "properties": [
+                                                        "inputs"
+                                                    ]
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "runAfter": {
+                                        "Scope": [
+                                            "Succeeded",
+                                            "Failed"
+                                        ]
+                                    },
+                                    "else": {
+                                        "actions": {
+                                            "Response_success": {
+                                                "runAfter": {},
+                                                "type": "Response",
+                                                "kind": "Http",
+                                                "inputs": {
+                                                    "body": {
+                                                        "Message": "CheckSum Verified and status updated Successfully"
+                                                    },
+                                                    "statusCode": 200
+                                                },
+                                                "runtimeConfiguration": {
+                                                    "secureData": {
+                                                        "properties": [
+                                                            "inputs"
+                                                        ]
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "expression": {
+                                        "and": [
+                                            {
+                                                "greater": [
+                                                    "@length(variables('ErrorMessage'))",
+                                                    0
+                                                ]
+                                            }
+                                        ]
+                                    },
+                                    "type": "If"
+                                },
+                                "Scope": {
+                                    "actions": {
+                                        "Condition-Is_record_found": {
+                                            "actions": {
+                                                "Condition_-_CheckSumRequired": {
+                                                    "actions": {
+                                                        "Condition_-_CheckSumVerification": {
+                                                            "actions": {
+                                                                "Set_variable_-_Update_record_CheckSumVerified_-_ErrorMessage": {
+                                                                    "runAfter": {
+                                                                        "Update_record_-_CheckSumVerified": [
+                                                                            "Failed",
+                                                                            "TimedOut"
+                                                                        ]
+                                                                    },
+                                                                    "type": "SetVariable",
+                                                                    "inputs": {
+                                                                        "name": "ErrorMessage",
+                                                                        "value": "Failed to update CheckSum Status of RecordId: @{triggerBody()?['RecordId']} "
+                                                                    }
+                                                                },
+                                                                "Update_record_-_CheckSumVerified": {
+                                                                    "runAfter": {},
+                                                                    "type": "ApiConnection",
+                                                                    "inputs": {
+                                                                        "body": {
+                                                                            "media_checksumstatus": 207940000
+                                                                        },
+                                                                        "host": {
+                                                                            "connection": {
+                                                                                "name": "@parameters('$connections')['commondataservice']['connectionId']"
+                                                                            }
+                                                                        },
+                                                                        "method": "patch",
+                                                                        "path": "[concat('/v2/datasets/@{encodeURIComponent(encodeURIComponent(',variables('org'),'))}/tables/@{encodeURIComponent(encodeURIComponent(',durin.wrapInQuote('media_assetfileses'),'))}/items/@{encodeURIComponent(encodeURIComponent(triggerBody()?[',durin.wrapInQuote('RecordId'),']))}')]"
+                                                                    },
+                                                                    "runtimeConfiguration": {
+                                                                        "secureData": {
+                                                                            "properties": [
+                                                                                "inputs",
+                                                                                "outputs"
+                                                                            ]
+                                                                        }
+                                                                    }
+                                                                }
+                                                            },
+                                                            "runAfter": {
+                                                                "GetCheckSumValue": [
+                                                                    "Succeeded"
+                                                                ]
+                                                            },
+                                                            "else": {
+                                                                "actions": {
+                                                                    "Set_variable_-_Update_record_CheckSumNotMatched_-_ErrorMessage": {
+                                                                        "runAfter": {
+                                                                            "Update_record_-_CheckSumNotMatched": [
+                                                                                "Failed",
+                                                                                "TimedOut"
+                                                                            ]
+                                                                        },
+                                                                        "type": "SetVariable",
+                                                                        "inputs": {
+                                                                            "name": "ErrorMessage",
+                                                                            "value": "Failed to update CheckSum Status of RecordId: @{triggerBody()?['RecordId']}"
+                                                                        }
+                                                                    },
+                                                                    "Update_record_-_CheckSumNotMatched": {
+                                                                        "runAfter": {},
+                                                                        "type": "ApiConnection",
+                                                                        "inputs": {
+                                                                            "body": {
+                                                                                "media_checksumstatus": 207940001
+                                                                            },
+                                                                            "host": {
+                                                                                "connection": {
+                                                                                    "name": "@parameters('$connections')['commondataservice']['connectionId']"
+                                                                                }
+                                                                            },
+                                                                            "method": "patch",
+                                                                            "path": "[concat('/v2/datasets/@{encodeURIComponent(encodeURIComponent(',variables('org'),'))}/tables/@{encodeURIComponent(encodeURIComponent(',durin.wrapInQuote('media_assetfileses'),'))}/items/@{encodeURIComponent(encodeURIComponent(triggerBody()?[',durin.wrapInQuote('RecordId'),']))}')]"
+                                                                        },
+                                                                        "runtimeConfiguration": {
+                                                                            "secureData": {
+                                                                                "properties": [
+                                                                                    "inputs",
+                                                                                    "outputs"
+                                                                                ]
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                }
+                                                            },
+                                                            "expression": {
+                                                                "and": [
+                                                                    {
+                                                                        "equals": [
+                                                                            "@variables('CheckSumClient')",
+                                                                            "@body('GetCheckSumValue')"
+                                                                        ]
+                                                                    }
+                                                                ]
+                                                            },
+                                                            "type": "If"
+                                                        },
+                                                        "GetCheckSumValue": {
+                                                            "runAfter": {
+                                                                "Set_variable_-_CheckSum_Client": [
+                                                                    "Succeeded"
+                                                                ]
+                                                            },
+                                                            "type": "Function",
+                                                            "inputs": {
+                                                                "body": {
+                                                                    "BlobPath": "@{triggerBody()?['BlobPath']}"
+                                                                },
+                                                                "function": {
+                                                                    "id": "[concat(parameters('sites_MediaLakeFunction'), '/functions/GetCheckSumValue')]"
+                                                                }
+                                                            },
+                                                            "runtimeConfiguration": {
+                                                                "secureData": {
+                                                                    "properties": [
+                                                                        "inputs",
+                                                                        "outputs"
+                                                                    ]
+                                                                }
+                                                            }
+                                                        },
+                                                        "Set_variable_-_CheckSum_Client": {
+                                                            "runAfter": {},
+                                                            "type": "SetVariable",
+                                                            "inputs": {
+                                                                "name": "CheckSumClient",
+                                                                "value": "@{body('Fetch_Asset_checksumrequired_property')?['value']?[0]?['media_checksummd5']}"
+                                                            }
+                                                        },
+                                                        "Set_variable_-_Get_Blob_CheckSumValue_-_ErrorMessage": {
+                                                            "runAfter": {
+                                                                "GetCheckSumValue": [
+                                                                    "Failed",
+                                                                    "TimedOut"
+                                                                ]
+                                                            },
+                                                            "type": "SetVariable",
+                                                            "inputs": {
+                                                                "name": "ErrorMessage",
+                                                                "value": "Failed to fetch Blob ChecksumValue"
+                                                            }
+                                                        }
+                                                    },
+                                                    "runAfter": {
+                                                        "Parse_JSON-Show_entity": [
+                                                            "Succeeded"
+                                                        ]
+                                                    },
+                                                    "else": {
+                                                        "actions": {
+                                                            "Update_record_CheckSumVerificanotNotRequired": {
+                                                                "runAfter": {},
+                                                                "type": "ApiConnection",
+                                                                "inputs": {
+                                                                    "body": {
+                                                                        "media_checksumstatus": 207940002
+                                                                    },
+                                                                    "host": {
+                                                                        "connection": {
+                                                                            "name": "@parameters('$connections')['commondataservice']['connectionId']"
+                                                                        }
+                                                                    },
+                                                                    "method": "patch",
+                                                                    "path": "[concat('/v2/datasets/@{encodeURIComponent(encodeURIComponent(',variables('org'),'))}/tables/@{encodeURIComponent(encodeURIComponent(',durin.wrapInQuote('media_assetfileses'),'))}/items/@{encodeURIComponent(encodeURIComponent(triggerBody()?[',durin.wrapInQuote('RecordId'),']))}')]"
+                                                                },
+                                                                "runtimeConfiguration": {
+                                                                    "secureData": {
+                                                                        "properties": [
+                                                                            "inputs",
+                                                                            "outputs"
+                                                                        ]
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    },
+                                                    "expression": {
+                                                        "and": [
+                                                            {
+                                                                "equals": [
+                                                                    "@body('Parse_JSON-Show_entity')?['media_AssetContainer']?['media_enablechecksumcheck']",
+                                                                    "@true"
+                                                                ]
+                                                            }
+                                                        ]
+                                                    },
+                                                    "type": "If"
+                                                },
+                                                "Parse_JSON-Show_entity": {
+                                                    "runAfter": {},
+                                                    "type": "ParseJson",
+                                                    "inputs": {
+                                                        "content": "@body('Fetch_Asset_checksumrequired_property')?['value']?[0]?['media_Asset']",
+                                                        "schema": {
+                                                            "properties": {
+                                                                "media_AssetContainer": {
+                                                                    "properties": {
+                                                                        "media_assetcontainerid": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "media_enablechecksumcheck": {
+                                                                            "type": "boolean"
+                                                                        }
+                                                                    },
+                                                                    "type": "object"
+                                                                },
+                                                                "media_assetid": {
+                                                                    "type": "string"
+                                                                },
+                                                                "media_name": {
+                                                                    "type": "string"
+                                                                }
+                                                            },
+                                                            "type": "object"
+                                                        }
+                                                    },
+                                                    "runtimeConfiguration": {
+                                                        "secureData": {
+                                                            "properties": [
+                                                                "inputs"
+                                                            ]
+                                                        }
+                                                    }
+                                                }
+                                            },
+                                            "runAfter": {
+                                                "Fetch_Asset_checksumrequired_property": [
+                                                    "Succeeded"
+                                                ]
+                                            },
+                                            "else": {
+                                                "actions": {
+                                                    "Set_variable_-_ErrorMessage_no_record_found": {
+                                                        "runAfter": {},
+                                                        "type": "SetVariable",
+                                                        "inputs": {
+                                                            "name": "ErrorMessage",
+                                                            "value": "No show record found for RecordId: @{triggerBody()?['RecordId']}"
+                                                        }
+                                                    }
+                                                }
+                                            },
+                                            "expression": {
+                                                "and": [
+                                                    {
+                                                        "greater": [
+                                                            "@length(body('Fetch_Asset_checksumrequired_property')?['value'])",
+                                                            0
+                                                        ]
+                                                    }
+                                                ]
+                                            },
+                                            "type": "If"
+                                        },
+                                        "Fetch_Asset_checksumrequired_property": {
+                                            "runAfter": {},
+                                            "type": "ApiConnection",
+                                            "inputs": {
+                                                "host": {
+                                                    "connection": {
+                                                        "name": "@parameters('$connections')['commondataservice']['connectionId']"
+                                                    }
+                                                },
+                                                "method": "get",
+                                                "path": "[concat('/v2/datasets/@{encodeURIComponent(encodeURIComponent(',variables('org'),'))}/tables/@{encodeURIComponent(encodeURIComponent(',durin.wrapInQuote('media_assetfileses'),'))}/items')]",
+                                                "queries": {
+                                                    "$expand": "media_Asset($select=media_name;$expand=media_AssetContainer($select=media_enablechecksumcheck))",
+                                                    "$filter": "media_assetfilesid eq '@{triggerBody()?['RecordId']}'"
+                                                }
+                                            },
+                                            "runtimeConfiguration": {
+                                                "secureData": {
+                                                    "properties": [
+                                                        "inputs",
+                                                        "outputs"
+                                                    ]
+                                                }
+                                            }
+                                        },
+                                        "Set_variable_-_GetFetchXML_ErrorMessage": {
+                                            "runAfter": {
+                                                "Fetch_Asset_checksumrequired_property": [
+                                                    "Failed",
+                                                    "TimedOut"
+                                                ]
+                                            },
+                                            "type": "SetVariable",
+                                            "inputs": {
+                                                "name": "ErrorMessage",
+                                                "value": "Failed to fetch CheckSumRequired Property for RecordId: @{triggerBody()?['RecordId']}"
+                                            }
+                                        }
+                                    },
+                                    "runAfter": {},
+                                    "type": "Scope"
+                                }
+                            },
+                            "runAfter": {
+                                "Initialize_variable_-_CheckSumClient": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "else": {
+                                "actions": {
+                                    "Response": {
+                                        "runAfter": {},
+                                        "type": "Response",
+                                        "kind": "Http",
+                                        "inputs": {
+                                            "body": {
+                                                "message": "BlobPath and RecordId Required"
+                                            },
+                                            "headers": {
+                                                "Content-Type": "application/json; charset=utf-8"
+                                            },
+                                            "statusCode": 400
+                                        }
+                                    }
+                                }
+                            },
+                            "expression": {
+                                "and": [
+                                    {
+                                        "greater": [
+                                            "@length(triggerBody()?['BlobPath'])",
+                                            0
+                                        ]
+                                    },
+                                    {
+                                        "greater": [
+                                            "@length(triggerBody()?['RecordId'])",
+                                            0
+                                        ]
+                                    }
+                                ]
+                            },
+                            "type": "If"
+                        },
+                        "Initialize_variable_-_CheckSumClient": {
+                            "runAfter": {
+                                "Initialize_variable_-_ErrorMessage": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "InitializeVariable",
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "CheckSumClient",
+                                        "type": "string"
+                                    }
+                                ]
+                            }
+                        },
+                        "Initialize_variable_-_ErrorMessage": {
+                            "runAfter": {},
+                            "type": "InitializeVariable",
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "ErrorMessage",
+                                        "type": "string"
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    "outputs": {
+                    }
+                },
+                "parameters": {
+                    "$connections": {
+                        "value": {
+                            "commondataservice": {
+                                "connectionId": "[parameters('connection_commondataservice')]",
+                                "connectionName": "commondataservice",
+                                "id": "[concat(subscription().id, '/providers/Microsoft.Web/locations/', resourceGroup().location, '/managedApis/commondataservice')]"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    ],
+    "outputs": {}
+}

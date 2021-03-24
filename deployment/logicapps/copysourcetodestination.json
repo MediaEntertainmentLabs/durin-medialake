@@ -1,0 +1,1044 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"workflows_Logic_ReadAzureConfiguration": {
+			"defaultValue": "[concat(subscription().id,'/resourceGroups/',resourceGroup().name,'/providers/Microsoft.Logic/workflows/Logic-ReadAzureConfiguration')]",
+			"type": "String"
+		},
+		"workflows_Logic_CreatePipelineForEachDestination": {
+			"defaultValue": "[concat(subscription().id,'/resourceGroups/',resourceGroup().name,'/providers/Microsoft.Logic/workflows/Logic-CreatePipelineForEachDestination')]",
+			"type": "String"
+		},
+		"connection_commondataservice": {
+			"type": "string",
+			"defaultValue": "[concat(subscription().id,'/resourceGroups/',resourceGroup().name,'/providers/Microsoft.Web/connections/commondataservice')]"
+		},
+		"crmOrgName": {
+			"type": "string",
+			"metadata": {
+				"description": "description"
+			}
+		},
+		"crmIdentifier": {
+			"type": "string",
+			"metadata": {
+				"description": "crmIdentifier"
+			}
+		}
+	},
+	"functions": [
+		{
+			"namespace": "durin",
+			"members": {
+				"wrapInQuote": {
+					"parameters": [
+						{
+							"name": "text",
+							"type": "string"
+						}
+					],
+					"output": {
+						"value": "[concat('''', parameters('text'),'''')]",
+						"type": "string"
+					}
+				}
+			}
+		}
+	],
+	"variables": {
+		"org": "[durin.wrapInQuote(concat(parameters('crmOrgName'),'.',parameters('crmIdentifier')))]"
+	},
+	"resources": [
+		{
+			"type": "Microsoft.Logic/workflows",
+			"apiVersion": "2017-07-01",
+			"name": "Logic-CopySourceToDestination",
+			"location": "[resourceGroup().location]",
+			"properties": {
+				"definition": {
+					"$schema": "https://schema.management.azure.com/schemas/2016-06-01/Microsoft.Logic.json",
+					"contentVersion": "1.0.0.0",
+					"parameters": {
+						"$connections": {
+							"defaultValue": {},
+							"type": "Object"
+						}
+					},
+					"triggers": {
+						"When_a_record_is_created": {
+							"type": "ApiConnectionWebhook",
+							"inputs": {
+								"body": {
+									"NotificationUrl": "@{listCallbackUrl()}"
+								},
+								"host": {
+									"connection": {
+										"name": "@parameters('$connections')['commondataservice']['connectionId']"
+									}
+								},
+								"path": "[concat('/datasets/@{encodeURIComponent(encodeURIComponent(',variables('org'),'))}/tables/@{encodeURIComponent(encodeURIComponent(',durin.wrapInQuote('media_copyrequests'),'))}/onnewitemswebhook')]",
+								"queries": {
+									"scope": "Organization"
+                                }
+                            },
+                            "runtimeConfiguration": {
+                                "secureData": {
+                                    "properties": [
+                                        "inputs",
+                                        "outputs"
+                                    ]
+								}
+							}
+						}
+					},
+					"actions": {
+						"Condition_for_error": {
+							"actions": {
+								"Create_a_new_parse_json_error_log_record": {
+									"runAfter": {},
+									"type": "ApiConnection",
+									"inputs": {
+										"body": {
+											"media_description": "@variables('Error')",
+											"media_name": "Request Json is Invalid.",
+											"media_notificationemail": "@{json(triggerBody()?['media_data'])?['submittedBy']?['email']}"
+										},
+										"host": {
+											"connection": {
+												"name": "@parameters('$connections')['commondataservice']['connectionId']"
+											}
+										},
+										"method": "post",
+										"path": "[concat('/v2/datasets/@{encodeURIComponent(encodeURIComponent(',variables('org'),'))}/tables/@{encodeURIComponent(encodeURIComponent(',durin.wrapInQuote('media_asseterrorlogs'),'))}/items')]"
+                                    },
+                                    "runtimeConfiguration": {
+                                        "secureData": {
+                                            "properties": [
+                                                "inputs",
+                                                "outputs"
+                                            ]
+                                        }
+									}
+								}
+							},
+							"runAfter": {
+								"Scope": [
+									"Failed",
+									"Skipped",
+									"TimedOut"
+								]
+							},
+							"else": {
+								"actions": {
+									"Create_a_new_error_log_record": {
+										"runAfter": {
+											"Filter_error": [
+												"Succeeded"
+											]
+										},
+										"type": "ApiConnection",
+										"inputs": {
+											"body": {
+												"media_description": "Logic App \"CopySourceToDestination\" failed for @{if(equals(body('Parse_Request_JSON')?['source'], null),'',join(body('Parse_Request_JSON')?['source'],','))}\nShow: @{body('Parse_Request_JSON')?['container']},\nSubmitted By: @{body('Parse_Request_JSON')?['submittedBy']},\nError Details: @{string(body('Filter_error'))}",
+												"media_name": "Copy operation failed for @{body('Parse_Request_JSON')?['entityLogicalName']}",
+												"media_notificationemail": "@body('Parse_Request_JSON')?['submittedBy']?['email']"
+											},
+											"host": {
+												"connection": {
+													"name": "@parameters('$connections')['commondataservice']['connectionId']"
+												}
+											},
+											"method": "post",
+											"path": "[concat('/v2/datasets/@{encodeURIComponent(encodeURIComponent(',variables('org'),'))}/tables/@{encodeURIComponent(encodeURIComponent(',durin.wrapInQuote('media_asseterrorlogs'),'))}/items')]"
+                                        },
+                                        "runtimeConfiguration": {
+                                            "secureData": {
+                                                "properties": [
+                                                    "inputs",
+                                                    "outputs"
+                                                ]
+                                            }
+										}
+									},
+									"Filter_error": {
+										"runAfter": {},
+										"type": "Query",
+										"inputs": {
+											"from": "@result('Scope')",
+											"where": "@equals(item()['status'], 'Failed')"
+                                        },
+                                        "runtimeConfiguration": {
+                                            "secureData": {
+                                                "properties": [
+                                                    "inputs",
+                                                    "outputs"
+                                                ]
+                                            }
+										}
+									}
+								}
+							},
+							"expression": {
+								"and": [
+									{
+										"greater": [
+											"@length(variables('Error'))",
+											0
+										]
+									}
+								]
+							},
+							"type": "If"
+						},
+						"Constants": {
+							"runAfter": {
+								"Initialize_variable_configurations": [
+									"Succeeded"
+								]
+							},
+							"type": "ParseJson",
+							"inputs": {
+								"content": {
+									"assetfilesDropdownValue": 207940002,
+									"assetfilesLogicalName": "media_assetfiles",
+									"assetsDropdownValue": 207940001,
+									"nexisDropdownValue": 207940000,
+									"seasonsDropdownValue": 207940000,
+									"vendorDropdownValue": 207940001
+								},
+								"schema": {
+									"properties": {
+										"assetfilesDropdownValue": {
+											"type": "integer"
+										},
+										"assetfilesLogicalName": {
+											"type": "string"
+										},
+										"assetsDropdownValue": {
+											"type": "integer"
+										},
+										"nexisDropdownValue": {
+											"type": "integer"
+										},
+										"seasonsDropdownValue": {
+											"type": "integer"
+										},
+										"vendorDropdownValue": {
+											"type": "integer"
+										}
+									},
+									"type": "object"
+                                }
+                            },
+                            "runtimeConfiguration": {
+                                "secureData": {
+                                    "properties": [
+                                        "inputs"
+                                    ]
+								}
+							}
+						},
+						"Initialize_variable_Error": {
+							"runAfter": {},
+							"type": "InitializeVariable",
+							"inputs": {
+								"variables": [
+									{
+										"name": "Error",
+										"type": "string"
+									}
+								]
+							}
+						},
+						"Initialize_variable_FinalSourceSet": {
+							"runAfter": {
+								"Initialize_variable_SourceInputArray": [
+									"Succeeded"
+								]
+							},
+							"type": "InitializeVariable",
+							"inputs": {
+								"variables": [
+									{
+										"name": "FinalSourceSet",
+										"type": "array"
+									}
+								]
+							}
+						},
+						"Initialize_variable_SourceInputArray": {
+							"runAfter": {
+								"Initialize_variable_SourceTypeValue": [
+									"Succeeded"
+								]
+							},
+							"type": "InitializeVariable",
+							"inputs": {
+								"variables": [
+									{
+										"name": "SourceInputArray",
+										"type": "array"
+									}
+								]
+							}
+						},
+						"Initialize_variable_SourceTypeValue": {
+							"runAfter": {
+								"Constants": [
+									"Succeeded"
+								]
+							},
+							"type": "InitializeVariable",
+							"inputs": {
+								"variables": [
+									{
+										"name": "SourceTypeValue",
+										"type": "integer",
+										"value": 0
+									}
+								]
+							}
+						},
+						"Initialize_variable_TempArray": {
+							"runAfter": {
+								"Initialize_variable_FinalSourceSet": [
+									"Succeeded"
+								]
+							},
+							"type": "InitializeVariable",
+							"inputs": {
+								"variables": [
+									{
+										"name": "TempArray",
+										"type": "array"
+									}
+								]
+							}
+						},
+						"Initialize_variable_UnrelatedFilesArray": {
+							"runAfter": {
+								"Initialize_variable_TempArray": [
+									"Succeeded"
+								]
+							},
+							"type": "InitializeVariable",
+							"inputs": {
+								"variables": [
+									{
+										"name": "UnrelatedFilesArray",
+										"type": "array"
+									}
+								]
+							}
+						},
+						"Initialize_variable_configurations": {
+							"runAfter": {
+								"Logic-ReadAzureConfiguration": [
+									"Succeeded"
+								]
+							},
+							"type": "InitializeVariable",
+							"inputs": {
+								"variables": [
+									{
+										"name": "configurations",
+										"type": "object"
+									}
+								]
+							}
+						},
+						"Logic-ReadAzureConfiguration": {
+							"runAfter": {
+								"Parse_Request_JSON": [
+									"Succeeded"
+								]
+							},
+							"type": "Workflow",
+							"inputs": {
+								"host": {
+									"triggerName": "manual",
+									"workflow": {
+										"id": "[parameters('workflows_Logic_ReadAzureConfiguration')]"
+									}
+                                }
+                            },
+                            "runtimeConfiguration": {
+                                "secureData": {
+                                    "properties": [
+                                        "inputs",
+                                        "outputs"
+                                    ]
+								}
+							}
+						},
+						"Parse_Request_JSON": {
+							"runAfter": {
+								"Initialize_variable_Error": [
+									"Succeeded"
+								]
+							},
+							"type": "ParseJson",
+							"inputs": {
+								"content": "@triggerBody()?['media_data']",
+								"schema": {
+									"properties": {
+										"container": {
+											"type": "string"
+										},
+										"destination": {
+											"items": {
+												"properties": {
+													"id": {
+														"type": "string"
+													},
+													"name": {
+														"type": "string"
+													},
+													"path": {
+														"type": "string"
+													}
+												},
+												"required": [
+													"id",
+													"name",
+													"path"
+												],
+												"type": "object"
+											},
+											"type": "array"
+										},
+										"destinationType": {
+											"type": "string"
+										},
+										"entityLogicalName": {
+											"type": "string"
+										},
+										"showid": {
+											"type": "string"
+										},
+										"source": {
+											"items": {
+												"properties": {
+													"aleId": {
+														"type": "string"
+													},
+													"id": {
+														"type": "string"
+													},
+													"name": {
+														"type": "string"
+													},
+													"path": {
+														"type": "string"
+													}
+												},
+												"required": [
+													"id",
+													"name",
+													"aleId",
+													"path"
+												],
+												"type": "object"
+											},
+											"type": "array"
+										},
+										"submittedBy": {
+											"properties": {
+												"email": {
+													"type": "string"
+												},
+												"userId": {
+													"type": "string"
+												}
+											},
+											"type": "object"
+										}
+									},
+									"type": "object"
+								}
+                            },
+                            "runtimeConfiguration": {
+                                "secureData": {
+                                    "properties": [
+                                        "inputs"
+                                    ]
+                                }
+							}
+						},
+						"Scope": {
+							"actions": {
+								"Check_ale_file": {
+									"actions": {
+										"For_each_ale_file": {
+											"foreach": "@body('Filter_array_of_ale_files')",
+											"actions": {
+												"Filter_array_of_unrelated_files": {
+													"runAfter": {
+														"Set_variable_FinalSourceSet": [
+															"Succeeded"
+														]
+													},
+													"type": "Query",
+													"inputs": {
+														"from": "@variables('UnrelatedFilesArray')",
+														"where": "@and(\nnot(equals(item()?['id'], string(items('For_each_ale_file')?['id']))),\nor(\nnot(equals(item()?['aleId'], string(items('For_each_ale_file')?['id']))),\nequals(empty(item()?['aleId']), true)\n)\n)"
+													},
+                                                    "description": "Filter files which are not equal to ale Id, not related file of ale or ale Id is blank",
+                                                    "runtimeConfiguration": {
+                                                        "secureData": {
+                                                            "properties": [
+                                                                "inputs",
+                                                                "outputs"
+                                                            ]
+                                                        }
+                                                    }
+												},
+												"List_related_ale_records": {
+													"runAfter": {},
+													"type": "ApiConnection",
+													"inputs": {
+														"host": {
+															"connection": {
+																"name": "@parameters('$connections')['commondataservice']['connectionId']"
+															}
+														},
+														"method": "get",
+														"path": "[concat('/v2/datasets/@{encodeURIComponent(encodeURIComponent(',variables('org'),'))}/tables/@{encodeURIComponent(encodeURIComponent(',durin.wrapInQuote('media_assetfileses'),'))}/items')]",
+														"queries": {
+															"$filter": "media_alefileid eq '@{items('For_each_ale_file')?['id']}' and statecode eq 0"
+														}
+													},
+                                                    "description": "List related files of ale file",
+                                                    "runtimeConfiguration": {
+                                                        "secureData": {
+                                                            "properties": [
+                                                                "inputs",
+                                                                "outputs"
+                                                            ]
+                                                        }
+                                                    }
+												},
+												"Select_short_object": {
+													"runAfter": {
+														"List_related_ale_records": [
+															"Succeeded"
+														]
+													},
+													"type": "Select",
+													"inputs": {
+														"from": "@body('List_related_ale_records')?['value']",
+														"select": {
+															"aleId": "@item()?['media_alefileid']",
+															"id": "@item()?['media_assetfilesid']",
+															"name": "@item()?['media_name']",
+															"path": "@item()?['media_blobpath']"
+                                                        }
+                                                    },
+                                                    "runtimeConfiguration": {
+                                                        "secureData": {
+                                                            "properties": [
+                                                                "inputs",
+                                                                "outputs"
+                                                            ]
+														}
+													}
+												},
+												"Set_variable_FinalSourceSet": {
+													"runAfter": {
+														"Set_variable_tempArray": [
+															"Succeeded"
+														]
+													},
+													"type": "SetVariable",
+													"inputs": {
+														"name": "FinalSourceSet",
+														"value": "@variables('TempArray')"
+													}
+												},
+												"Set_variable_tempArray": {
+													"runAfter": {
+														"Select_short_object": [
+															"Succeeded"
+														]
+													},
+													"type": "SetVariable",
+													"inputs": {
+														"name": "TempArray",
+														"value": "@union(body('Select_short_object'),array(items('For_each_ale_file')),variables('FinalSourceSet'))"
+													}
+												},
+												"Set_variable_unrelatedFiles": {
+													"runAfter": {
+														"Filter_array_of_unrelated_files": [
+															"Succeeded"
+														]
+													},
+													"type": "SetVariable",
+													"inputs": {
+														"name": "UnrelatedFilesArray",
+														"value": "@body('Filter_array_of_unrelated_files')"
+													}
+												}
+											},
+											"runAfter": {},
+											"type": "Foreach",
+											"runtimeConfiguration": {
+												"concurrency": {
+													"repetitions": 1
+												}
+											}
+										},
+										"Set_variable_6": {
+											"runAfter": {
+												"For_each_ale_file": [
+													"Succeeded"
+												]
+											},
+											"type": "SetVariable",
+											"inputs": {
+												"name": "TempArray",
+												"value": "@union(variables('FinalSourceSet'),variables('UnrelatedFilesArray'))"
+											}
+										},
+										"Set_variable_7": {
+											"runAfter": {
+												"Set_variable_6": [
+													"Succeeded"
+												]
+											},
+											"type": "SetVariable",
+											"inputs": {
+												"name": "FinalSourceSet",
+												"value": "@variables('TempArray')"
+											}
+										}
+									},
+									"runAfter": {
+										"Filter_array_of_ale_files": [
+											"Succeeded"
+										]
+									},
+									"else": {
+										"actions": {
+											"Set_variable_8": {
+												"runAfter": {},
+												"type": "SetVariable",
+												"inputs": {
+													"name": "FinalSourceSet",
+													"value": "@body('Parse_Request_JSON')?['source']"
+												}
+											}
+										}
+									},
+									"expression": {
+										"and": [
+											{
+												"greater": [
+													"@length(body('Filter_array_of_ale_files'))",
+													0
+												]
+											}
+										]
+									},
+									"type": "If"
+								},
+								"Filter_array_of_ale_files": {
+									"runAfter": {
+										"Set_variable_UnrelatedFilesArray": [
+											"Succeeded"
+										]
+									},
+									"type": "Query",
+									"inputs": {
+										"from": "@body('Parse_Request_JSON')?['source']",
+										"where": "@contains(item()?['name'], '.ale')"
+                                    },
+                                    "runtimeConfiguration": {
+                                        "secureData": {
+                                            "properties": [
+                                                "inputs",
+                                                "outputs"
+                                            ]
+                                        }
+									}
+								},
+								"For_each": {
+									"foreach": "@variables('SourceInputArray')",
+									"actions": {
+										"Compose_Input_Name": {
+											"runAfter": {},
+											"type": "Compose",
+                                            "inputs": "@concat(rand(1,100),'_',replace(items('For_each')?['id'],'-','|'))",
+                                            "runtimeConfiguration": {
+                                                "secureData": {
+                                                    "properties": [
+                                                        "inputs"
+                                                    ]
+                                                }
+                                            }
+										},
+										"For_each_2": {
+											"foreach": "@body('Parse_Request_JSON')?['destination']",
+											"actions": {
+												"Logic-CreatePipelineForEachDestination": {
+													"runAfter": {},
+													"type": "Workflow",
+													"inputs": {
+														"body": {
+															"AssetFileFlag": "@if(equals(outputs('Compose_AssetFileFlag'), null), false, outputs('Compose_AssetFileFlag'))",
+															"SourceTypeValue": "@variables('SourceTypeValue')",
+															"destination": "@items('For_each_2')",
+															"destinationType": "@{body('Parse_Request_JSON')?['destinationType']}",
+															"inputDataset": "@{body('HTTP_create_input_dataset')?['name']}",
+															"recordUrl": "Anika Nexis",
+															"showId": "@{body('Parse_Request_JSON')?['showid']}",
+															"source": "@items('For_each')",
+															"submittedBy": "@body('Parse_Request_JSON')?['submittedBy']",
+															"token": "@{body('HTTP_Get_Access_Token')?['access_token']}"
+														},
+														"host": {
+															"triggerName": "manual",
+															"workflow": {
+																"id": "[parameters('workflows_Logic_CreatePipelineForEachDestination')]"
+															}
+														},
+														"retryPolicy": {
+															"type": "none"
+                                                        }
+                                                    },
+                                                    "runtimeConfiguration": {
+                                                        "secureData": {
+                                                            "properties": [
+                                                                "inputs",
+                                                                "outputs"
+                                                            ]
+														}
+													}
+												}
+											},
+											"runAfter": {
+												"HTTP_create_input_dataset": [
+													"Succeeded"
+												]
+											},
+											"type": "Foreach"
+										},
+										"HTTP_create_input_dataset": {
+											"runAfter": {
+												"Compose_Input_Name": [
+													"Succeeded"
+												]
+											},
+											"type": "Http",
+											"inputs": {
+												"body": {
+													"name": "@concat('Input', outputs('Compose_Input_Name'))",
+													"properties": {
+														"annotations": [],
+														"linkedServiceName": {
+															"referenceName": "@{variables('configurations')?['SourceBlobLinkedServiceName']}",
+															"type": "LinkedServiceReference"
+														},
+														"type": "Binary",
+														"typeProperties": {
+															"location": {
+																"container": "@{body('Parse_Request_JSON')?['container']}",
+																"fileName": "@{items('For_each')?['fileName']}",
+																"folderPath": "@{join(skip(split(items('For_each')?['path'], '/'), 1), '/')}",
+																"type": "AzureBlobStorageLocation"
+															}
+														}
+													}
+												},
+												"headers": {
+													"Accept": "application/json",
+													"Authorization": "Bearer @{body('HTTP_Get_Access_Token')?['access_token']}",
+													"Content-Type": "application/json"
+												},
+												"method": "PUT",
+												"uri": "@{concat('https://management.azure.com/subscriptions/', variables('configurations')?['SubscriptionId'], '/resourceGroups/', variables('configurations')?['ResourceGroup'], '/providers/Microsoft.DataFactory/factories/', variables('configurations')?['FactoryName'], '/datasets/Input',outputs('Compose_Input_Name'), '?api-version=', variables('configurations')?['api-version'])}"
+                                            },
+                                            "runtimeConfiguration": {
+                                                "secureData": {
+                                                    "properties": [
+                                                        "inputs",
+                                                        "outputs"
+                                                    ]
+                                                }
+											}
+										}
+									},
+									"runAfter": {
+										"HTTP_Get_Access_Token": [
+											"Succeeded"
+										]
+									},
+									"type": "Foreach"
+								},
+								"HTTP_Get_Access_Token": {
+									"runAfter": {
+										"Switch_for_source_type": [
+											"Succeeded"
+										]
+									},
+									"type": "Http",
+									"inputs": {
+										"body": "grant_type=client_credentials&client_id=@{variables('configurations')?['AadClientId']}&client_secret=@{variables('configurations')?['AadSecret']}&resource=https://management.core.windows.net/",
+										"headers": {
+											"Content-Type": "application/x-www-form-urlencoded",
+											"Keep-Alive": "true"
+										},
+										"method": "POST",
+										"uri": "@{concat('https://login.microsoftonline.com/', variables('configurations')?['AadTenantDomain'], '/oauth2/token')}"
+                                    },
+                                    "runtimeConfiguration": {
+                                        "secureData": {
+                                            "properties": [
+                                                "inputs",
+                                                "outputs"
+                                            ]
+                                        }
+									}
+								},
+								"Set_variable_UnrelatedFilesArray": {
+									"runAfter": {
+										"Set_variable_configurations": [
+											"Succeeded"
+										]
+									},
+									"type": "SetVariable",
+									"inputs": {
+										"name": "UnrelatedFilesArray",
+										"value": "@body('Parse_Request_JSON')?['source']"
+									}
+								},
+								"Set_variable_configurations": {
+									"runAfter": {},
+									"type": "SetVariable",
+									"inputs": {
+										"name": "configurations",
+										"value": "@body('Logic-ReadAzureConfiguration')"
+									}
+								},
+								"Switch_for_source_type": {
+									"runAfter": {
+										"Check_ale_file": [
+											"Succeeded"
+										]
+									},
+									"cases": {
+										"Case_asset": {
+											"case": "media_asset",
+											"actions": {
+												"Select_3": {
+													"runAfter": {
+														"Set_variable_asset": [
+															"Succeeded"
+														]
+													},
+													"type": "Select",
+													"inputs": {
+														"from": "@variables('FinalSourceSet')",
+														"select": {
+															"aleId": "@item()?['aleId']",
+															"fileName": "",
+															"id": "@item()?['id']",
+															"name": "@item()?['name']",
+															"path": "@item()?['path']"
+														}
+                                                    },
+                                                    "runtimeConfiguration": {
+                                                        "secureData": {
+                                                            "properties": [
+                                                                "inputs",
+                                                                "outputs"
+                                                            ]
+                                                        }
+													}
+												},
+												"Set_variable_5": {
+													"runAfter": {
+														"Select_3": [
+															"Succeeded"
+														]
+													},
+													"type": "SetVariable",
+													"inputs": {
+														"name": "SourceInputArray",
+														"value": "@body('Select_3')"
+													}
+												},
+												"Set_variable_asset": {
+													"runAfter": {},
+													"type": "SetVariable",
+													"inputs": {
+														"name": "SourceTypeValue",
+														"value": "@body('Constants')?['assetsDropdownValue']"
+													}
+												}
+											}
+										},
+										"Case_assetfiles": {
+											"case": "media_assetfiles",
+											"actions": {
+												"Compose_AssetFileFlag": {
+													"runAfter": {
+														"Set_variable_assetfiles": [
+															"Succeeded"
+														]
+													},
+													"type": "Compose",
+                                                    "inputs": "@true",
+                                                    "runtimeConfiguration": {
+                                                        "secureData": {
+                                                            "properties": [
+                                                                "inputs"
+                                                            ]
+                                                        }
+                                                    }
+												},
+												"Select": {
+													"runAfter": {
+														"Compose_AssetFileFlag": [
+															"Succeeded"
+														]
+													},
+													"type": "Select",
+													"inputs": {
+														"from": "@variables('FinalSourceSet')",
+														"select": {
+															"aleId": "@item()?['aleId']",
+															"fileName": "@item()?['name']",
+															"id": "@item()?['id']",
+															"name": "@item()?['name']",
+															"path": "@join(take(split(item()?['path'],'/'),sub(length(split(item()?['path'],'/')),1)),'/')"
+                                                        }
+                                                    },
+                                                    "runtimeConfiguration": {
+                                                        "secureData": {
+                                                            "properties": [
+                                                                "inputs",
+                                                                "outputs"
+                                                            ]
+														}
+													}
+												},
+												"Set_variable_3": {
+													"runAfter": {
+														"Select": [
+															"Succeeded"
+														]
+													},
+													"type": "SetVariable",
+													"inputs": {
+														"name": "SourceInputArray",
+														"value": "@body('Select')"
+													}
+												},
+												"Set_variable_assetfiles": {
+													"runAfter": {},
+													"type": "SetVariable",
+													"inputs": {
+														"name": "SourceTypeValue",
+														"value": "@body('Constants')?['assetfilesDropdownValue']"
+													}
+												}
+											}
+										},
+										"Case_season": {
+											"case": "media_season",
+											"actions": {
+												"Select_2": {
+													"runAfter": {
+														"Set_variable_season": [
+															"Succeeded"
+														]
+													},
+													"type": "Select",
+													"inputs": {
+														"from": "@variables('FinalSourceSet')",
+														"select": {
+															"aleId": "@item()?['aleId']",
+															"fileName": "",
+															"id": "@item()?['id']",
+															"name": "@item()?['name']",
+															"path": "@item()?['path']"
+                                                        }
+                                                    },
+                                                    "runtimeConfiguration": {
+                                                        "secureData": {
+                                                            "properties": [
+                                                                "inputs",
+                                                                "outputs"
+                                                            ]
+														}
+													}
+												},
+												"Set_variable_4": {
+													"runAfter": {
+														"Select_2": [
+															"Succeeded"
+														]
+													},
+													"type": "SetVariable",
+													"inputs": {
+														"name": "SourceInputArray",
+														"value": "@body('Select_2')"
+													}
+												},
+												"Set_variable_season": {
+													"runAfter": {},
+													"type": "SetVariable",
+													"inputs": {
+														"name": "SourceTypeValue",
+														"value": "@body('Constants')?['seasonsDropdownValue']"
+													}
+												}
+											}
+										}
+									},
+									"default": {
+										"actions": {}
+									},
+									"expression": "@body('Parse_Request_JSON')?['entityLogicalName']",
+									"type": "Switch"
+								}
+							},
+							"runAfter": {
+								"Initialize_variable_UnrelatedFilesArray": [
+									"Succeeded"
+								]
+							},
+							"type": "Scope"
+						},
+						"Set_variable_Error": {
+							"runAfter": {
+								"Parse_Request_JSON": [
+									"Failed"
+								]
+							},
+							"type": "SetVariable",
+							"inputs": {
+								"name": "Error",
+								"value": "@{string(outputs('Parse_Request_JSON'))}"
+							}
+						}
+					},
+					"outputs": {}
+				},
+				"parameters": {
+					"$connections": {
+						"value": {
+							"commondataservice": {
+								"connectionId": "[parameters('connection_commondataservice')]",
+								"connectionName": "commondataservice",
+								"id": "[concat(subscription().id, '/providers/Microsoft.Web/locations/', resourceGroup().location, '/managedApis/commondataservice')]"
+							}
+						}
+					}
+				}
+			}
+		}
+	]
+}

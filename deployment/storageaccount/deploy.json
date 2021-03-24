@@ -1,0 +1,71 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "storagename": {
+            "type": "string",
+            "metadata": {
+                "description": "description"
+            }
+        }     
+    },
+    "functions": [],
+    "variables": {
+    },
+    "resources": [
+        {
+            "name": "[parameters('storagename')]",
+            "type": "Microsoft.Storage/storageAccounts",
+            "apiVersion": "2019-06-01",
+            "tags": {
+                "displayName": "[parameters('storagename')]"
+            },
+            "location": "[resourceGroup().location]",
+            "kind": "StorageV2",
+            "sku": {
+                "name": "Standard_LRS",
+                "tier": "Standard"
+            }
+        },
+        {
+            "name": "azureblob",
+            "type": "Microsoft.Web/connections",
+            "apiVersion": "2016-06-01",
+            "location": "[resourceGroup().location]",
+            "tags": {
+            },
+            "properties": {
+                "displayName": "duringstorageconnection",
+                "parameterValues": {
+                    "accountName": "[parameters('storagename')]",
+                    "accessKey": "[listKeys(resourceId('Microsoft.Storage/storageAccounts',parameters('storagename')) ,'2019-06-01').keys[0].value]"
+                },
+                "customParameterValues": {
+                },
+                "nonSecretParameterValues": {
+                },
+                "api": {
+                    "id": "[concat(subscription().id, '/providers/Microsoft.Web/locations/', resourceGroup().location, '/managedApis/azureblob')]"
+                }
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storagename'))]"
+            ]
+        },
+         {
+            "name": "[take(concat('vendor', parameters('storagename')),24)]",
+            "type": "Microsoft.Storage/storageAccounts",
+            "apiVersion": "2019-06-01",
+            "tags": {
+                "displayName": "[take(concat('vendor', parameters('storagename')),24)]"
+            },
+            "location": "[resourceGroup().location]",
+            "kind": "StorageV2",
+            "sku": {
+                "name": "Standard_LRS",
+                "tier": "Standard"
+            }
+        }
+    ],
+    "outputs": {}
+}

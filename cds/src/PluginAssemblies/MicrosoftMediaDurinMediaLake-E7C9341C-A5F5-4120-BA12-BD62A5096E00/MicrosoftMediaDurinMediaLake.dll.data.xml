@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<PluginAssembly FullName="Microsoft.Media.DurinMediaLake, Version=1.0.0.0, Culture=neutral, PublicKeyToken=809b50fade28e4c2" PluginAssemblyId="e7c9341c-a5f5-4120-ba12-bd62a5096e00" CustomizationLevel="1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <IsolationMode>2</IsolationMode>
+  <SourceType>0</SourceType>
+  <IntroducedVersion>1.0</IntroducedVersion>
+  <FileName>/PluginAssemblies/MicrosoftMediaDurinMediaLake-E7C9341C-A5F5-4120-BA12-BD62A5096E00/MicrosoftMediaDurinMediaLake.dll</FileName>
+  <PluginTypes>
+    <PluginType AssemblyQualifiedName="Microsoft.Media.DurinMediaLake.Plugin.CameraMetadataExtraction, Microsoft.Media.DurinMediaLake, Version=1.0.0.0, Culture=neutral, PublicKeyToken=809b50fade28e4c2" PluginTypeId="6d3964f9-1c7d-4463-8df8-2d11434f40cf" Name="Microsoft.Media.DurinMediaLake.Plugin.CameraMetadataExtraction">
+      <FriendlyName>5a5b9a05-530f-415d-89bc-86549811b0ae</FriendlyName>
+    </PluginType>
+    <PluginType AssemblyQualifiedName="Microsoft.Media.DurinMediaLake.Plugin.MediaInfoMetadataExtract, Microsoft.Media.DurinMediaLake, Version=1.0.0.0, Culture=neutral, PublicKeyToken=809b50fade28e4c2" PluginTypeId="39d24521-394d-418d-b0f1-25d12188c9ce" Name="Microsoft.Media.DurinMediaLake.Plugin.MediaInfoMetadataExtract">
+      <FriendlyName>88f28702-4dec-420b-8059-bc62de7f9d9c</FriendlyName>
+    </PluginType>
+    <PluginType AssemblyQualifiedName="Microsoft.Media.DurinMediaLake.Plugin.UpdateAssetUploadStatus, Microsoft.Media.DurinMediaLake, Version=1.0.0.0, Culture=neutral, PublicKeyToken=809b50fade28e4c2" PluginTypeId="ae7e7c62-271c-4a90-984f-fdbc2f01ab73" Name="Microsoft.Media.DurinMediaLake.Plugin.UpdateAssetUploadStatus">
+      <FriendlyName>201e268c-3da5-45d3-8f14-4734174b4fd4</FriendlyName>
+    </PluginType>
+  </PluginTypes>
+</PluginAssembly>

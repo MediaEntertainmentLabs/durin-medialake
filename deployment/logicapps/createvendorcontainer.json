@@ -1,0 +1,250 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"connection_commondataservice": {
+			"type": "string",
+			"defaultValue": "[concat(subscription().id,'/resourceGroups/',resourceGroup().name,'/providers/Microsoft.Web/connections/commondataservice')]"
+		},
+		"sites_MediaLakeFunction": {
+			"defaultValue": "[concat(subscription().id,'/resourceGroups/',resourceGroup().name,'/providers/Microsoft.Web/sites/',toLower(take(concat('func-', concat('durinmedia',uniqueString(resourceGroup().id))), 60)))]",
+			"type": "String"
+		},
+		"crmOrgName": {
+			"type": "string",
+			"metadata": {
+				"description": "description"
+			}
+		},
+		"crmIdentifier": {
+			"type": "string",
+			"metadata": {
+				"description": "crmIdentifier"
+			}
+		}
+	},
+	"functions": [
+		{
+			"namespace": "durin",
+			"members": {
+				"wrapInQuote": {
+					"parameters": [
+						{
+							"name": "text",
+							"type": "string"
+						}
+					],
+					"output": {
+						"value": "[concat('''', parameters('text'),'''')]",
+						"type": "string"
+					}
+				}
+			}
+		}
+	],
+	"variables": {
+		"org": "[durin.wrapInQuote(concat(parameters('crmOrgName'),'.',parameters('crmIdentifier')))]"
+	},
+	"resources": [
+		{
+			"type": "Microsoft.Logic/workflows",
+			"apiVersion": "2017-07-01",
+			"name": "Logic-CreateVendorContainer",
+			"location": "[resourceGroup().location]",
+			"properties": {
+				"definition": {
+					"$schema": "https://schema.management.azure.com/schemas/2016-06-01/Microsoft.Logic.json",
+					"contentVersion": "1.0.0.0",
+					"parameters": {
+						"$connections": {
+							"defaultValue": {},
+							"type": "Object"
+						}
+					},
+					"triggers": {
+						"When_a_record_is_created": {
+							"type": "ApiConnectionWebhook",
+							"inputs": {
+								"body": {
+									"NotificationUrl": "@{listCallbackUrl()}"
+								},
+								"host": {
+									"connection": {
+										"name": "@parameters('$connections')['commondataservice']['connectionId']"
+									}
+								},
+								"path": "[concat('/datasets/@{encodeURIComponent(encodeURIComponent(',variables('org'),'))}/tables/@{encodeURIComponent(encodeURIComponent(',durin.wrapInQuote('media_vendors'),'))}/onnewitemswebhook')]",
+								"queries": {
+									"scope": "Organization"
+                                }
+                            },
+                            "runtimeConfiguration": {
+                                "secureData": {
+                                    "properties": [
+                                        "inputs",
+                                        "outputs"
+                                    ]
+								}
+							}
+						}
+					},
+					"actions": {
+						"Compose": {
+							"runAfter": {},
+							"type": "Compose",
+							"inputs": {
+								"name": "@{triggerBody()?['media_name']}",
+								"type": "vendor"
+                            },
+                            "runtimeConfiguration": {
+                                "secureData": {
+                                    "properties": [
+                                        "inputs"
+                                    ]
+                                }
+							}
+						},
+						"CreateShowContainer": {
+							"runAfter": {
+								"Compose": [
+									"Succeeded"
+								]
+							},
+							"type": "Function",
+							"inputs": {
+								"body": "@outputs('Compose')",
+								"function": {
+									"id": "[concat(parameters('sites_MediaLakeFunction'), '/functions/CreateShowContainer')]"
+                                }
+                            },
+                            "runtimeConfiguration": {
+                                "secureData": {
+                                    "properties": [
+                                        "inputs",
+                                        "outputs"
+                                    ]
+								}
+							}
+						},
+						"Create_error_log_record": {
+							"runAfter": {
+								"CreateShowContainer": [
+									"Failed",
+									"TimedOut"
+								]
+							},
+							"type": "ApiConnection",
+							"inputs": {
+								"body": {
+									"_media_vendor_value": "@triggerBody()?['media_vendorid']",
+									"media_description": "Failed to create Show container @{triggerBody()?['media_name']}",
+									"media_name": "Failed to create Show container @{triggerBody()?['media_name']}"
+								},
+								"host": {
+									"connection": {
+										"name": "@parameters('$connections')['commondataservice']['connectionId']"
+									}
+								},
+								"method": "post",
+								"path": "[concat('/v2/datasets/@{encodeURIComponent(encodeURIComponent(',variables('org'),'))}/tables/@{encodeURIComponent(encodeURIComponent(',durin.wrapInQuote('media_asseterrorlogs'),'))}/items')]"
+                            },
+                            "runtimeConfiguration": {
+                                "secureData": {
+                                    "properties": [
+                                        "inputs",
+                                        "outputs"
+                                    ]
+                                }
+							}
+						},
+						"Response_failure": {
+							"runAfter": {
+								"Create_error_log_record": [
+									"Succeeded"
+								]
+							},
+							"type": "Response",
+							"kind": "Http",
+							"inputs": {
+								"body": {
+									"Message": "Failed to create Vendor container and Update folder Path"
+								},
+								"statusCode": 500
+                            },
+                            "runtimeConfiguration": {
+                                "secureData": {
+                                    "properties": [
+                                        "inputs"
+                                    ]
+                                }
+							}
+						},
+						"Response_success": {
+							"runAfter": {
+								"Update_vendor_path": [
+									"Succeeded"
+								]
+							},
+							"type": "Response",
+							"kind": "Http",
+							"inputs": {
+								"body": {
+									"Message": "Vendor created and path updated successfully"
+								},
+								"statusCode": 200
+                            },
+                            "runtimeConfiguration": {
+                                "secureData": {
+                                    "properties": [
+                                        "inputs"
+                                    ]
+                                }
+							}
+						},
+						"Update_vendor_path": {
+							"runAfter": {
+								"CreateShowContainer": [
+									"Succeeded"
+								]
+							},
+							"type": "ApiConnection",
+							"inputs": {
+								"body": {
+									"_ownerid_type": "",
+									"media_folderpath": "@{body('CreateShowContainer')}"
+								},
+								"host": {
+									"connection": {
+										"name": "@parameters('$connections')['commondataservice']['connectionId']"
+									}
+								},
+								"method": "patch",
+								"path": "[concat('/v2/datasets/@{encodeURIComponent(encodeURIComponent(',variables('org'),'))}/tables/@{encodeURIComponent(encodeURIComponent(',durin.wrapInQuote('media_vendors'),'))}/items/@{encodeURIComponent(encodeURIComponent(triggerBody()?[',durin.wrapInQuote('media_vendorid'),']))}')]"
+                            },
+                            "runtimeConfiguration": {
+                                "secureData": {
+                                    "properties": [
+                                        "inputs",
+                                        "outputs"
+                                    ]
+                                }
+							}
+						}
+					},
+					"outputs": {}
+				},
+				"parameters": {
+					"$connections": {
+						"value": {
+							"commondataservice": {
+								"connectionId": "[parameters('connection_commondataservice')]",
+								"connectionName": "commondataservice",
+								"id": "[concat(subscription().id, '/providers/Microsoft.Web/locations/', resourceGroup().location, '/managedApis/commondataservice')]"
+							}
+						}
+					}
+				}
+			}
+		}
+	]
+}

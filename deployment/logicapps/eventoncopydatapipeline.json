@@ -1,0 +1,672 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"workflows_Logic_SendEmail": {
+			"defaultValue": "[concat(subscription().id,'/resourceGroups/',resourceGroup().name,'/providers/Microsoft.Logic/workflows/Logic-SendEmail')]",
+			"type": "String"
+		},
+		"workflows_Logic_ReadAzureConfiguration": {
+			"defaultValue": "[concat(subscription().id,'/resourceGroups/',resourceGroup().name,'/providers/Microsoft.Logic/workflows/Logic-ReadAzureConfiguration')]",
+			"type": "String"
+		},
+		"connection_commondataservice": {
+			"type": "string",
+			"defaultValue": "[concat(subscription().id,'/resourceGroups/',resourceGroup().name,'/providers/Microsoft.Web/connections/commondataservice')]"
+		},
+		"crmOrgName": {
+			"type": "string",
+			"metadata": {
+				"description": "description"
+			}
+		},
+		"crmIdentifier": {
+			"type": "string",
+			"metadata": {
+				"description": "crmIdentifier"
+			}
+		}
+	},
+	"functions": [
+		{
+			"namespace": "durin",
+			"members": {
+				"wrapInQuote": {
+					"parameters": [
+						{
+							"name": "text",
+							"type": "string"
+						}
+					],
+					"output": {
+						"value": "[concat('''', parameters('text'),'''')]",
+						"type": "string"
+					}
+				}
+			}
+		}
+	],
+	"variables": {
+		"org": "[durin.wrapInQuote(concat(parameters('crmOrgName'),'.',parameters('crmIdentifier')))]"
+	},
+	"resources": [
+		{
+			"type": "Microsoft.Logic/workflows",
+			"apiVersion": "2017-07-01",
+			"name": "Logic-EventOnCopyDataPipeline",
+			"location": "[resourceGroup().location]",
+			"properties": {
+				"state": "Enabled",
+				"definition": {
+					"$schema": "https://schema.management.azure.com/schemas/2016-06-01/Microsoft.Logic.json",
+					"contentVersion": "1.0.0.0",
+					"parameters": {
+						"$connections": {
+							"defaultValue": {},
+							"type": "Object"
+						}
+					},
+					"triggers": {
+						"manual": {
+							"type": "Request",
+							"kind": "Http",
+							"inputs": {},
+                            "runtimeConfiguration": {
+                                "secureData": {
+                                    "properties": [
+                                        "inputs",
+                                        "outputs"
+                                    ]
+                                }
+                            }
+						}
+					},
+				"actions": {
+					"Compose_CopyStatusId": {
+						"runAfter": {
+							"Compose_UniqueId": [
+								"Succeeded"
+							]
+						},
+						"type": "Compose",
+						"inputs": "@split(outputs('Compose_UniqueId'),'_')[0]",
+						"runtimeConfiguration": {
+							"secureData": {
+								"properties": [
+									"inputs"
+								]
+							}
+						}
+					},
+					"Compose_Input_Name": {
+						"runAfter": {
+							"HTTP_Get_Pipeline": [
+								"Succeeded"
+							]
+						},
+						"type": "Compose",
+						"inputs": "@body('HTTP_Get_Pipeline')?['properties']?['activities'][0]?['inputs'][0]?['referenceName']",
+						"runtimeConfiguration": {
+							"secureData": {
+								"properties": [
+									"inputs"
+								]
+							}
+						}
+					},
+					"Compose_Source_Id": {
+						"runAfter": {
+							"Compose_Input_Name": [
+								"Succeeded"
+							]
+						},
+						"type": "Compose",
+						"inputs": "@replace(last(split(outputs('Compose_Input_Name'),'_')),'|','-')",
+						"runtimeConfiguration": {
+							"secureData": {
+								"properties": [
+									"inputs"
+								]
+							}
+						}
+					},
+					"Compose_UniqueId": {
+						"runAfter": {
+							"Constants": [
+								"Succeeded"
+							]
+						},
+						"type": "Compose",
+						"inputs": "@replace(body('Parse_JSON')?['pipelineName'],'pipe','')",
+						"runtimeConfiguration": {
+							"secureData": {
+								"properties": [
+									"inputs"
+								]
+							}
+						}
+					},
+					"Compose_Valid_Body_To_Parse": {
+						"runAfter": {},
+						"type": "Compose",
+						"inputs": "@replace(string(triggerBody()),'\\','/')",
+                            "runtimeConfiguration": {
+                                "secureData": {
+                                    "properties": [
+                                        "inputs"
+                                    ]
+                                }
+							}
+					},
+					"Constants": {
+						"runAfter": {
+							"Initialize_variable_configurations": [
+								"Succeeded"
+							]
+						},
+						"type": "ParseJson",
+						"inputs": {
+							"content": {
+								"assetfilesDropdownValue": 207940002,
+								"assetfilesLogicalName": "media_assetfiles",
+								"assetsDropdownValue": 207940001,
+								"nexisDropdownValue": 207940000,
+								"seasonsDropdownValue": 207940000,
+								"vendorDropdownValue": 207940001
+							},
+							"schema": {
+								"properties": {
+									"assetfilesDropdownValue": {
+										"type": "integer"
+									},
+									"assetfilesLogicalName": {
+										"type": "string"
+									},
+									"assetsDropdownValue": {
+										"type": "integer"
+									},
+									"nexisDropdownValue": {
+										"type": "integer"
+									},
+									"seasonsDropdownValue": {
+										"type": "integer"
+									},
+									"vendorDropdownValue": {
+										"type": "integer"
+									}
+								},
+								"type": "object"
+							}
+						},
+						"runtimeConfiguration": {
+							"secureData": {
+								"properties": [
+									"inputs"
+								]
+							}
+						}
+					},
+					"Create_error_log_record_for_after_run": {
+						"runAfter": {
+							"Scope_cds_update": [
+								"Skipped",
+								"Failed",
+								"TimedOut"
+							]
+						},
+						"type": "ApiConnection",
+						"inputs": {
+							"body": {
+								"media_description": "@{result('Scope_cds_update')}",
+								"media_name": "Event after pipeline run failed or pipeline/dataset deletion failed",
+								"media_notificationemail": "@body('Create_error_log_record')['media_notificationemail']"
+							},
+							"host": {
+								"connection": {
+									"name": "@parameters('$connections')['commondataservice']['connectionId']"
+								}
+							},
+							"method": "post",
+							"path": "[concat('/v2/datasets/@{encodeURIComponent(encodeURIComponent(',variables('org'),'))}/tables/@{encodeURIComponent(encodeURIComponent(',durin.wrapInQuote('media_asseterrorlogs'),'))}/items')]"
+						},
+                            "runtimeConfiguration": {
+                                "secureData": {
+                                    "properties": [
+                                        "inputs",
+                                        "outputs"
+                                    ]
+                                }
+                            }
+					},
+					"HTTP_Get_Access_Token": {
+						"runAfter": {
+							"Compose_CopyStatusId": [
+								"Succeeded"
+							]
+						},
+						"type": "Http",
+						"inputs": {
+							"body": "grant_type=client_credentials&client_id=@{variables('configurations')?['AadClientId']}&client_secret=@{variables('configurations')?['AadSecret']}&resource=https://management.core.windows.net/",
+							"headers": {
+								"Content-Type": "application/x-www-form-urlencoded",
+								"Keep-Alive": "true"
+							},
+							"method": "POST",
+							"uri": "@{concat('https://login.microsoftonline.com/', variables('configurations')?['AadTenantDomain'], '/oauth2/token')}"
+						},
+						"runtimeConfiguration": {
+							"secureData": {
+								"properties": [
+									"inputs",
+									"outputs"
+								]
+						}
+					}
+					},
+					"HTTP_Get_Pipeline": {
+						"runAfter": {
+							"HTTP_Get_Access_Token": [
+								"Succeeded"
+							]
+						},
+						"type": "Http",
+						"inputs": {
+							"headers": {
+								"Accept": "application/json",
+								"Authorization": "Bearer @{body('HTTP_Get_Access_Token')?['access_token']}",
+								"Content-Type": "application/json"
+							},
+							"method": "GET",
+							"uri": "@{concat('https://management.azure.com/subscriptions/', variables('configurations')?['SubscriptionId'], '/resourceGroups/', variables('configurations')?['ResourceGroup'], '/providers/Microsoft.DataFactory/factories/', variables('configurations')?['FactoryName'], '/pipelines/pipe', outputs('Compose_UniqueId'), '?api-version=', variables('configurations')?['api-version'])}"
+						},
+						"runtimeConfiguration": {
+							"secureData": {
+								"properties": [
+									"inputs",
+									"outputs"
+								]
+						}
+					}
+					},
+					"Initialize_variable_SourceRecordId": {
+						"runAfter": {
+							"Parse_JSON": [
+								"Succeeded"
+							]
+						},
+						"type": "InitializeVariable",
+						"inputs": {
+							"variables": [
+								{
+									"name": "SourceRecordId",
+									"type": "string"
+								}
+							]
+						}
+					},
+					"Initialize_variable_configurations": {
+						"runAfter": {
+							"Logic-ReadAzureConfiguration": [
+								"Succeeded"
+							]
+						},
+						"type": "InitializeVariable",
+						"inputs": {
+							"variables": [
+								{
+									"name": "configurations",
+									"type": "object",
+									"value": "@body('Logic-ReadAzureConfiguration')"
+								}
+							]
+						}
+					},
+					"Logic-ReadAzureConfiguration": {
+						"runAfter": {
+							"Initialize_variable_SourceRecordId": [
+								"Succeeded"
+							]
+						},
+						"type": "Workflow",
+						"inputs": {
+							"host": {
+								"triggerName": "manual",
+								"workflow": {
+									"id": "[parameters('workflows_Logic_ReadAzureConfiguration')]"
+								}
+							}
+						},
+                            "runtimeConfiguration": {
+                                "secureData": {
+                                    "properties": [
+                                        "inputs",
+                                        "outputs"
+                                    ]
+                                }
+							}
+						},
+					"Parse_JSON": {
+						"runAfter": {
+							"Compose_Valid_Body_To_Parse": [
+								"Succeeded"
+							]
+						},
+						"type": "ParseJson",
+						"inputs": {
+							"content": "@outputs('Compose_Valid_Body_To_Parse')",
+							"schema": {
+								"properties": {
+									"message": {
+										"type": "string"
+									},
+									"pipelineName": {
+										"type": "string"
+									},
+									"pipelineRunId": {
+										"type": "string"
+									},
+									"status": {
+										"type": "string"
+									}
+								},
+								"type": "object"
+							}
+						},
+                            "runtimeConfiguration": {
+                                "secureData": {
+                                    "properties": [
+                                        "inputs"
+                                    ]
+                                }
+                            }
+					},
+					"Scope_cds_update": {
+						"actions": {
+							"Switch_on_pipeline_status": {
+								"runAfter": {},
+								"cases": {
+									"Case_-_Failed": {
+										"case": "Failed",
+										"actions": {
+											"Create_error_log_record": {
+												"runAfter": {
+													"Update_a_record_in_CopyStatusId_status_failed": [
+														"Succeeded"
+													]
+												},
+												"type": "ApiConnection",
+												"inputs": {
+													"body": {
+														"_media_asset_value": "@{if(equals(body('Update_a_record_in_CopyStatusId_status_failed')?['media_sourcetype'],body('Constants')?['assetsDropdownValue']),outputs('Compose_Source_Id'),'')}",
+														"_media_assetfiles_value": "@{if(equals(body('Update_a_record_in_CopyStatusId_status_failed')?['media_sourcetype'],body('Constants')?['assetfilesDropdownValue']),outputs('Compose_Source_Id'),'')}",
+														"_media_season_value": "@{if(equals(body('Update_a_record_in_CopyStatusId_status_failed')?['media_sourcetype'],body('Constants')?['seasonsDropdownValue']),outputs('Compose_Source_Id'),'')}",
+														"media_description": "Operation: Copy, \nStatus: Failed,\nSource Name: @{body('Update_a_record_in_CopyStatusId_status_failed')?['media_name']}, \nSource Id: @{outputs('Compose_Source_Id')},\nDestination Name: @{body('Update_a_record_in_CopyStatusId_status_failed')?['media_destinationname']},\nFailure Reason: @{body('Parse_JSON')?['message']}\n\n",
+														"media_name": "Copy failed for record: @{body('Update_a_record_in_CopyStatusId_status_failed')?['media_name']}",
+														"media_notificationemail": "@body('Update_a_record_in_CopyStatusId_status_failed')?['media_notificationemail']"
+													},
+													"host": {
+														"connection": {
+															"name": "@parameters('$connections')['commondataservice']['connectionId']"
+														}
+													},
+													"method": "post",
+													"path": "[concat('/v2/datasets/@{encodeURIComponent(encodeURIComponent(',variables('org'),'))}/tables/@{encodeURIComponent(encodeURIComponent(',durin.wrapInQuote('media_asseterrorlogs'),'))}/items')]"
+												},
+												"runtimeConfiguration": {
+													"secureData": {
+														"properties": [
+															"inputs",
+															"outputs"
+														]
+													}
+												}
+											},
+											"Update_a_record_in_CopyStatusId_status_failed": {
+												"runAfter": {},
+												"type": "ApiConnection",
+												"inputs": {
+													"body": {
+														"media_errorlog": "Pipeline run failed.\nError Details: @{body('Parse_JSON')?['message']}",
+														"media_status": 207940002
+													},
+													"host": {
+														"connection": {
+															"name": "@parameters('$connections')['commondataservice']['connectionId']"
+														}
+													},
+													"method": "patch",
+													"path": "[concat('/v2/datasets/@{encodeURIComponent(encodeURIComponent(',variables('org'),'))}/tables/@{encodeURIComponent(encodeURIComponent(',durin.wrapInQuote('media_copystatuses'),'))}/items/@{encodeURIComponent(encodeURIComponent(outputs(',durin.wrapInQuote('Compose_CopyStatusId'),')))}')]"
+												},
+												"runtimeConfiguration": {
+													"secureData": {
+														"properties": [
+															"inputs",
+															"outputs"
+														]
+												}
+											}
+										}
+									}
+									},
+									"Case_-_Succeeded": {
+										"case": "Succeeded",
+										"actions": {
+											"Compose_email_body": {
+												"runAfter": {
+													"Compose_subject": [
+														"Succeeded"
+													]
+												},
+												"type": "Compose",
+												"inputs": "<p> Operation: Copy, </br>\nStatus: Succeeded, </br>\nSource Name: @{body('Update_a_record_in_CopyStatusId_status_succeeded')?['media_name']},  </br>\nSource Id: @{outputs('Compose_Source_Id')},   </br>\nDestination Name: @{body('Update_a_record_in_CopyStatusId_status_succeeded')?['media_destinationname']},   </br>\nRun Start: @{body('Update_a_record_in_CopyStatusId_status_succeeded')?['media_copystarttime']}, </br>\nRun End: @{body('Update_a_record_in_CopyStatusId_status_succeeded')?['media_copyendtime']}, </br>\nDuration:  @{body('Update_a_record_in_CopyStatusId_status_succeeded')?['media_copyduration']}\n</p>",
+												"runtimeConfiguration": {
+													"secureData": {
+														"properties": [
+															"inputs"
+														]
+													}
+												}
+											},
+											"Compose_subject": {
+												"runAfter": {
+													"Get_destination_record": [
+														"Succeeded"
+													]
+												},
+												"type": "Compose",
+												"inputs": "Copy completed successfully for record: @{body('Update_a_record_in_CopyStatusId_status_succeeded')?['media_name']}",
+												"runtimeConfiguration": {
+													"secureData": {
+														"properties": [
+															"inputs"
+														]
+													}
+												}
+											},
+											"Get_destination_record": {
+												"runAfter": {
+													"Update_a_record_in_CopyStatusId_status_succeeded": [
+														"Succeeded"
+													]
+												},
+												"type": "ApiConnection",
+												"inputs": {
+													"host": {
+														"connection": {
+															"name": "@parameters('$connections')['commondataservice']['connectionId']"
+														}
+													},
+													"method": "get",
+													"path": "[concat('/v2/datasets/@{encodeURIComponent(encodeURIComponent(',variables('org'),'))}/tables/@{encodeURIComponent(encodeURIComponent(if(equals(body(',durin.wrapInQuote('Update_a_record_in_CopyStatusId_status_succeeded'),')?[',durin.wrapInQuote('media_destinantiontype'),'],body(',durin.wrapInQuote('Constants'),')?[',durin.wrapInQuote('vendorDropdownValue'),']),',durin.wrapInQuote('media_vendors'),',',durin.wrapInQuote('media_nexises'),')))}/items/@{encodeURIComponent(encodeURIComponent(body(',durin.wrapInQuote('Update_a_record_in_CopyStatusId_status_succeeded'),')?[',durin.wrapInQuote('media_destinationid'),']))}')]"
+												},
+												"runtimeConfiguration": {
+													"secureData": {
+														"properties": [
+															"inputs",
+															"outputs"
+														]
+													}
+												}
+											},
+											"HTTP_Delete_Pipeline": {
+												"runAfter": {
+													"Get_destination_record": [
+														"Succeeded"
+													]
+												},
+												"type": "Http",
+												"inputs": {
+													"headers": {
+														"Accept": "application/json",
+														"Authorization": "Bearer @{body('HTTP_Get_Access_Token')?['access_token']}",
+														"Content-Type": "application/json"
+													},
+													"method": "DELETE",
+													"uri": "@{concat('https://management.azure.com/subscriptions/', variables('configurations')?['SubscriptionId'], '/resourceGroups/', variables('configurations')?['ResourceGroup'], '/providers/Microsoft.DataFactory/factories/', variables('configurations')?['FactoryName'], '/pipelines/', body('Parse_JSON')?['pipelineName'], '?api-version=', variables('configurations')?['api-version'])}"
+												},
+												"runtimeConfiguration": {
+													"secureData": {
+														"properties": [
+															"inputs",
+															"outputs"
+														]
+													}
+												}
+											},
+											"HTTP_Delete_input_dataset": {
+												"runAfter": {
+													"HTTP_delete_output_dataset": [
+														"Succeeded"
+													]
+												},
+												"type": "Http",
+												"inputs": {
+													"headers": {
+														"Accept": "application/json",
+														"Authorization": "Bearer @{body('HTTP_Get_Access_Token')?['access_token']}",
+														"Content-Type": "application/json"
+													},
+													"method": "DELETE",
+													"uri": "@{concat('https://management.azure.com/subscriptions/', variables('configurations')?['SubscriptionId'], '/resourceGroups/', variables('configurations')?['ResourceGroup'], '/providers/Microsoft.DataFactory/factories/', variables('configurations')?['FactoryName'], '/datasets/','Input',outputs('Compose_Input_Name') ,'?api-version=', variables('configurations')?['api-version'])}"
+												},
+												"runtimeConfiguration": {
+													"secureData": {
+														"properties": [
+															"inputs",
+															"outputs"
+														]
+													}
+												}
+											},
+											"HTTP_delete_output_dataset": {
+												"runAfter": {
+													"HTTP_Delete_Pipeline": [
+														"Succeeded"
+													]
+												},
+												"type": "Http",
+												"inputs": {
+													"headers": {
+														"Accept": "application/json",
+														"Authorization": "Bearer @{body('HTTP_Get_Access_Token')?['access_token']}",
+														"Content-Type": "application/json"
+													},
+													"method": "DELETE",
+													"uri": "@{concat('https://management.azure.com/subscriptions/', variables('configurations')?['SubscriptionId'], '/resourceGroups/', variables('configurations')?['ResourceGroup'], '/providers/Microsoft.DataFactory/factories/', variables('configurations')?['FactoryName'], '/datasets/output',outputs('Compose_UniqueId'),'?api-version=', variables('configurations')?['api-version'])}"
+												},
+												"runtimeConfiguration": {
+													"secureData": {
+														"properties": [
+															"inputs",
+															"outputs"
+														]
+													}
+												}
+											},
+											"Logic-SendEmail_2": {
+												"runAfter": {
+													"Compose_email_body": [
+														"Succeeded"
+													]
+												},
+												"type": "Workflow",
+												"inputs": {
+													"body": {
+														"EmailBody": "@{outputs('Compose_email_body')}",
+														"Recipient": "@{concat(body('Get_destination_record')?['media_owneremail'],';',body('Update_a_record_in_CopyStatusId_status_succeeded')?['media_notificationemail'])} ",
+														"Subject": "@{outputs('Compose_subject')}"
+													},
+													"host": {
+														"triggerName": "manual",
+														"workflow": {
+															"id": "[parameters('workflows_Logic_SendEmail')]"
+														}
+													}
+												},
+												"runtimeConfiguration": {
+													"secureData": {
+														"properties": [
+															"inputs",
+															"outputs"
+														]
+													}
+												}
+											},
+											"Update_a_record_in_CopyStatusId_status_succeeded": {
+												"runAfter": {},
+												"type": "ApiConnection",
+												"inputs": {
+													"body": {
+														"media_copyendtime": "@{utcNow()}",
+														"media_status": 207940001
+													},
+													"host": {
+														"connection": {
+															"name": "@parameters('$connections')['commondataservice']['connectionId']"
+														}
+													},
+													"method": "patch",
+													"path": "[concat('/v2/datasets/@{encodeURIComponent(encodeURIComponent(',variables('org'),'))}/tables/@{encodeURIComponent(encodeURIComponent(',durin.wrapInQuote('media_copystatuses'),'))}/items/@{encodeURIComponent(encodeURIComponent(outputs(',durin.wrapInQuote('Compose_CopyStatusId'),')))}')]"
+												},
+												"runtimeConfiguration": {
+													"secureData": {
+														"properties": [
+															"inputs",
+															"outputs"
+														]
+													}
+												}
+											}
+										}
+									}
+								},
+								"default": {
+									"actions": {}
+								},
+								"expression": "@body('Parse_JSON')?['status']",
+								"type": "Switch"
+							}
+						},
+						"runAfter": {
+							"Compose_Source_Id": [
+								"Succeeded"
+							]
+						},
+						"type": "Scope"
+					}
+				},
+				"outputs": {}
+			},
+			"parameters": {
+				"$connections": {
+					"value": {
+						"commondataservice": {
+							"connectionId": "[parameters('connection_commondataservice')]",
+							"connectionName": "commondataservice",
+							"id": "[concat(subscription().id, '/providers/Microsoft.Web/locations/', resourceGroup().location, '/managedApis/commondataservice')]"
+						}
+					}
+				}
+			}
+		}
+} ] }

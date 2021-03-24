@@ -1,0 +1,49 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<AppModuleSiteMap xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <SiteMapUniqueName>media_DurinMediaLake</SiteMapUniqueName>
+  <SiteMap IntroducedVersion="7.0.0.0">
+    <Area Id="NewArea_7b880037" ResourceId="SitemapDesigner.NewArea" ShowGroups="false">
+      <Titles>
+        <Title LCID="1033" Title="Media Lake" />
+      </Titles>
+      <Group Id="NewGroup_ffa0bf02" ResourceId="SitemapDesigner.NewGroup" IsProfile="false" ToolTipResourseId="SitemapDesigner.Unknown">
+        <Titles>
+          <Title LCID="1033" Title="Media Lake" />
+        </Titles>
+        <SubArea Id="NewSubArea_f3919288" Icon="/_imgs/imagestrips/transparent_spacer.gif" Entity="media_studio" Client="All,Outlook,OutlookLaptopClient,OutlookWorkstationClient,Web" AvailableOffline="true" PassParams="false" Sku="All,OnPremise,Live,SPLA" />
+        <SubArea Id="NewSubArea_71882d0e" Icon="/_imgs/imagestrips/transparent_spacer.gif" Entity="media_assetcontainer" Client="All,Outlook,OutlookLaptopClient,OutlookWorkstationClient,Web" AvailableOffline="true" PassParams="false" Sku="All,OnPremise,Live,SPLA" />
+        <SubArea Id="NewSubArea_05820552" Icon="/_imgs/imagestrips/transparent_spacer.gif" Entity="media_season" Client="All,Outlook,OutlookLaptopClient,OutlookWorkstationClient,Web" AvailableOffline="true" PassParams="false" Sku="All,OnPremise,Live,SPLA" />
+        <SubArea Id="NewSubArea_ce4d9ed2" Icon="/_imgs/imagestrips/transparent_spacer.gif" Entity="media_episode" Client="All,Outlook,OutlookLaptopClient,OutlookWorkstationClient,Web" AvailableOffline="true" PassParams="false" Sku="All,OnPremise,Live,SPLA" />
+        <SubArea Id="NewSubArea_cbb3c10b" Icon="/_imgs/imagestrips/transparent_spacer.gif" Entity="media_block" Client="All,Outlook,OutlookLaptopClient,OutlookWorkstationClient,Web" AvailableOffline="true" PassParams="false" Sku="All,OnPremise,Live,SPLA" />
+        <SubArea Id="NewSubArea_d45247ee" Icon="/_imgs/imagestrips/transparent_spacer.gif" Entity="media_asset" Client="All,Outlook,OutlookLaptopClient,OutlookWorkstationClient,Web" AvailableOffline="true" PassParams="false" Sku="All,OnPremise,Live,SPLA" />
+        <SubArea Id="NewSubArea_7f5eb18" Icon="/_imgs/imagestrips/transparent_spacer.gif" Entity="media_assetfiles" Client="All,Outlook,OutlookLaptopClient,OutlookWorkstationClient,Web" AvailableOffline="true" PassParams="false" Sku="All,OnPremise,Live,SPLA" />
+      </Group>
+      <Group Id="NewGroup_a0bf658b" ResourceId="SitemapDesigner.NewGroup" IsProfile="false" ToolTipResourseId="SitemapDesigner.Unknown">
+        <Titles>
+          <Title LCID="1033" Title="Dashboard" />
+        </Titles>
+        <SubArea Id="NewSubArea_3367cb99" ResourceId="Homepage_Dashboards" DescriptionResourceId="Dashboards_Description" Icon="/_imgs/imagestrips/transparent_spacer.gif" Url="/workplace/home_dashboards.aspx" DefaultDashboard="2a11c560-0275-eb11-a812-002248097e89" Client="All,Outlook,OutlookLaptopClient,OutlookWorkstationClient,Web" AvailableOffline="true" PassParams="false" Sku="All,OnPremise,Live,SPLA" ToolTipResourseId="Dashboards_ToolTip">
+          <Titles>
+            <Title LCID="1033" Title="Dashbaord and Report" />
+          </Titles>
+        </SubArea>
+      </Group>
+      <Group Id="NewGroup_c53377f9" ResourceId="SitemapDesigner.NewGroup" IsProfile="false" ToolTipResourseId="SitemapDesigner.Unknown">
+        <Titles>
+          <Title LCID="1033" Title="Copy Status" />
+        </Titles>
+        <SubArea Id="NewSubArea_2e3cee638" Icon="/_imgs/imagestrips/transparent_spacer.gif" Entity="media_copystatus" Client="All,Outlook,OutlookLaptopClient,OutlookWorkstationClient,Web" AvailableOffline="true" PassParams="false" Sku="All,OnPremise,Live,SPLA" />
+      </Group>
+      <Group Id="New_Group" ResourceId="SitemapDesigner.NewGroup" DescriptionResourceId="SitemapDesigner.NewGroup" IntroducedVersion="7.0.0.0" IsProfile="false" ToolTipResourseId="SitemapDesigner.Unknown">
+        <Titles>
+          <Title LCID="1033" Title="Setting" />
+        </Titles>
+        <SubArea Id="NewSubArea_8cd10b5f" Icon="/_imgs/imagestrips/transparent_spacer.gif" Entity="media_vendor" Client="All,Outlook,OutlookLaptopClient,OutlookWorkstationClient,Web" AvailableOffline="true" PassParams="false" Sku="All,OnPremise,Live,SPLA" />
+        <SubArea Id="NewSubArea_283ed144" Icon="/_imgs/imagestrips/transparent_spacer.gif" Entity="media_nexis" Client="All,Outlook,OutlookLaptopClient,OutlookWorkstationClient,Web" AvailableOffline="true" PassParams="false" Sku="All,OnPremise,Live,SPLA" />
+      </Group>
+    </Area>
+  </SiteMap>
+  <LocalizedNames>
+    <LocalizedName description="Durin Media Lake" languagecode="1033" />
+  </LocalizedNames>
+</AppModuleSiteMap>

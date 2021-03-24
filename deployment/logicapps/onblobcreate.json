@@ -1,0 +1,1474 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "crmOrgName": {
+            "type": "string",
+            "metadata": {
+                "description": "description"
+            }
+        },
+        "storageName": {
+            "type": "string",
+            "metadata": {
+                "description": "description"
+            }
+        },
+        "connections_azureblob": {
+            "type": "string",
+            "defaultValue": "[concat(subscription().id,'/resourceGroups/',resourceGroup().name,'/providers/Microsoft.Web/connections/azureblob')]"
+        },
+        "connection_commondataservice": {
+            "type": "string",
+           "defaultValue":"[concat(subscription().id,'/resourceGroups/',resourceGroup().name,'/providers/Microsoft.Web/connections/commondataservice')]"
+        },
+        "storageAccounts_durinmediastorage": {
+            "defaultValue": "[concat(subscription().id,'/resourceGroups/',resourceGroup().name,'/providers/Microsoft.Storage/storageAccounts/',parameters('storageName'))]",
+            "type": "String"
+        },
+        "workflows_Logic_AntiVirusScan": {
+            "defaultValue": "[concat(subscription().id,'/resourceGroups/',resourceGroup().name,'/providers/Microsoft.Logic/workflows/Logic-AntiVirusScan')]",
+            "type": "String"
+        },
+        "workflows_Logic_CompareCheckSum": {
+            "defaultValue": "[concat(subscription().id,'/resourceGroups/',resourceGroup().name,'/providers/Microsoft.Logic/workflows/Logic-CompareCheckSum')]",
+            "type": "String"
+        },
+        "workflows_Logic_ExtractAndSaveMetadata": {
+            "defaultValue": "[concat(subscription().id,'/resourceGroups/',resourceGroup().name,'/providers/Microsoft.Logic/workflows/Logic-ExtractAndSaveMetadata')]",
+            "type": "String"
+        },
+        "connections_azureeventgrid": {
+            "defaultValue": "[concat(subscription().id,'/resourceGroups/',resourceGroup().name,'/providers/Microsoft.Web/connections/azureeventgrid')]",
+            "type": "String"
+        },
+        "crmIdentifier": {
+            "type": "string",
+            "metadata": {
+                "description": "description"
+            }
+        }
+    },
+    "functions": [
+        {
+            "namespace": "durin",
+            "members": {
+                "wrapInQuote": {
+                    "parameters": [
+                        {
+                            "name": "text",
+                            "type": "string"
+                        }
+                    ],
+                    "output": {
+                        "value": "[concat('''', parameters('text'),'''')]",
+                        "type": "string"
+                    }
+                }
+            }
+        }
+    ],
+    "variables": {
+        "org": "[durin.wrapInQuote(concat(parameters('crmOrgName'),'.',parameters('crmIdentifier')))]"
+    },
+    "resources": [
+        {
+            "name": "Logic-OnBlobCreate",
+            "type": "Microsoft.Logic/workflows",
+            "apiVersion": "2017-07-01",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "definition": {
+                    "$schema": "https://schema.management.azure.com/schemas/2016-06-01/Microsoft.Logic.json",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {
+                        "$connections": {
+                            "defaultValue": {},
+                            "type": "Object"
+                        }
+                    },
+                    "triggers": {
+                        "When_a_resource_event_occurs": {
+                            "splitOn": "@triggerBody()",
+                            "type": "ApiConnectionWebhook",
+                            "inputs": {
+                                "body": {
+                                    "properties": {
+                                        "destination": {
+                                            "endpointType": "webhook",
+                                            "properties": {
+                                                "endpointUrl": "@{listCallbackUrl()}"
+                                            }
+                                        },
+                                        "filter": {
+                                            "includedEventTypes": [
+                                                "Microsoft.Storage.BlobCreated"
+                                            ]
+                                        },
+                                        "topic": "[parameters('storageAccounts_durinmediastorage')]"
+                                    }
+                                },
+                                "host": {
+                                    "connection": {
+                                        "name": "@parameters('$connections')['azureeventgrid']['connectionId']"
+                                    }
+                                },
+                                "path": "[concat(subscription().id,'/providers/@{encodeURIComponent(',durin.wrapInQuote('Microsoft.Storage.StorageAccounts'),')}/resource/eventSubscriptions')]",
+                                "queries": {
+                                    "x-ms-api-version": "2017-09-15-preview"
+                                }
+                            },
+                            "runtimeConfiguration": {
+                                "secureData": {
+                                    "properties": [
+                                        "inputs",
+                                        "outputs"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "actions": {
+                        "Condition_if_Blob_created": {
+                            "actions": {
+                                "Compose": {
+                                    "runAfter": {},
+                                    "type": "Compose",
+                                    "inputs": "@replace(substring(triggerBody()?['subject'],add(indexOf(triggerBody()?['subject'],'/containers/'),12)),'/blobs','')",
+                                    "runtimeConfiguration": {
+                                        "secureData": {
+                                            "properties": [
+                                                "inputs"
+                                            ]
+                                        }
+                                    }
+                                },
+                                "Condition_-_Check_for_ErrorMessage": {
+                                    "actions": {
+                                        "Create_error_log_record": {
+                                            "runAfter": {},
+                                            "type": "ApiConnection",
+                                            "inputs": {
+                                                "body": {
+                                                    "_media_assetcontainer_value": "@variables('ContainerId')",
+                                                    "media_name": "@variables('ErrorMessage')"
+                                                },
+                                                "host": {
+                                                    "connection": {
+                                                        "name": "@parameters('$connections')['commondataservice']['connectionId']"
+                                                    }
+                                                },
+                                                "method": "post",
+                                                "path": "[concat('/v2/datasets/@{encodeURIComponent(encodeURIComponent(',variables('org'),'))}/tables/@{encodeURIComponent(encodeURIComponent(',durin.wrapInQuote('media_asseterrorlogs'),'))}/items')]"
+                                            }
+                                        }
+                                    },
+                                    "runAfter": {
+                                        "Scope": [
+                                            "Succeeded",
+                                            "Failed"
+                                        ]
+                                    },
+                                    "expression": {
+                                        "and": [
+                                            {
+                                                "greater": [
+                                                    "@length(variables('ErrorMessage'))",
+                                                    0
+                                                ]
+                                            }
+                                        ]
+                                    },
+                                    "type": "If"
+                                },
+                                "Scope": {
+                                    "actions": {
+                                        "Get_Container_Id": {
+                                            "runAfter": {},
+                                            "type": "ApiConnection",
+                                            "inputs": {
+                                                "host": {
+                                                    "connection": {
+                                                        "name": "@parameters('$connections')['commondataservice']['connectionId']"
+                                                    }
+                                                },
+                                                "method": "get",
+                                                "path": "[concat('/v2/datasets/@{encodeURIComponent(encodeURIComponent(',variables('org'),'))}/tables/@{encodeURIComponent(encodeURIComponent(',durin.wrapInQuote('media_assetcontainers'),'))}/items')]",
+                                                "queries": {
+                                                    "$filter": "media_containerpath eq '@{variables('ContainerName')}'"
+                                                }
+                                            },
+                                            "runtimeConfiguration": {
+                                                "secureData": {
+                                                    "properties": [
+                                                        "inputs",
+                                                        "outputs"
+                                                    ]
+                                                }
+                                            }
+                                        },
+                                        "If_blob_is_metadata_json_file": {
+                                            "actions": {
+                                                "Get_blob_content": {
+                                                    "runAfter": {},
+                                                    "type": "ApiConnection",
+                                                    "inputs": {
+                                                        "host": {
+                                                            "connection": {
+                                                                "name": "@parameters('$connections')['azureblob']['connectionId']"
+                                                            }
+                                                        },
+                                                        "method": "get",
+                                                        "path": "/datasets/default/files/@{encodeURIComponent(encodeURIComponent(outputs('Compose')))}/content",
+                                                        "queries": {
+                                                            "inferContentType": true
+                                                        }
+                                                    },
+                                                    "runtimeConfiguration": {
+                                                        "secureData": {
+                                                            "properties": [
+                                                                "inputs",
+                                                                "outputs"
+                                                            ]
+                                                        }
+                                                    }
+                                                },
+                                                "If_metadata.json": {
+                                                    "actions": {
+                                                        "Condition": {
+                                                            "actions": {
+                                                              "Update_shoot_record_file_count": {
+                                                                "runAfter": {},
+                                                                "type": "ApiConnection",
+                                                                "inputs": {
+                                                                  "body": {
+                                                                    "media_folderfilecount": "@add(body('List_records_matching_asset')?['value']?[0]?['media_folderfilecount'],outputs('Compose_new_added_fileCount'))"
+                                                                  },
+                                                                  "host": {
+                                                                    "connection": {
+                                                                      "name": "@parameters('$connections')['commondataservice']['connectionId']"
+                                                                    }
+                                                                  },
+                                                                  "method": "patch",
+                                                                  "path": "[concat('/v2/datasets/@{encodeURIComponent(encodeURIComponent(',variables('org'),'))}/tables/@{encodeURIComponent(encodeURIComponent(',durin.wrapInQuote('media_assets'),'))}/items/@{encodeURIComponent(encodeURIComponent(outputs(',durin.wrapInQuote('Compose_AssetId'),')))}')]"
+                                                                    },
+                                                                    "runtimeConfiguration": {
+                                                                        "secureData": {
+                                                                            "properties": [
+                                                                                "inputs",
+                                                                                "outputs"
+                                                                            ]
+                                                                        }
+                                                                }
+                                                              }
+                                                            },
+                                                            "runAfter": {
+                                                                "Iterate_Asset_files_records": [
+                                                                    "Succeeded"
+                                                                ]
+                                                            },
+                                                            "expression": {
+                                                                "and": [
+                                                                    {
+                                                                        "greater": [
+                                                                            "@length(body('List_records_matching_asset')?['value'])",
+                                                                            0
+                                                                        ]
+                                                                    }
+                                                                ]
+                                                            },
+                                                            "type": "If"
+                                                        },
+                                                        "Condition_if_asset_exist": {
+                                                            "actions": {
+                                                                "Compose_AssetId": {
+                                                                    "runAfter": {},
+                                                                    "type": "Compose",
+                                                                    "inputs": "@body('List_records_matching_asset')?['value']?[0]?['media_assetid']",
+                                                                    "runtimeConfiguration": {
+                                                                        "secureData": {
+                                                                            "properties": [
+                                                                                "inputs"
+                                                                            ]
+                                                                        }
+                                                                    }
+                                                                },
+                                                                "Compose_FolderFileCount": {
+                                                                    "runAfter": {
+                                                                        "Compose_AssetId": [
+                                                                            "Succeeded"
+                                                                        ]
+                                                                    },
+                                                                    "type": "Compose",
+                                                                    "inputs": "@add(body('List_records_matching_asset')?['value']?[0]?['media_folderfilecount'],length(body('Parse_JSON')?['files']))",
+                                                                    "runtimeConfiguration": {
+                                                                        "secureData": {
+                                                                            "properties": [
+                                                                                "inputs"
+                                                                            ]
+                                                                        }
+                                                                    }
+                                                                },
+                                                                "Compose_new_added_fileCount": {
+                                                                    "runAfter": {
+                                                                        "List_existing_assetFiles": [
+                                                                            "Succeeded"
+                                                                        ]
+                                                                    },
+                                                                    "type": "Compose",
+                                                                    "inputs": "@sub(length(body('Parse_JSON')?['files']),length(body('List_existing_assetFiles')?['value']))",
+                                                                    "runtimeConfiguration": {
+                                                                        "secureData": {
+                                                                            "properties": [
+                                                                                "inputs"
+                                                                            ]
+                                                                        }
+                                                                    }
+                                                                },
+                                                                "Join_filterQuery": {
+                                                                    "runAfter": {
+                                                                        "Select_filePath_array": [
+                                                                            "Succeeded"
+                                                                        ]
+                                                                    },
+                                                                    "type": "Join",
+                                                                    "inputs": {
+                                                                        "from": "@body('Select_filePath_array')",
+                                                                        "joinWith": " or media_blobpath eq "
+                                                                    },
+                                                                    "runtimeConfiguration": {
+                                                                        "secureData": {
+                                                                            "properties": [
+                                                                                "inputs",
+                                                                                "outputs"
+                                                                            ]
+                                                                        }
+                                                                    }
+                                                                },
+                                                                "List_existing_assetFiles": {
+                                                                    "runAfter": {
+                                                                        "Join_filterQuery": [
+                                                                            "Succeeded"
+                                                                        ]
+                                                                    },
+                                                                    "type": "ApiConnection",
+                                                                  "inputs": {
+                                                                    "host": {
+                                                                      "connection": {
+                                                                        "name": "@parameters('$connections')['commondataservice']['connectionId']"
+                                                                      }
+                                                                    },
+                                                                    "method": "get",
+                                                                    "path": "[concat('/v2/datasets/@{encodeURIComponent(encodeURIComponent(',variables('org'),'))}/tables/@{encodeURIComponent(encodeURIComponent(',durin.wrapInQuote('media_assetfileses'),'))}/items')]",
+                                                                    "queries": {
+                                                                      "$filter": "_media_asset_value eq '@{outputs('Compose_AssetId')}' and statecode eq 0  and (media_blobpath eq  @{body('Join_filterQuery')})"
+                                                                        }
+                                                                    },
+                                                                    "runtimeConfiguration": {
+                                                                        "secureData": {
+                                                                            "properties": [
+                                                                                "inputs",
+                                                                                "outputs"
+                                                                            ]
+                                                                    }
+                                                                  }
+                                                                },
+                                                                "Select_filePath_array": {
+                                                                    "runAfter": {
+                                                                        "Compose_FolderFileCount": [
+                                                                            "Succeeded"
+                                                                        ]
+                                                                    },
+                                                                    "type": "Select",
+                                                                    "inputs": {
+                                                                        "from": "@body('Parse_JSON')?['files']",
+                                                                        "select": "@concat('''',variables('DirectoryPath'),'/',item()?['filePath'],'''')"
+                                                                    },
+                                                                    "runtimeConfiguration": {
+                                                                        "secureData": {
+                                                                            "properties": [
+                                                                                "inputs",
+                                                                                "outputs"
+                                                                            ]
+                                                                        }
+                                                                    }
+                                                                },
+                                                                "Set_variable_NewAddedFileList": {
+                                                                    "runAfter": {
+                                                                        "Compose_new_added_fileCount": [
+                                                                            "Succeeded"
+                                                                        ]
+                                                                    },
+                                                                    "type": "SetVariable",
+                                                                    "inputs": {
+                                                                        "name": "NewAddedFileList",
+                                                                        "value": "@body('List_existing_assetFiles')?['value']"
+                                                                    }
+                                                                }
+                                                            },
+                                                            "runAfter": {
+                                                                "List_records_matching_asset": [
+                                                                    "Succeeded"
+                                                                ]
+                                                            },
+                                                            "else": {
+                                                                "actions": {
+                                                                    "Create_Shoot_Record": {
+                                                                        "runAfter": {},
+                                                                        "type": "ApiConnection",
+                                                                        "inputs": {
+                                                                            "body": {
+                                                                                "_media_assetcontainer_value": "@body('Parse_JSON')?['showId']",
+                                                                                "_media_block_value": "@body('Parse_JSON')?['blockId']",
+                                                                                "_media_episode_value": "@body('Parse_JSON')?['episodeId']",
+                                                                                "_media_season_value": "@body('Parse_JSON')?['seasonId']",
+                                                                                "media_assetstatus": 207940000,
+                                                                                "media_batch": "@body('Parse_JSON')?['batch']",
+                                                                                "media_blobpath": "@{concat(variables('DirectoryPath'),'/')}",
+                                                                                "media_description": "@body('Parse_JSON')?['description']",
+                                                                                "media_folderfilecount": "@length(body('Parse_JSON')?['files'])",
+                                                                                "media_info": "@body('Parse_JSON')?['info']",
+                                                                                "media_name": "@body('Parse_JSON')?['shootDay']",
+                                                                                "media_notificationemailaddress": "@body('Parse_JSON')?['notificationEmail']",
+                                                                                "media_shootdate": "@body('Parse_JSON')?['shootDate']",
+                                                                                "media_shootday": "@body('Parse_JSON')?['shootDay']",
+                                                                                "media_team": "@body('Parse_JSON')?['team']",
+                                                                                "media_unit": "@body('Parse_JSON')?['unit']"
+                                                                            },
+                                                                            "host": {
+                                                                                "connection": {
+                                                                                    "name": "@parameters('$connections')['commondataservice']['connectionId']"
+                                                                                }
+                                                                            },
+                                                                            "method": "post",
+                                                                            "path": "[concat('/v2/datasets/@{encodeURIComponent(encodeURIComponent(',variables('org'),'))}/tables/@{encodeURIComponent(encodeURIComponent(',durin.wrapInQuote('media_assets'),'))}/items')]"
+                                                                        },
+                                                                        "runtimeConfiguration": {
+                                                                            "secureData": {
+                                                                                "properties": [
+                                                                                    "inputs",
+                                                                                    "outputs"
+                                                                                ]
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                }
+                                                            },
+                                                            "expression": {
+                                                                "and": [
+                                                                    {
+                                                                        "greater": [
+                                                                            "@length(body('List_records_matching_asset')?['value'])",
+                                                                            0
+                                                                        ]
+                                                                    }
+                                                                ]
+                                                            },
+                                                            "type": "If"
+                                                        },
+                                                        "Iterate_Asset_files_records": {
+                                                            "foreach": "@body('Parse_JSON')?['files']",
+                                                            "actions": {
+                                                                "Calculate_FileSize": {
+                                                                    "runAfter": {
+                                                                        "Filter_FileType": [
+                                                                            "Succeeded"
+                                                                        ]
+                                                                    },
+                                                                    "type": "Compose",
+                                                                    "inputs": "@if(greater(items('Iterate_Asset_files_records')?['filesize'],0),div(div(items('Iterate_Asset_files_records')?['filesize'],1024.00),1024.00),0)",
+                                                                    "runtimeConfiguration": {
+                                                                        "secureData": {
+                                                                            "properties": [
+                                                                                "inputs"
+                                                                            ]
+                                                                        }
+                                                                    }
+                                                                },
+                                                                "Compose_BlobPath": {
+                                                                    "runAfter": {
+                                                                        "Calculate_FileSize": [
+                                                                            "Succeeded"
+                                                                        ]
+                                                                    },
+                                                                    "type": "Compose",
+                                                                    "inputs": "@concat(variables('DirectoryPath'),'/',items('Iterate_Asset_files_records')?['filePath'])",
+                                                                    "runtimeConfiguration": {
+                                                                        "secureData": {
+                                                                            "properties": [
+                                                                                "inputs"
+                                                                            ]
+                                                                        }
+                                                                    }
+                                                                },
+                                                                "Condition_if_assetfile_exist": {
+                                                                    "actions": {},
+                                                                    "runAfter": {
+                                                                        "Filter_current_file": [
+                                                                            "Succeeded"
+                                                                        ]
+                                                                    },
+                                                                    "else": {
+                                                                        "actions": {
+                                                                            "Create_asset_file": {
+                                                                                "runAfter": {},
+                                                                                "type": "ApiConnection",
+                                                                              "inputs": {
+                                                                                "body": {
+                                                                                  "_media_asset_value": "@{if(equals(body('Create_Shoot_Record')?['media_assetid'],null),outputs('Compose_AssetId'),body('Create_Shoot_Record')?['media_assetid'])}",
+                                                                                  "media_blobpath": "@{concat(variables('DirectoryPath'),'/',items('Iterate_Asset_files_records')?['filePath'])}",
+                                                                                  "media_checksummd5": "@items('Iterate_Asset_files_records')?['checksum']",
+                                                                                  "media_filesizemb": "@outputs('Calculate_FileSize')",
+                                                                                  "media_filetype": "@body('Filter_FileType')?[0]?['Value']",
+                                                                                  "media_miscinfo": "@{items('Iterate_Asset_files_records')?['miscInfo']}",
+                                                                                  "media_name": "@items('Iterate_Asset_files_records')?['name']",
+                                                                                  "media_uploadstatus": 207940001
+                                                                                },
+                                                                                "host": {
+                                                                                  "connection": {
+                                                                                    "name": "@parameters('$connections')['commondataservice']['connectionId']"
+                                                                                  }
+                                                                                },
+                                                                                "method": "post",
+                                                                                "path": "[concat('/v2/datasets/@{encodeURIComponent(encodeURIComponent(',variables('org'),'))}/tables/@{encodeURIComponent(encodeURIComponent(',durin.wrapInQuote('media_assetfileses'),'))}/items')]"
+                                                                                },
+                                                                                "runtimeConfiguration": {
+                                                                                    "secureData": {
+                                                                                        "properties": [
+                                                                                            "inputs",
+                                                                                            "outputs"
+                                                                                        ]
+                                                                                    }
+                                                                              }
+                                                                            }
+                                                                        }
+                                                                    },
+                                                                    "expression": {
+                                                                        "and": [
+                                                                            {
+                                                                                "greater": [
+                                                                                    "@length(body('Filter_current_file'))",
+                                                                                    0
+                                                                                ]
+                                                                            }
+                                                                        ]
+                                                                    },
+                                                                    "type": "If"
+                                                                },
+                                                                "Filter_FileType": {
+                                                                    "runAfter": {},
+                                                                    "type": "Query",
+                                                                    "inputs": {
+                                                                        "from": "@body('Parse_JSON-Asset_file_types')",
+                                                                        "where": "@equals(toUpper(item()?['TypeName']), toUpper(items('Iterate_Asset_files_records')?['type']))"
+                                                                    },
+                                                                    "runtimeConfiguration": {
+                                                                        "secureData": {
+                                                                            "properties": [
+                                                                                "inputs",
+                                                                                "outputs"
+                                                                            ]
+                                                                        }
+                                                                    }
+                                                                },
+                                                                "Filter_current_file": {
+                                                                    "runAfter": {
+                                                                        "Compose_BlobPath": [
+                                                                            "Succeeded"
+                                                                        ]
+                                                                    },
+                                                                    "type": "Query",
+                                                                    "inputs": {
+                                                                        "from": "@variables('NewAddedFileList')",
+                                                                        "where": "@equals(item()?['media_blobpath'], outputs('Compose_BlobPath'))"
+                                                                    }
+                                                                },
+                                                                "Set_variable_-_ErrorMessage": {
+                                                                    "runAfter": {
+                                                                        "Condition_if_assetfile_exist": [
+                                                                            "Failed",
+                                                                            "TimedOut"
+                                                                        ]
+                                                                    },
+                                                                    "type": "SetVariable",
+                                                                    "inputs": {
+                                                                        "name": "ErrorMessage",
+                                                                        "value": "Unable to create Shoot file @{items('Iterate_Asset_files_records')?['name']}"
+                                                                    }
+                                                                }
+                                                            },
+                                                            "runAfter": {
+                                                                "Parse_JSON-Asset_file_types": [
+                                                                    "Succeeded"
+                                                                ]
+                                                            },
+                                                            "type": "Foreach",
+                                                            "runtimeConfiguration": {
+                                                                "concurrency": {
+                                                                    "repetitions": 50
+                                                                }
+                                                            }
+                                                        },
+                                                        "List_records_matching_asset": {
+                                                            "runAfter": {
+                                                                "Set_variable_-_FilteringAttributes_": [
+                                                                    "Succeeded"
+                                                                ]
+                                                            },
+                                                            "type": "ApiConnection",
+                                                            "inputs": {
+                                                                "host": {
+                                                                    "connection": {
+                                                                        "name": "@parameters('$connections')['commondataservice']['connectionId']"
+                                                                    }
+                                                                },
+                                                                "method": "get",
+                                                                "path": "[concat('/v2/datasets/@{encodeURIComponent(encodeURIComponent(',variables('org'),'))}/tables/@{encodeURIComponent(encodeURIComponent(',durin.wrapInQuote('media_assets'),'))}/items')]",
+                                                                "queries": {
+                                                                    "$filter": "media_shootday eq '@{body('Parse_JSON')?['shootDay']}' and media_unit eq '@{body('Parse_JSON')?['unit']}' and media_batch eq '@{body('Parse_JSON')?['batch']}' and @{variables('FilterAttributes')}"
+                                                                }
+                                                            },
+                                                            "runtimeConfiguration": {
+                                                                "secureData": {
+                                                                    "properties": [
+                                                                        "inputs",
+                                                                        "outputs"
+                                                                    ]
+                                                                }
+                                                            }
+                                                        },
+                                                        "Parse_JSON": {
+                                                            "runAfter": {},
+                                                            "type": "ParseJson",
+                                                            "inputs": {
+                                                                "content": "@decodeBase64(body('Get_blob_content')['$content'])",
+                                                                "schema": {
+                                                                    "properties": {
+                                                                        "batch": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "blockId": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "checksum": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "episodeId": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "files": {
+                                                                            "items": {
+                                                                                "properties": {
+                                                                                    "checksum": {
+                                                                                        "type": "string"
+                                                                                    },
+                                                                                    "filePath": {
+                                                                                        "type": "string"
+                                                                                    },
+                                                                                    "filesize": {
+                                                                                        "type": "integer"
+                                                                                    },
+                                                                                    "miscInfo": {
+                                                                                        "properties": {
+                                                                                            "aleFileNameField": {
+                                                                                                "type": "string"
+                                                                                            },
+                                                                                            "matchType": {
+                                                                                                "type": "string"
+                                                                                            },
+                                                                                            "truncateCharFromEnd": {
+                                                                                                "type": "integer"
+                                                                                            },
+                                                                                            "truncateCharFromStart": {
+                                                                                                "type": "integer"
+                                                                                            }
+                                                                                        },
+                                                                                        "type": "object"
+                                                                                    },
+                                                                                    "name": {
+                                                                                        "type": "string"
+                                                                                    },
+                                                                                    "type": {
+                                                                                        "type": "string"
+                                                                                    }
+                                                                                },
+                                                                                "required": [
+                                                                                    "checksum",
+                                                                                    "filePath",
+                                                                                    "filesize",
+                                                                                    "name",
+                                                                                    "type"
+                                                                                ],                                                      
+                                                                                "type": "object"
+                                                                            },
+                                                                            "type": "array"
+                                                                        },
+                                                                        "info": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "notificationEmail": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "seasonId": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "shootDay": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "showId": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "team": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "unit": {
+                                                                            "type": "string"
+                                                                        }
+                                                                    },
+                                                                    "type": "object"
+                                                                }
+                                                            },
+                                                            "runtimeConfiguration": {
+                                                                "secureData": {
+                                                                    "properties": [
+                                                                        "inputs"
+                                                                    ]
+                                                                }
+                                                            }
+                                                        },
+                                                        "Parse_JSON-Asset_file_types": {
+                                                            "runAfter": {
+                                                                "Condition_if_asset_exist": [
+                                                                    "Succeeded"
+                                                                ]
+                                                            },
+                                                            "type": "ParseJson",
+                                                            "inputs": {
+                                                                "content": [
+                                                                    {
+                                                                        "TypeName": "Camera RAW",
+                                                                        "Value": 207940001
+                                                                    },
+                                                                    {
+                                                                        "TypeName": "CDL",
+                                                                        "Value": 207940002
+                                                                    },
+                                                                    {
+                                                                        "TypeName": "LUTS",
+                                                                        "Value": 207940003
+                                                                    },
+                                                                    {
+                                                                        "TypeName": "Audio",
+                                                                        "Value": 207940000
+                                                                    },
+                                                                    {
+                                                                        "TypeName": "Stills",
+                                                                        "Value": 207940006
+                                                                    },
+                                                                    {
+                                                                        "TypeName": "Others",
+                                                                        "Value": 207940005
+                                                                    },
+                                                                    {
+                                                                        "TypeName": "Reports/Notes",
+                                                                        "Value": 207940004
+                                                                    }
+                                                                ],
+                                                                "schema": {
+                                                                    "items": {
+                                                                        "properties": {
+                                                                            "TypeName": {
+                                                                                "type": "string"
+                                                                            },
+                                                                            "Value": {
+                                                                                "type": "integer"
+                                                                            }
+                                                                        },
+                                                                        "required": [
+                                                                            "TypeName",
+                                                                            "Value"
+                                                                        ],
+                                                                        "type": "object"
+                                                                    },
+                                                                    "type": "array"
+                                                                }
+                                                            },
+                                                            "runtimeConfiguration": {
+                                                                "secureData": {
+                                                                    "properties": [
+                                                                        "inputs"
+                                                                    ]
+                                                                }
+                                                            }
+                                                        },
+                                                        "Set_variable_-_FilteringAttributes_": {
+                                                            "runAfter": {
+                                                                "Set_variable_Blockingidattr": [
+                                                                    "Succeeded"
+                                                                ]
+                                                            },
+                                                            "type": "SetVariable",
+                                                            "inputs": {
+                                                                "name": "FilterAttributes",
+                                                                "value": "@{if(equals(body('Parse_JSON')?['episodeId'],''),variables('blockidattr'),variables('episodeidattr'))}"
+                                                            }
+                                                        },
+                                                        "Set_variable_Blockingidattr": {
+                                                            "runAfter": {
+                                                                "Set_variable_Episodeidattr": [
+                                                                    "Succeeded"
+                                                                ]
+                                                            },
+                                                            "type": "SetVariable",
+                                                            "inputs": {
+                                                                "name": "blockidattr",
+                                                                "value": "_media_block_value eq '@{body('Parse_JSON')?['blockId']}'"
+                                                            }
+                                                        },
+                                                        "Set_variable_Episodeidattr": {
+                                                            "runAfter": {
+                                                                "Parse_JSON": [
+                                                                    "Succeeded"
+                                                                ]
+                                                            },
+                                                            "type": "SetVariable",
+                                                            "inputs": {
+                                                                "name": "episodeidattr",
+                                                                "value": "_media_episode_value eq '@{body('Parse_JSON')?['episodeId']}'"
+                                                            }
+                                                        },
+                                                        "Set_variable__-_Create_Shoot_Record_-_Error_Message": {
+                                                            "runAfter": {
+                                                                "Condition_if_asset_exist": [
+                                                                    "Failed",
+                                                                    "TimedOut"
+                                                                ]
+                                                            },
+                                                            "type": "SetVariable",
+                                                            "inputs": {
+                                                                "name": "ErrorMessage",
+                                                                "value": "Unable to create Shoot record with shoot number @{body('Parse_JSON')?['shootNumber']}"
+                                                            }
+                                                        }
+                                                    },
+                                                    "runAfter": {
+                                                        "Get_blob_content": [
+                                                            "Succeeded"
+                                                        ]
+                                                    },
+                                                    "else": {
+                                                        "actions": {
+                                                            "Delay": {
+                                                                "runAfter": {},
+                                                                "type": "Wait",
+                                                                "inputs": {
+                                                                    "interval": {
+                                                                        "count": 10,
+                                                                        "unit": "Second"
+                                                                    }
+                                                                },
+                                                                "runtimeConfiguration": {
+                                                                    "secureData": {
+                                                                        "properties": [
+                                                                            "inputs"
+                                                                        ]
+                                                                    }
+                                                                }
+                                                            },
+                                                            "Fetch_asset_file_camera_raw_metadata": {
+                                                                "runAfter": {
+                                                                    "Delay": [
+                                                                        "Succeeded"
+                                                                    ]
+                                                                },
+                                                                "type": "ApiConnection",
+                                                                "inputs": {
+                                                                    "host": {
+                                                                        "connection": {
+                                                                            "name": "@parameters('$connections')['commondataservice']['connectionId']"
+                                                                        }
+                                                                    },
+                                                                    "method": "get",
+                                                                    "path": "[concat('/v2/datasets/@{encodeURIComponent(encodeURIComponent(',variables('org'),'))}/tables/@{encodeURIComponent(encodeURIComponent(',durin.wrapInQuote('media_assetfileses'),'))}/items')]",
+                                                                    "queries": {
+                                                                        "$expand": "media_Asset($select=media_name)",
+                                                                        "$filter": "@{decodeUriComponent(concat('media_blobpath eq %27',outputs('Compose'),'%27','and statecode eq 0'))}",
+                                                                        "$top": 1
+                                                                    }
+                                                                },
+                                                                "runtimeConfiguration": {
+                                                                    "secureData": {
+                                                                        "properties": [
+                                                                            "inputs",
+                                                                            "outputs"
+                                                                        ]
+                                                                    }
+                                                                }
+                                                            },
+                                                            "Iterate_camera_raw_metadata": {
+                                                                "foreach": "@body('Fetch_asset_file_camera_raw_metadata')?['value']",
+                                                                "actions": {
+                                                                    "Set_variable_-_Update_Record_-_ErrorMessage": {
+                                                                        "runAfter": {
+                                                                            "Update_Asset_File_Status_for_Camera_Raw_file": [
+                                                                                "Failed",
+                                                                                "TimedOut"
+                                                                            ]
+                                                                        },
+                                                                        "type": "SetVariable",
+                                                                        "inputs": {
+                                                                            "name": "ErrorMessage",
+                                                                            "value": "Failed to upadte camera raw metadata of asset @{items('Iterate_camera_raw_metadata')?['_media_asset_value']}"
+                                                                        }
+                                                                    },
+                                                                    "Update_Asset_File_Status_for_Camera_Raw_file": {
+                                                                        "runAfter": {
+                                                                            "Update_Asset_camera_raw_metadata": [
+                                                                                "Succeeded"
+                                                                            ]
+                                                                        },
+                                                                        "type": "ApiConnection",
+                                                                        "inputs": {
+                                                                            "body": {
+                                                                                "media_filetype": 207940001,
+                                                                                "media_uploadstatus": 207940000
+                                                                            },
+                                                                            "host": {
+                                                                                "connection": {
+                                                                                    "name": "@parameters('$connections')['commondataservice']['connectionId']"
+                                                                                }
+                                                                            },
+                                                                            "method": "patch",
+                                                                            "path": "[concat('/v2/datasets/@{encodeURIComponent(encodeURIComponent(',variables('org'),'))}/tables/@{encodeURIComponent(encodeURIComponent(',durin.wrapInQuote('media_assetfileses'),'))}/items/@{encodeURIComponent(encodeURIComponent(items(',durin.wrapInQuote('Iterate_camera_raw_metadata'),')?[',durin.wrapInQuote('media_assetfilesid'),']))}')]"
+                                                                        },
+                                                                        "runtimeConfiguration": {
+                                                                            "secureData": {
+                                                                                "properties": [
+                                                                                    "inputs",
+                                                                                    "outputs"
+                                                                                ]
+                                                                            }
+                                                                        }
+                                                                    },
+                                                                    "Update_Asset_camera_raw_metadata": {
+                                                                        "runAfter": {},
+                                                                        "type": "ApiConnection",
+                                                                      "inputs": {
+                                                                        "body": {
+                                                                          "media_alefilecontent": "@{decodeBase64(body('Get_blob_content')['$content'])}"
+                                                                        },
+                                                                        "host": {
+                                                                          "connection": {
+                                                                            "name": "@parameters('$connections')['commondataservice']['connectionId']"
+                                                                          }
+                                                                        },
+                                                                        "method": "patch",
+                                                                        "path": "[concat('/v2/datasets/@{encodeURIComponent(encodeURIComponent(',variables('org'),'))}/tables/@{encodeURIComponent(encodeURIComponent(',durin.wrapInQuote('media_assetfileses'),'))}/items/@{encodeURIComponent(encodeURIComponent(items(',durin.wrapInQuote('Iterate_camera_raw_metadata'),')?[',durin.wrapInQuote('media_assetfilesid'),']))}')]",
+                                                                        },
+                                                                        "runtimeConfiguration": {
+                                                                            "secureData": {
+                                                                                "properties": [
+                                                                                    "inputs",
+                                                                                    "outputs"
+                                                                                ]
+                                                                            }
+                                                                      }
+                                                                    }
+                                                                },
+                                                                "runAfter": {
+                                                                    "Fetch_asset_file_camera_raw_metadata": [
+                                                                        "Succeeded"
+                                                                    ]
+                                                                },
+                                                                "type": "Foreach"
+                                                            },
+                                                            "Set_variable_-_List_Records_-_Errror_Message": {
+                                                                "runAfter": {
+                                                                    "Fetch_asset_file_camera_raw_metadata": [
+                                                                        "Failed",
+                                                                        "TimedOut"
+                                                                    ]
+                                                                },
+                                                                "type": "SetVariable",
+                                                                "inputs": {
+                                                                    "name": "ErrorMessage",
+                                                                    "value": "Failed to retrieve asset file @{variables('DirectoryPath')}"
+                                                                }
+                                                            }
+                                                        }
+                                                    },
+                                                    "expression": {
+                                                        "and": [
+                                                            {
+                                                                "equals": [
+                                                                    "@contains(triggerBody()?['subject'],'metadata.json')",
+                                                                    "@true"
+                                                                ]
+                                                            }
+                                                        ]
+                                                    },
+                                                    "type": "If"
+                                                },
+                                                "Set_variable_-_Get_blob_content_-_Error_Message": {
+                                                    "runAfter": {
+                                                        "Get_blob_content": [
+                                                            "Failed",
+                                                            "TimedOut"
+                                                        ]
+                                                    },
+                                                    "type": "SetVariable",
+                                                    "inputs": {
+                                                        "name": "ErrorMessage",
+                                                        "value": "Unable to Get Blob content of @{outputs('Compose')}"
+                                                    }
+                                                }
+                                            },
+                                            "runAfter": {
+                                                "Iterate_containers": [
+                                                    "Succeeded"
+                                                ]
+                                            },
+                                            "else": {
+                                                "actions": {
+                                                    "Find_the_asset_file_or_shooting_file_record": {
+                                                        "runAfter": {},
+                                                        "type": "ApiConnection",
+                                                        "inputs": {
+                                                            "host": {
+                                                                "connection": {
+                                                                    "name": "@parameters('$connections')['commondataservice']['connectionId']"
+                                                                }
+                                                            },
+                                                            "method": "get",
+                                                            "path": "[concat('/v2/datasets/@{encodeURIComponent(encodeURIComponent(',variables('org'),'))}/tables/@{encodeURIComponent(encodeURIComponent(',durin.wrapInQuote('media_assetfileses'),'))}/items')]",
+                                                            "queries": {
+                                                                "$filter": "@{decodeUriComponent(concat('media_blobpath eq %27',outputs('Compose'),'%27','and statecode eq 0'))}"
+                                                            }
+                                                        },
+                                                        "runtimeConfiguration": {
+                                                            "secureData": {
+                                                                "properties": [
+                                                                    "inputs",
+                                                                    "outputs"
+                                                                ]
+                                                            }
+                                                        }
+                                                    },
+                                                    "Iterate_asset_files": {
+                                                        "foreach": "@body('Find_the_asset_file_or_shooting_file_record')?['value']",
+                                                        "actions": {
+                                                            "Logic-AntiVirusScan": {
+                                                                "runAfter": {
+                                                                    "Update_asset_file_upload_status_to_successful": [
+                                                                        "Succeeded"
+                                                                    ]
+                                                                },
+                                                                "type": "Workflow",
+                                                                "inputs": {
+                                                                    "body": {
+                                                                        "BlobUri": "@{triggerBody()?['data']?['url']}",
+                                                                        "RecordId": "@items('Iterate_asset_files')?['media_assetfilesid']"
+                                                                    },
+                                                                    "host": {
+                                                                        "triggerName": "manual",
+                                                                        "workflow": {
+                                                                            "id": "[parameters('workflows_Logic_AntiVirusScan')]"
+                                                                        }
+                                                                    }
+                                                                },
+                                                                "runtimeConfiguration": {
+                                                                    "secureData": {
+                                                                        "properties": [
+                                                                            "inputs",
+                                                                            "outputs"
+                                                                        ]
+                                                                    }
+                                                                }
+                                                            },
+                                                            "Logic-CompareCheckSum": {
+                                                                "runAfter": {
+                                                                    "Update_asset_file_upload_status_to_successful": [
+                                                                        "Succeeded"
+                                                                    ]
+                                                                },
+                                                                "type": "Workflow",
+                                                                "inputs": {
+                                                                    "body": {
+                                                                        "BlobPath": "@{outputs('Compose')}",
+                                                                        "RecordId": "@items('Iterate_asset_files')?['media_assetfilesid']"
+                                                                    },
+                                                                    "host": {
+                                                                        "triggerName": "manual",
+                                                                        "workflow": {
+                                                                            "id": "[parameters('workflows_Logic_CompareCheckSum')]"
+                                                                        }
+                                                                    }
+                                                                },
+                                                                "runtimeConfiguration": {
+                                                                    "secureData": {
+                                                                        "properties": [
+                                                                            "inputs",
+                                                                            "outputs"
+                                                                        ]
+                                                                    }
+                                                                }
+                                                            },
+                                                            "Logic-ExtractAndSaveMetadata": {
+                                                                "runAfter": {
+                                                                    "Update_asset_file_upload_status_to_successful": [
+                                                                        "Succeeded"
+                                                                    ]
+                                                                },
+                                                                "type": "Workflow",
+                                                                "inputs": {
+                                                                    "body": {
+                                                                        "BlobUri": "@triggerBody()?['data']?['url']",
+                                                                        "RecordId": "@body('Update_asset_file_upload_status_to_successful')?['media_assetfilesid']"
+                                                                    },
+                                                                    "host": {
+                                                                        "triggerName": "manual",
+                                                                        "workflow": {
+                                                                            "id": "[parameters('workflows_Logic_ExtractAndSaveMetadata')]"
+                                                                        }
+                                                                    }
+                                                                },
+                                                                "runtimeConfiguration": {
+                                                                    "secureData": {
+                                                                        "properties": [
+                                                                            "inputs",
+                                                                            "outputs"
+                                                                        ]
+                                                                    }
+                                                                }
+                                                            },
+                                                            "Set_variable_-_Update_record_Updated_Successfull__-_Error_Message": {
+                                                                "runAfter": {
+                                                                    "Update_asset_file_upload_status_to_successful": [
+                                                                        "Failed",
+                                                                        "TimedOut"
+                                                                    ]
+                                                                },
+                                                                "type": "SetVariable",
+                                                                "inputs": {
+                                                                    "name": "ErrorMessage",
+                                                                    "value": "Failed to Update asset file status with Id @{body('Update_asset_file_upload_status_to_successful')?['media_assetfilesid']}"
+                                                                }
+                                                            },
+                                                            "Update_asset_file_upload_status_to_successful": {
+                                                                "runAfter": {},
+                                                                "type": "ApiConnection",
+                                                                "inputs": {
+                                                                    "body": {
+                                                                        "media_uploadstatus": 207940000
+                                                                    },
+                                                                    "host": {
+                                                                        "connection": {
+                                                                            "name": "@parameters('$connections')['commondataservice']['connectionId']"
+                                                                        }
+                                                                    },
+                                                                    "method": "patch",
+                                                                    "path": "[concat('/v2/datasets/@{encodeURIComponent(encodeURIComponent(',variables('org'),'))}/tables/@{encodeURIComponent(encodeURIComponent(',durin.wrapInQuote('media_assetfileses'),'))}/items/@{encodeURIComponent(encodeURIComponent(items(',durin.wrapInQuote('Iterate_asset_files'),')?[',durin.wrapInQuote('media_assetfilesid'),']))}')]"
+                                                                },
+                                                                "runtimeConfiguration": {
+                                                                    "secureData": {
+                                                                        "properties": [
+                                                                            "inputs",
+                                                                            "outputs"
+                                                                        ]
+                                                                    }
+                                                                }
+                                                            }
+                                                        },
+                                                        "runAfter": {
+                                                            "Find_the_asset_file_or_shooting_file_record": [
+                                                                "Succeeded"
+                                                            ]
+                                                        },
+                                                        "type": "Foreach"
+                                                    },
+                                                    "Set_variable_-_Find_asset_or_shooting_file_record_-_ErrorMessage": {
+                                                        "runAfter": {
+                                                            "Find_the_asset_file_or_shooting_file_record": [
+                                                                "Failed",
+                                                                "TimedOut"
+                                                            ]
+                                                        },
+                                                        "type": "SetVariable",
+                                                        "inputs": {
+                                                            "name": "ErrorMessage",
+                                                            "value": "Failed to retrieve asset file with path @{outputs('Compose')}"
+                                                        }
+                                                    }
+                                                }
+                                            },
+                                            "expression": {
+                                                "or": [
+                                                    {
+                                                        "equals": [
+                                                            "@contains(triggerBody()?['subject'],'metadata.json')",
+                                                            "@true"
+                                                        ]
+                                                    },
+                                                    {
+                                                        "equals": [
+                                                            "@contains(triggerBody()?['subject'],'.ale')",
+                                                            "@true"
+                                                        ]
+                                                    }
+                                                ]
+                                            },
+                                            "type": "If"
+                                        },
+                                        "Iterate_containers": {
+                                            "foreach": "@body('Get_Container_Id')?['value']",
+                                            "actions": {
+                                                "Set_variable_-_ContainerId": {
+                                                    "runAfter": {},
+                                                    "type": "SetVariable",
+                                                    "inputs": {
+                                                        "name": "ContainerId",
+                                                        "value": "@items('Iterate_containers')?['media_assetcontainerid']"
+                                                    }
+                                                }
+                                            },
+                                            "runAfter": {
+                                                "Get_Container_Id": [
+                                                    "Succeeded"
+                                                ]
+                                            },
+                                            "type": "Foreach"
+                                        },
+                                        "Set_variable_-_GetContainerId_-ErrorMessage": {
+                                            "runAfter": {
+                                                "Get_Container_Id": [
+                                                    "Failed",
+                                                    "TimedOut"
+                                                ]
+                                            },
+                                            "type": "SetVariable",
+                                            "inputs": {
+                                                "name": "ErrorMessage",
+                                                "value": "Failed to retrieve Container Id of @{variables('ContainerName')}"
+                                            }
+                                        }
+                                    },
+                                    "runAfter": {
+                                        "Set_Directory_Path_variable": [
+                                            "Succeeded"
+                                        ]
+                                    },
+                                    "type": "Scope"
+                                },
+                                "Set_Container_Name_variable": {
+                                    "runAfter": {
+                                        "Compose": [
+                                            "Succeeded"
+                                        ]
+                                    },
+                                    "type": "SetVariable",
+                                    "inputs": {
+                                        "name": "ContainerName",
+                                        "value": "@{substring(outputs('Compose'),0,indexOf(outputs('Compose'),'/'))}"
+                                    }
+                                },
+                                "Set_Directory_Path_variable": {
+                                    "runAfter": {
+                                        "Set_Container_Name_variable": [
+                                            "Succeeded"
+                                        ]
+                                    },
+                                    "type": "SetVariable",
+                                    "inputs": {
+                                        "name": "DirectoryPath",
+                                        "value": "@{substring(outputs('Compose'),0,lastIndexOf(outputs('Compose'),'/'))}"
+                                    }
+                                }
+                            },
+                            "runAfter": {
+                                "Initialize_variable_NewAddedFileList": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "expression": {
+                                "and": [
+                                    {
+                                        "equals": [
+                                            "@triggerBody()?['eventType']",
+                                            "Microsoft.Storage.BlobCreated"
+                                        ]
+                                    }
+                                ]
+                            },
+                            "type": "If"
+                        },
+                        "Initialize_Directory_Path": {
+                            "runAfter": {
+                                "Initialize_variable": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "InitializeVariable",
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "DirectoryPath",
+                                        "type": "string"
+                                    }
+                                ]
+                            }
+                        },
+                        "Initialize_variable": {
+                            "runAfter": {},
+                            "type": "InitializeVariable",
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "ContainerName",
+                                        "type": "string"
+                                    }
+                                ]
+                            }
+                        },
+                        "Initialize_variable_-_ContainerId": {
+                            "runAfter": {
+                                "Initialize_Directory_Path": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "InitializeVariable",
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "ContainerId",
+                                        "type": "string"
+                                    }
+                                ]
+                            }
+                        },
+                        "Initialize_variable_-_ErrorMessage": {
+                            "runAfter": {
+                                "Initialize_variable_-_ContainerId": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "InitializeVariable",
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "ErrorMessage",
+                                        "type": "string"
+                                    }
+                                ]
+                            }
+                        },
+                        "Initialize_variable_-_FilterAttributes": {
+                            "runAfter": {
+                                "Initialize_variable_-_UploadedFileCount": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "InitializeVariable",
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "FilterAttributes",
+                                        "type": "string"
+                                    }
+                                ]
+                            }
+                        },
+                        "Initialize_variable_-_UploadedFileCount": {
+                            "runAfter": {
+                                "Initialize_variable_-_ErrorMessage": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "InitializeVariable",
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "UploadedFileCount",
+                                        "type": "integer",
+                                        "value": 0
+                                    }
+                                ]
+                            }
+                        },
+                        "Initialize_variable_Blockingidattr": {
+                            "runAfter": {
+                                "Initialize_variable_-_FilterAttributes": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "InitializeVariable",
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "blockidattr",
+                                        "type": "string"
+                                    }
+                                ]
+                            }
+                        },
+                        "Initialize_variable_Episodeidattr": {
+                            "runAfter": {
+                                "Initialize_variable_Blockingidattr": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "InitializeVariable",
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "episodeidattr",
+                                        "type": "string"
+                                    }
+                                ]
+                            }
+                        },
+                        "Initialize_variable_NewAddedFileList": {
+                            "runAfter": {
+                                "Initialize_variable_Episodeidattr": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "InitializeVariable",
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "NewAddedFileList",
+                                        "type": "array"
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    "outputs": {
+                    }
+                },
+                "parameters": {
+                    "$connections": {
+                        "value": {
+                            "azureblob": {
+                                "connectionId":"[parameters('connections_azureblob')]",
+                                "connectionName": "azureblob",
+                                "id": "[concat(subscription().id, '/providers/Microsoft.Web/locations/', resourceGroup().location, '/managedApis/azureblob')]"
+                            },
+                            "commondataservice": {
+                                "connectionId": "[parameters('connection_commondataservice')]",
+                                "connectionName": "commondataservice",
+                                "id": "[concat(subscription().id, '/providers/Microsoft.Web/locations/', resourceGroup().location, '/managedApis/commondataservice')]"
+                            },
+                            "azureeventgrid": {
+                                "connectionId": "[parameters('connections_azureeventgrid')]",
+                                "connectionName": "azureeventgrid",
+                                "id": "[concat(subscription().id, '/providers/Microsoft.Web/locations/', resourceGroup().location, '/managedApis/azureeventgrid')]"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    ],
+    "outputs": {}
+}

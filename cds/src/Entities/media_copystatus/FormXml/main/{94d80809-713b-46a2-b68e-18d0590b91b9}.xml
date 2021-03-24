@@ -1,0 +1,239 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<forms xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <systemform>
+    <formid>{94d80809-713b-46a2-b68e-18d0590b91b9}</formid>
+    <IntroducedVersion>1.0.0.0</IntroducedVersion>
+    <FormPresentation>1</FormPresentation>
+    <FormActivationState>1</FormActivationState>
+    <form headerdensity="HighWithControls">
+      <tabs>
+        <tab verticallayout="true" id="{9d6dd08b-dd65-45c0-a117-260bca567004}" IsUserDefined="1">
+          <labels>
+            <label description="General" languagecode="1033" />
+          </labels>
+          <columns>
+            <column width="100%">
+              <sections>
+                <section showlabel="false" showbar="false" IsUserDefined="0" id="{47003dc5-af98-4ece-ad2d-895af9d18891}" columns="11">
+                  <labels>
+                    <label description="General" languagecode="1033" />
+                  </labels>
+                  <rows>
+                    <row>
+                      <cell id="{d1a0a427-8c7d-47be-9c19-c91628dcb9ce}">
+                        <labels>
+                          <label description="Name" languagecode="1033" />
+                        </labels>
+                        <control id="media_name" classid="{4273EDBD-AC1D-40d3-9FB2-095C621B552D}" datafieldname="media_name" />
+                      </cell>
+                      <cell id="{187b3d9a-60ad-49cd-8186-03c1a9df0dc7}" locklevel="0">
+                        <labels>
+                          <label description="Copy Duration" languagecode="1033" />
+                        </labels>
+                        <control id="media_copyduration" classid="{AA987274-CE4E-4271-A803-66164311A958}" datafieldname="media_copyduration" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{5aff6eac-77c3-44d2-b4ad-31ffb4398771}" locklevel="0">
+                        <labels>
+                          <label description="Show" languagecode="1033" />
+                        </labels>
+                        <control id="media_show" classid="{270BD3DB-D9AF-4782-9025-509E298DEC0A}" datafieldname="media_show" disabled="false" />
+                      </cell>
+                      <cell id="{88f97a77-c58c-45a0-8fa2-e4ece164c701}" locklevel="0">
+                        <labels>
+                          <label description="Destinantion Type" languagecode="1033" />
+                        </labels>
+                        <control id="media_destinantiontype" classid="{3EF39988-22BB-4F0B-BBBE-64B5A3748AEE}" datafieldname="media_destinantiontype" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{aba51de8-66f2-4b8a-a1d0-ca14f04b5636}" locklevel="0">
+                        <labels>
+                          <label description="Source Type" languagecode="1033" />
+                        </labels>
+                        <control id="media_sourcetype" classid="{3EF39988-22BB-4F0B-BBBE-64B5A3748AEE}" datafieldname="media_sourcetype" disabled="true" />
+                      </cell>
+                      <cell id="{e888f3c3-dcf6-4037-8649-6ccc46412e5c}" locklevel="0">
+                        <labels>
+                          <label description="Status" languagecode="1033" />
+                        </labels>
+                        <control id="media_status" classid="{3EF39988-22BB-4F0B-BBBE-64B5A3748AEE}" datafieldname="media_status" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{591c2ce4-1868-4e1a-be7e-1c90481e58d8}" locklevel="0">
+                        <labels>
+                          <label description="Destination Name" languagecode="1033" />
+                        </labels>
+                        <control id="media_destinationname" classid="{4273EDBD-AC1D-40D3-9FB2-095C621B552D}" datafieldname="media_destinationname" disabled="false" />
+                      </cell>
+                      <cell id="{6b80a268-cbb4-4c62-81cb-59b9a62e584b}" locklevel="0">
+                        <labels>
+                          <label description="Created On" languagecode="1033" />
+                        </labels>
+                        <control id="createdon" classid="{5B773807-9FB2-42DB-97C3-7A91EFF8ADFF}" datafieldname="createdon" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{675b7adc-4417-44c5-ace8-98a4d3dec7ae}" visible="false">
+                        <labels>
+                          <label description="Owner" languagecode="1033" />
+                        </labels>
+                        <control id="ownerid" classid="{270BD3DB-D9AF-4782-9025-509E298DEC0A}" datafieldname="ownerid" />
+                      </cell>
+                      <cell id="{6ea8179c-d1c7-4279-ad27-ef70b8f42004}" locklevel="0">
+                        <labels>
+                          <label description="Copy Start Time" languagecode="1033" />
+                        </labels>
+                        <control id="media_copystarttime" classid="{5B773807-9FB2-42DB-97C3-7A91EFF8ADFF}" datafieldname="media_copystarttime" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{258a4989-b6a8-458d-97f4-b5f3331c08f4}" locklevel="0">
+                        <labels>
+                          <label description="Task Duration" languagecode="1033" />
+                        </labels>
+                        <control id="media_duration" classid="{4273EDBD-AC1D-40D3-9FB2-095C621B552D}" datafieldname="media_duration" disabled="false" />
+                      </cell>
+                      <cell id="{61734f11-9175-4f5c-9e3b-2f0743da21e6}" locklevel="0">
+                        <labels>
+                          <label description="Copy End Time" languagecode="1033" />
+                        </labels>
+                        <control id="media_copyendtime" classid="{5B773807-9FB2-42DB-97C3-7A91EFF8ADFF}" datafieldname="media_copyendtime" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{6490f1c0-6a28-4772-965d-a46ecff4285e}" locklevel="0">
+                        <labels>
+                          <label description="Submitted By" languagecode="1033" />
+                        </labels>
+                        <control id="media_submittedby" classid="{270BD3DB-D9AF-4782-9025-509E298DEC0A}" datafieldname="media_submittedby" disabled="false" />
+                      </cell>
+                      <cell locklevel="0" id="{fc262dd9-f9b9-496b-8fcf-eca6e9da91cb}" showlabel="false">
+                        <labels>
+                          <label description="" languagecode="1033" />
+                        </labels>
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{85af767e-2509-4348-93a7-677a68398bda}" locklevel="0">
+                        <labels>
+                          <label description="Status" languagecode="1033" />
+                        </labels>
+                        <control id="statecode" classid="{3EF39988-22BB-4F0B-BBBE-64B5A3748AEE}" datafieldname="statecode" disabled="false" />
+                      </cell>
+                      <cell locklevel="0" id="{a5549461-8c30-44e1-9be1-e104c8ce3f0a}">
+                        <labels>
+                          <label description="" languagecode="1033" />
+                        </labels>
+                      </cell>
+                    </row>
+                  </rows>
+                </section>
+                <section name="{9d6dd08b-dd65-45c0-a117-260bca567004}_section_2" showlabel="false" showbar="false" locklevel="0" id="{2ed84681-908a-a4ac-b452-5753cdea43b5}" IsUserDefined="0" layout="varwidth" columns="1" labelwidth="115" height="auto">
+                  <labels>
+                    <label description="Section" languagecode="1033" />
+                  </labels>
+                  <rows>
+                    <row height="auto">
+                      <cell id="{a849ed82-d671-4b89-87f3-ffd09202136c}" locklevel="0" auto="true">
+                        <labels>
+                          <label description="Error Log" languagecode="1033" />
+                        </labels>
+                        <control id="media_errorlog" classid="{E0DECE4B-6FC8-4A8F-A065-082708572369}" datafieldname="media_errorlog" disabled="false" />
+                      </cell>
+                    </row>
+                  </rows>
+                </section>
+              </sections>
+            </column>
+          </columns>
+        </tab>
+      </tabs>
+      <header id="{8fb64696-8bbc-443b-bfc7-ceb919d242b9}" celllabelposition="Top" columns="111" labelwidth="115" celllabelalignment="Left">
+        <rows>
+          <row>
+            <cell id="{4e505c74-d60d-4d79-993a-1b2356e59c6e}" showlabel="false">
+              <labels>
+                <label description="" languagecode="1033" />
+              </labels>
+            </cell>
+            <cell id="{65f3eaf3-49ae-4ec5-b5d5-b588c2ced6a8}" showlabel="false">
+              <labels>
+                <label description="" languagecode="1033" />
+              </labels>
+            </cell>
+            <cell id="{a78a7f93-6e5c-42a1-9ea2-c343afcf491f}" showlabel="false">
+              <labels>
+                <label description="" languagecode="1033" />
+              </labels>
+            </cell>
+          </row>
+        </rows>
+      </header>
+      <footer id="{408ea1b7-8a89-4e80-9572-549a5b215686}" celllabelposition="Top" columns="111" labelwidth="115" celllabelalignment="Left">
+        <rows>
+          <row>
+            <cell id="{55ae70d7-3b5a-429a-9d3d-bcfac5249fd7}" showlabel="false">
+              <labels>
+                <label description="" languagecode="1033" />
+              </labels>
+            </cell>
+            <cell id="{e15cc205-32b4-4ed8-8f09-614e9ac59b84}" showlabel="false">
+              <labels>
+                <label description="" languagecode="1033" />
+              </labels>
+            </cell>
+            <cell id="{405e659e-8d22-4069-8520-2e796b1ce244}" showlabel="false">
+              <labels>
+                <label description="" languagecode="1033" />
+              </labels>
+            </cell>
+          </row>
+        </rows>
+      </footer>
+      <Navigation>
+        <NavBar />
+        <NavBarAreas>
+          <NavBarArea Id="Info">
+            <Titles>
+              <Title LCID="1033" Text="Common" />
+            </Titles>
+          </NavBarArea>
+          <NavBarArea Id="Sales">
+            <Titles>
+              <Title LCID="1033" Text="Sales" />
+            </Titles>
+          </NavBarArea>
+          <NavBarArea Id="Service">
+            <Titles>
+              <Title LCID="1033" Text="Service" />
+            </Titles>
+          </NavBarArea>
+          <NavBarArea Id="Marketing">
+            <Titles>
+              <Title LCID="1033" Text="Marketing" />
+            </Titles>
+          </NavBarArea>
+          <NavBarArea Id="ProcessCenter">
+            <Titles>
+              <Title LCID="1033" Text="Process Sessions" />
+            </Titles>
+          </NavBarArea>
+        </NavBarAreas>
+      </Navigation>
+      <DisplayConditions Order="0" FallbackForm="true">
+        <Everyone />
+      </DisplayConditions>
+    </form>
+    <IsCustomizable>1</IsCustomizable>
+    <CanBeDeleted>1</CanBeDeleted>
+    <LocalizedNames>
+      <LocalizedName description="Information" languagecode="1033" />
+    </LocalizedNames>
+    <Descriptions>
+      <Description description="A form for this entity." languagecode="1033" />
+    </Descriptions>
+  </systemform>
+</forms>

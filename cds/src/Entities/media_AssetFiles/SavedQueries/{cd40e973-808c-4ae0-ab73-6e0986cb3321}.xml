@@ -1,0 +1,47 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<savedqueries xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <savedquery>
+    <IsCustomizable>1</IsCustomizable>
+    <CanBeDeleted>0</CanBeDeleted>
+    <isquickfindquery>0</isquickfindquery>
+    <isprivate>0</isprivate>
+    <isdefault>1</isdefault>
+    <savedqueryid>{cd40e973-808c-4ae0-ab73-6e0986cb3321}</savedqueryid>
+    <layoutxml>
+      <grid name="media_assetfileses" jump="media_name" select="1" icon="1" preview="1">
+        <row name="media_assetfiles" id="media_assetfilesid">
+          <cell name="media_name" width="262" />
+          <cell name="media_filetype" width="100" />
+          <cell name="media_virusscanstatus" width="100" />
+          <cell name="media_checksumstatus" width="100" />
+          <cell name="media_metadatastatus" width="100" />
+          <cell name="media_blobpath" width="100" />
+          <cell name="createdon" width="125" />
+        </row>
+      </grid>
+    </layoutxml>
+    <querytype>2</querytype>
+    <fetchxml>
+      <fetch version="1.0" mapping="logical">
+        <entity name="media_assetfiles">
+          <attribute name="media_assetfilesid" />
+          <attribute name="media_name" />
+          <attribute name="createdon" />
+          <order attribute="media_name" descending="false" />
+          <filter type="and">
+            <condition attribute="statecode" operator="eq" value="0" />
+          </filter>
+          <attribute name="media_checksumstatus" />
+          <attribute name="media_metadatastatus" />
+          <attribute name="media_filetype" />
+          <attribute name="media_virusscanstatus" />
+          <attribute name="media_blobpath" />
+        </entity>
+      </fetch>
+    </fetchxml>
+    <IntroducedVersion>1.0.0.0</IntroducedVersion>
+    <LocalizedNames>
+      <LocalizedName description="Asset Files Associated View" languagecode="1033" />
+    </LocalizedNames>
+  </savedquery>
+</savedqueries>

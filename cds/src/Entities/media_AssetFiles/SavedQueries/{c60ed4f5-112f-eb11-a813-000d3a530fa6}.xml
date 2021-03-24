@@ -1,0 +1,54 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<savedqueries xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <savedquery>
+    <IsCustomizable>1</IsCustomizable>
+    <CanBeDeleted>1</CanBeDeleted>
+    <isquickfindquery>0</isquickfindquery>
+    <isprivate>0</isprivate>
+    <isdefault>0</isdefault>
+    <savedqueryid>{c60ed4f5-112f-eb11-a813-000d3a530fa6}</savedqueryid>
+    <layoutxml>
+      <grid name="resultset" jump="media_name" select="1" icon="1" preview="1">
+        <row name="result" id="media_assetfilesid">
+          <cell name="media_name" width="200" />
+          <cell name="media_filetype" width="100" />
+          <cell name="media_checksumstatus" width="100" />
+          <cell name="media_metadatastatus" width="100" />
+          <cell name="media_uploadstatus" width="100" />
+          <cell name="media_virusscanstatus" width="100" />
+          <cell name="media_asset" width="100" />
+        </row>
+      </grid>
+    </layoutxml>
+    <querytype>0</querytype>
+    <fetchxml>
+      <fetch version="1.0" output-format="xml-platform" mapping="logical" distinct="true">
+        <entity name="media_assetfiles">
+          <attribute name="media_name" />
+          <attribute name="media_assetfilesid" />
+          <attribute name="media_filetype" />
+          <attribute name="media_checksumstatus" />
+          <attribute name="media_metadatastatus" />
+          <attribute name="media_uploadstatus" />
+          <attribute name="media_virusscanstatus" />
+          <attribute name="media_asset" />
+          <order attribute="media_name" descending="false" />
+          <link-entity name="media_track" from="media_assetfile" to="media_assetfilesid" link-type="inner" alias="ac">
+            <filter type="and">
+              <condition attribute="media_type" operator="eq" value="Audio" />
+            </filter>
+          </link-entity>
+          <link-entity name="media_track" from="media_assetfile" to="media_assetfilesid" link-type="inner" alias="ad">
+            <filter type="and">
+              <condition attribute="media_type" operator="eq" value="Video" />
+            </filter>
+          </link-entity>
+        </entity>
+      </fetch>
+    </fetchxml>
+    <IntroducedVersion>1.0.0.0</IntroducedVersion>
+    <LocalizedNames>
+      <LocalizedName description="Asset Files ( Audio and Video)" languagecode="1033" />
+    </LocalizedNames>
+  </savedquery>
+</savedqueries>

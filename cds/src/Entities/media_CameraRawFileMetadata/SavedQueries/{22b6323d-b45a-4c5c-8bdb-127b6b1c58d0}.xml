@@ -1,0 +1,37 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<savedqueries xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <savedquery>
+    <IsCustomizable>1</IsCustomizable>
+    <CanBeDeleted>0</CanBeDeleted>
+    <isquickfindquery>0</isquickfindquery>
+    <isprivate>0</isprivate>
+    <isdefault>1</isdefault>
+    <savedqueryid>{22b6323d-b45a-4c5c-8bdb-127b6b1c58d0}</savedqueryid>
+    <layoutxml>
+      <grid name="media_camerarawfilemetadatas" jump="media_keyname" select="1" icon="1" preview="1">
+        <row name="media_camerarawfilemetadata" id="media_camerarawfilemetadataid">
+          <cell name="media_keyname" width="300" />
+          <cell name="createdon" width="125" />
+        </row>
+      </grid>
+    </layoutxml>
+    <querytype>2</querytype>
+    <fetchxml>
+      <fetch version="1.0" mapping="logical">
+        <entity name="media_camerarawfilemetadata">
+          <attribute name="media_camerarawfilemetadataid" />
+          <attribute name="media_keyname" />
+          <attribute name="createdon" />
+          <order attribute="media_keyname" descending="false" />
+          <filter type="and">
+            <condition attribute="statecode" operator="eq" value="0" />
+          </filter>
+        </entity>
+      </fetch>
+    </fetchxml>
+    <IntroducedVersion>1.0</IntroducedVersion>
+    <LocalizedNames>
+      <LocalizedName description="Camera Raw File Metadata Associated View" languagecode="1033" />
+    </LocalizedNames>
+  </savedquery>
+</savedqueries>

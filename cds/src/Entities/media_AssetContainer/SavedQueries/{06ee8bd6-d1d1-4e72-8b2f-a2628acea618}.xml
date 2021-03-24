@@ -1,0 +1,45 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<savedqueries xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <savedquery>
+    <IsCustomizable>1</IsCustomizable>
+    <CanBeDeleted>0</CanBeDeleted>
+    <isquickfindquery>0</isquickfindquery>
+    <isprivate>0</isprivate>
+    <isdefault>1</isdefault>
+    <savedqueryid>{06ee8bd6-d1d1-4e72-8b2f-a2628acea618}</savedqueryid>
+    <layoutxml>
+      <grid name="media_assetcontainers" jump="media_name" select="1" icon="1" preview="1">
+        <row name="media_assetcontainer" id="media_assetcontainerid">
+          <cell name="media_name" width="300" />
+          <cell name="media_containerpath" width="100" />
+          <cell name="media_foldername" width="100" />
+          <cell name="media_uploadallowed" width="100" />
+          <cell name="media_enablechecksumcheck" width="100" />
+          <cell name="createdon" width="125" />
+        </row>
+      </grid>
+    </layoutxml>
+    <querytype>2</querytype>
+    <fetchxml>
+      <fetch version="1.0" mapping="logical">
+        <entity name="media_assetcontainer">
+          <attribute name="media_assetcontainerid" />
+          <attribute name="media_name" />
+          <attribute name="createdon" />
+          <order attribute="media_name" descending="false" />
+          <filter type="and">
+            <condition attribute="statecode" operator="eq" value="0" />
+          </filter>
+          <attribute name="media_containerpath" />
+          <attribute name="media_uploadallowed" />
+          <attribute name="media_foldername" />
+          <attribute name="media_enablechecksumcheck" />
+        </entity>
+      </fetch>
+    </fetchxml>
+    <IntroducedVersion>1.0.0.0</IntroducedVersion>
+    <LocalizedNames>
+      <LocalizedName description="Asset Container Associated View" languagecode="1033" />
+    </LocalizedNames>
+  </savedquery>
+</savedqueries>

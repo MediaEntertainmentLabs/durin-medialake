@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Dialog>
+	<FormId>{c074db67-1d58-4bf6-ad58-246a6e28ba63}</FormId>
+	<LocalizedNames>
+		<LocalizedName description="Select vendor to copy" languagecode="1033" />
+	</LocalizedNames>
+	<Descriptions>
+		<Description description="Dialog to select the vendors" languagecode="1033" />
+	</Descriptions>
+	<IsCustomizable>0</IsCustomizable>
+	<UniqueName>CopyToVendorDialog</UniqueName>
+	<IsTabletEnabled>1</IsTabletEnabled>
+	<CanBeDeleted>0</CanBeDeleted>
+	<FormXml>
+		<forms type="dialog">
+			<form>
+				<formparameters>
+					<querystringparameter name="media_type" type="SafeString" />
+					<querystringparameter name="media_entityName" type="SafeString" />
+					<querystringparameter name="media_entities" type="SafeString" />
+					<querystringparameter name="media_showId" type="SafeString" />
+					<querystringparameter name="media_selectedLocation" type="SafeString" />
+				</formparameters>
+				<header id="{20A88883-CFD3-49AC-A0AC-7A5A5916B494}">
+					<rows>
+						<row>
+							<cell id="{B65D2006-F3EF-4A95-BAAC-AAA10F4CB370}">
+								<labels>
+									<label description="Please select location/s to copy" languagecode="1033" />
+								</labels>
+								<control id="FormHeader" classid="{39354e4a-5015-4d74-8031-ea9eb73a1322}" isunbound="true">
+									<parameters>
+										<IsTitle>true</IsTitle>
+									</parameters>
+								</control>
+							</cell>
+						</row>
+					</rows>
+				</header>
+				<tabs>
+					<tab verticallayout="true" id="{9259b52f-536d-4ed1-82c9-b6b6cb1d0aa5}" name="{24539bea-f612-409e-99c5-f4a28270ab15}" locklevel="0" expanded="true">
+						<columns>
+							<column width="100%">
+								<sections>
+									<section showbar="false" columns="1" id="{9a9229a7-c2d2-48fd-a073-6cf902f38f5e}" name="{53694b57-4c54-4c1c-b576-840d5b983f7d}">
+										<rows>
+											<row>
+												<cell id="{aa8eac1b-10a7-44c4-b8e3-5db5f7a18794}" rowspan="12">
+													<control id="Webresource_CopyToVendor" classid="{fd2a7985-3187-444e-908d-6624b21f69c0}" isunbound="true">
+														<parameters>
+															<Url>../WebResources/media_copyVendorLocation.html</Url>
+															<PassParameters>false</PassParameters>
+															<Security>false</Security>
+															<Scrolling>auto</Scrolling>
+															<Border>false</Border>
+															<ShowOnMobileClient>true</ShowOnMobileClient>
+														</parameters>
+													</control>
+												</cell>
+											</row>
+										</rows>
+									</section>
+								</sections>
+							</column>
+						</columns>
+						<tabfooter id="{303f1bb7-3f05-423b-8b27-135b552b8375}">
+							<rows>
+								<row>
+									<cell id="{2535464d-171f-4833-9cfa-06e6c971bce3}">
+										<labels>
+											<label description="OK" languagecode="1033" />
+										</labels>
+										<control id="btnDialogOk" classid="{00ad73da-bd4d-49c6-88a8-2f4f4cad4a20}" isunbound="true" />
+									</cell>
+									<cell id="{7B9024DA-67E3-48F6-A29D-90675D51A66D}">
+										<labels>
+											<label description="Cancel" languagecode="1033" />
+										</labels>
+										<control id="btnDialogCancel" classid="{00ad73da-bd4d-49c6-88a8-2f4f4cad4a20}" isunbound="true" />
+									</cell>
+								</row>
+							</rows>
+						</tabfooter>
+					</tab>
+				</tabs>
+				<events>
+					<event name="onclick" application="false" active="false" attribute="btnDialogOk">
+						<Handlers>
+							<Handler functionName="DurinMedia.CopyVendorUtility.OnDialogOk" libraryName="media_CopyToVendor.js" handlerUniqueId="{ADC7E877-6FDC-4404-8744-A85F607A5095}" enabled="true" parameters="" passExecutionContext="true" />
+						</Handlers>
+					</event>
+					<event name="onclick" application="false" active="false" attribute="btnDialogCancel">
+						<Handlers>
+							<Handler functionName="DurinMedia.CopyVendorUtility.OnDialogCancel" libraryName="media_CopyToVendor.js" handlerUniqueId="{124A0213-CE38-4F33-93C9-7D2B2BD83006}" enabled="true" parameters="" passExecutionContext="true" />
+						</Handlers>
+					</event>
+				</events>
+				<clientresources>
+					<isvresources>
+						<clientincludes>
+							<webresource type="jscript" path="$webresource:media_CopyToVendor.js" />
+						</clientincludes>
+					</isvresources>
+				</clientresources>
+			</form>
+		</forms>
+	</FormXml>
+	<IntroducedVersion>1.0.0.0</IntroducedVersion>
+</Dialog>

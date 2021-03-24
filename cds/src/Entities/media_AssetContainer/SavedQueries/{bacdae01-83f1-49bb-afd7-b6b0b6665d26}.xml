@@ -1,0 +1,45 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<savedqueries xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <savedquery>
+    <IsCustomizable>1</IsCustomizable>
+    <CanBeDeleted>0</CanBeDeleted>
+    <isquickfindquery>0</isquickfindquery>
+    <isprivate>0</isprivate>
+    <isdefault>1</isdefault>
+    <savedqueryid>{bacdae01-83f1-49bb-afd7-b6b0b6665d26}</savedqueryid>
+    <layoutxml>
+      <grid name="resultset" jump="media_name" select="1" icon="1" preview="1">
+        <row name="result" id="media_assetcontainerid">
+          <cell name="media_name" width="80" imageproviderfunctionname="DurinMedia.Utility.displayIconInView" imageproviderwebresource="$webresource:media_durinutility.js" />
+          <cell name="media_studio" width="69" />
+          <cell name="media_containerpath" width="114" />
+          <cell name="media_shootdayformat" width="100" />
+          <cell name="createdon" width="112" />
+          <cell name="media_notificationemail" width="100" />
+        </row>
+      </grid>
+    </layoutxml>
+    <querytype>0</querytype>
+    <fetchxml>
+      <fetch version="1.0" mapping="logical">
+        <entity name="media_assetcontainer">
+          <attribute name="media_name" />
+          <attribute name="createdon" />
+          <order attribute="media_name" descending="false" />
+          <filter type="and">
+            <condition attribute="statecode" operator="eq" value="0" />
+          </filter>
+          <attribute name="media_containerpath" />
+          <attribute name="media_studio" />
+          <attribute name="media_assetcontainerid" />
+          <attribute name="media_notificationemail" />
+          <attribute name="media_shootdayformat" />
+        </entity>
+      </fetch>
+    </fetchxml>
+    <IntroducedVersion>1.0.0.0</IntroducedVersion>
+    <LocalizedNames>
+      <LocalizedName description="Active Shows" languagecode="1033" />
+    </LocalizedNames>
+  </savedquery>
+</savedqueries>

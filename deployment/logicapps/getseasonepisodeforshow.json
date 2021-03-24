@@ -1,0 +1,628 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"connection_commondataservice": {
+			"type": "string",
+			"defaultValue": "[concat(subscription().id,'/resourceGroups/',resourceGroup().name,'/providers/Microsoft.Web/connections/commondataservice')]"
+		},
+		"crmOrgName": {
+			"type": "string",
+			"metadata": {
+				"description": "description"
+			}
+		},
+		"crmIdentifier": {
+			"type": "string",
+			"metadata": {
+				"description": "crmIdentifier"
+			}
+		}
+	},
+	"functions": [
+		{
+			"namespace": "durin",
+			"members": {
+				"wrapInQuote": {
+					"parameters": [
+						{
+							"name": "text",
+							"type": "string"
+						}
+					],
+					"output": {
+						"value": "[concat('''', parameters('text'),'''')]",
+						"type": "string"
+					}
+				}
+			}
+		}
+	],
+	"variables": {
+		"org": "[durin.wrapInQuote(concat(parameters('crmOrgName'),'.',parameters('crmIdentifier')))]"
+	},
+	"resources": [
+		{
+			"name": "Logic-GetSeasonEpisodeForShow",
+			"type": "Microsoft.Logic/workflows",
+			"apiVersion": "2017-07-01",
+			"location": "[resourceGroup().location]",
+			"properties": {
+				"definition": {
+					"$schema": "https://schema.management.azure.com/schemas/2016-06-01/Microsoft.Logic.json",
+					"contentVersion": "1.0.0.0",
+					"parameters": {
+						"$connections": {
+							"defaultValue": {},
+							"type": "Object"
+						}
+					},
+					"triggers": {
+						"manual": {
+							"type": "Request",
+							"kind": "Http",
+							"inputs": {
+								"schema": {
+									"properties": {
+										"showId": {
+											"type": "string"
+										}
+									},
+									"type": "object"
+                                }
+                            },
+                            "runtimeConfiguration": {
+                                "secureData": {
+                                    "properties": [
+                                        "inputs",
+                                        "outputs"
+                                    ]
+								}
+							}
+						}
+					},
+					"actions": {
+						"Condition": {
+							"actions": {
+								"Create_error_log_record": {
+									"runAfter": {
+										"Scope": [
+											"Failed",
+											"Skipped",
+											"TimedOut"
+										]
+									},
+									"type": "ApiConnection",
+									"inputs": {
+										"body": {
+											"_media_assetcontainer_value": "@triggerBody()?['showId']",
+											"media_description": "@{result('Scope')}",
+											"media_name": "Failed to get season details of show with ShowId: @{triggerBody()?['showId']}"
+										},
+										"host": {
+											"connection": {
+												"name": "@parameters('$connections')['commondataservice']['connectionId']"
+											}
+										},
+										"method": "post",
+										"path": "[concat('/v2/datasets/@{encodeURIComponent(encodeURIComponent(',variables('org'),'))}/tables/@{encodeURIComponent(encodeURIComponent(',durin.wrapInQuote('media_asseterrorlogs'),'))}/items')]"
+                                    },
+                                    "runtimeConfiguration": {
+                                        "secureData": {
+                                            "properties": [
+                                                "inputs",
+                                                "outputs"
+                                            ]
+                                        }
+									}
+								},
+								"Response_2": {
+									"runAfter": {
+										"Create_error_log_record": [
+											"Succeeded"
+										]
+									},
+									"type": "Response",
+									"kind": "Http",
+									"inputs": {
+										"body": "Failed to get Season details for show ",
+										"statusCode": 500
+                                    },
+                                    "runtimeConfiguration": {
+                                        "secureData": {
+                                            "properties": [
+                                                "inputs"
+                                            ]
+                                        }
+									}
+								},
+								"Response_Success": {
+									"runAfter": {
+										"Scope": [
+											"Succeeded"
+										]
+									},
+									"type": "Response",
+									"kind": "Http",
+									"inputs": {
+										"body": "@outputs('Compose_response')",
+										"headers": {
+											"Content-Type": "application/json; charset=utf-8"
+										},
+										"statusCode": 200
+                                    },
+                                    "runtimeConfiguration": {
+                                        "secureData": {
+                                            "properties": [
+                                                "inputs"
+                                            ]
+                                        }
+									}
+								},
+								"Scope": {
+									"actions": {
+										"Compose_response": {
+											"runAfter": {
+												"Set_variable-LastShootDayValue": [
+													"Succeeded"
+												]
+											},
+											"type": "Compose",
+											"inputs": {
+												"blocks": "@variables('block')",
+												"episodes": "@variables('episode')",
+												"lastShootDay": "@variables('LastShootDayValue')",
+												"seasons": "@variables('season')",
+												"shootDayFormat": "@variables('ShootDayFormat')"
+                                            },
+                                            "runtimeConfiguration": {
+                                                "secureData": {
+                                                    "properties": [
+                                                        "inputs"
+                                                    ]
+                                                }
+											}
+										},
+										"Fetch_Last_Day": {
+											"runAfter": {
+												"For_each-episode": [
+													"Succeeded"
+												]
+											},
+											"type": "ApiConnection",
+											"inputs": {
+												"host": {
+													"connection": {
+														"name": "@parameters('$connections')['commondataservice']['connectionId']"
+													}
+												},
+												"method": "get",
+												"path": "[concat('/v2/datasets/@{encodeURIComponent(encodeURIComponent(',variables('org'),'))}/tables/@{encodeURIComponent(encodeURIComponent(',durin.wrapInQuote('media_assets'),'))}/items')]",
+												"queries": {
+													"$filter": "media_AssetContainer/media_assetcontainerid eq '@{triggerBody()?['showId']}' and statecode eq 0",
+													"$orderby": "createdon desc",
+													"$top": 1
+                                                }
+                                            },
+                                            "runtimeConfiguration": {
+                                                "secureData": {
+                                                    "properties": [
+                                                        "inputs",
+                                                        "outputs"
+                                                    ]
+												}
+											}
+										},
+										"For_each-block": {
+											"foreach": "@body('blocks')?['value']",
+											"actions": {
+												"Append_to_array_variable-block": {
+													"runAfter": {},
+													"type": "AppendToArrayVariable",
+													"inputs": {
+														"name": "block",
+														"value": {
+															"id": "@{items('For_each-block')?['media_blockid']}",
+															"name": "@{items('For_each-block')?['media_name']}",
+															"seasonid": "@{items('For_each-block')?['_media_season_value']}"
+														}
+													}
+												},
+												"Check_same_season_exist_in_block": {
+													"actions": {},
+													"runAfter": {
+														"Filter_array_block_season": [
+															"Succeeded"
+														]
+													},
+													"else": {
+														"actions": {
+															"Append_to_array_variable_season": {
+																"runAfter": {},
+																"type": "AppendToArrayVariable",
+																"inputs": {
+																	"name": "season",
+																	"value": {
+																		"seasonId": "@{items('For_each-block')?['_media_season_value']}",
+																		"seasonName": "@{json(items('For_each-block')?['media_Season'])['media_name']}"
+																	}
+																}
+															},
+															"Set_variable_ShootDayFormat": {
+																"runAfter": {
+																	"Append_to_array_variable_season": [
+																		"Succeeded"
+																	]
+																},
+																"type": "SetVariable",
+																"inputs": {
+																	"name": "ShootDayFormat",
+																	"value": "@{json(items('For_each-block')?['media_Season'])?['media_Show']?['media_shootdayformat']}"
+																}
+															}
+														}
+													},
+													"expression": {
+														"and": [
+															{
+																"greater": [
+																	"@length(body('Filter_array_block_season'))",
+																	0
+																]
+															}
+														]
+													},
+													"type": "If"
+												},
+												"Filter_array_block_season": {
+													"runAfter": {
+														"Append_to_array_variable-block": [
+															"Succeeded"
+														]
+													},
+													"type": "Query",
+													"inputs": {
+														"from": "@variables('season')",
+														"where": "@equals(item()['seasonId'], items('For_each-block')?['_media_season_value'])"
+                                                    },
+                                                    "runtimeConfiguration": {
+                                                        "secureData": {
+                                                            "properties": [
+                                                                "inputs",
+                                                                "outputs"
+                                                            ]
+                                                        }
+													}
+												}
+											},
+											"runAfter": {
+												"blocks": [
+													"Succeeded"
+												]
+											},
+											"type": "Foreach"
+										},
+										"For_each-episode": {
+											"foreach": "@body('episodes')?['value']",
+											"actions": {
+												"Append_to_array_variable-episode": {
+													"runAfter": {},
+													"type": "AppendToArrayVariable",
+													"inputs": {
+														"name": "episode",
+														"value": {
+															"id": "@{items('For_each-episode')?['media_episodeid']}",
+															"name": "@{items('For_each-episode')?['media_name']}",
+															"seasonid": "@{items('For_each-episode')?['_media_season_value']}"
+														}
+													}
+												},
+												"Check_same_season_exist_or_not": {
+													"actions": {},
+													"runAfter": {
+														"Filter_array_for_season": [
+															"Succeeded"
+														]
+													},
+													"else": {
+														"actions": {
+															"Append_to_array_variable-season": {
+																"runAfter": {},
+																"type": "AppendToArrayVariable",
+																"inputs": {
+																	"name": "season",
+																	"value": {
+																		"seasonId": "@{items('For_each-episode')?['_media_season_value']}",
+																		"seasonName": "@{json(items('For_each-episode')?['media_Season'])['media_name']}"
+																	}
+																}
+															},
+															"Set_variable-ShootDayFormat": {
+																"runAfter": {
+																	"Append_to_array_variable-season": [
+																		"Succeeded"
+																	]
+																},
+																"type": "SetVariable",
+																"inputs": {
+																	"name": "ShootDayFormat",
+																	"value": "@{json(items('For_each-episode')?['media_Season'])?['media_Show']?['media_shootdayformat']}"
+																}
+															}
+														}
+													},
+													"expression": {
+														"and": [
+															{
+																"greater": [
+																	"@length(body('Filter_array_for_season'))",
+																	0
+																]
+															}
+														]
+													},
+													"type": "If"
+												},
+												"Filter_array_for_season": {
+													"runAfter": {
+														"Append_to_array_variable-episode": [
+															"Succeeded"
+														]
+													},
+													"type": "Query",
+													"inputs": {
+														"from": "@variables('season')",
+														"where": "@equals(item()['seasonId'], items('For_each-episode')?['_media_season_value'])"
+                                                    },
+                                                    "runtimeConfiguration": {
+                                                        "secureData": {
+                                                            "properties": [
+                                                                "inputs",
+                                                                "outputs"
+                                                            ]
+                                                        }
+													}
+												}
+											},
+											"runAfter": {
+												"For_each-block": [
+													"Succeeded"
+												]
+											},
+											"type": "Foreach"
+                    },
+                    "Set_variable-LastShootDayValue": {
+                      "runAfter": {
+                          "Fetch_Last_Day": [
+                              "Succeeded"
+                          ]
+                      },
+                      "type": "SetVariable",
+                      "inputs": {
+                          "name": "LastShootDayValue",
+                          "value": "@{body('Fetch_Last_Day')?['value']?[0]?['media_shootday']}"
+                      }
+                  },
+										"blocks": {
+											"runAfter": {
+												"episodes": [
+													"Succeeded"
+												]
+											},
+											"type": "ApiConnection",
+											"inputs": {
+												"host": {
+													"connection": {
+														"name": "@parameters('$connections')['commondataservice']['connectionId']"
+													}
+												},
+												"method": "get",
+												"path": "[concat('/v2/datasets/@{encodeURIComponent(encodeURIComponent(',variables('org'),'))}/tables/@{encodeURIComponent(encodeURIComponent(',durin.wrapInQuote('media_blocks'),'))}/items')]",
+												"queries": {
+													"$expand": "media_Season($select=media_name;$expand=media_Show($select=media_name,media_shootdayformat))",
+													"$filter": "media_Season/_media_show_value eq '@{triggerBody()?['showId']}' and statecode eq 0"
+                                                }
+                                            },
+                                            "runtimeConfiguration": {
+                                                "secureData": {
+                                                    "properties": [
+                                                        "inputs",
+                                                        "outputs"
+                                                    ]
+												}
+											}
+										},
+										"episodes": {
+											"runAfter": {},
+											"type": "ApiConnection",
+											"inputs": {
+												"host": {
+													"connection": {
+														"name": "@parameters('$connections')['commondataservice']['connectionId']"
+													}
+												},
+												"method": "get",
+												"path": "[concat('/v2/datasets/@{encodeURIComponent(encodeURIComponent(',variables('org'),'))}/tables/@{encodeURIComponent(encodeURIComponent(',durin.wrapInQuote('media_episodes'),'))}/items')]",
+                        "queries": {
+                          "$expand": "media_Season($select=media_name;$expand=media_Show($select=media_name,media_shootdayformat))",
+                          "$filter": "media_Season/_media_show_value eq '@{triggerBody()?['showId']}' and statecode eq 0"
+                                                }
+                                            },
+                                            "runtimeConfiguration": {
+                                                "secureData": {
+                                                    "properties": [
+                                                        "inputs",
+                                                        "outputs"
+                                                    ]
+                      }
+											}
+										}
+									},
+									"runAfter": {},
+									"type": "Scope"
+								}
+							},
+							"runAfter": {
+								"Initialize_variable_LastShootDayValue": [
+									"Succeeded"
+								]
+							},
+							"else": {
+								"actions": {
+									"Response_bad_request": {
+										"runAfter": {},
+										"type": "Response",
+										"kind": "Http",
+										"inputs": {
+											"body": {
+												"message": "ShowId is Required"
+											},
+											"headers": {
+												"Content-Type": "application/json; charset=utf-8"
+											},
+											"statusCode": 400
+										}
+									}
+								}
+							},
+							"expression": {
+								"and": [
+									{
+										"greater": [
+											"@length(triggerBody()?['showId'])",
+											0
+										]
+									}
+								]
+							},
+							"type": "If"
+						},
+						"Initialize_variable-ResponseObject": {
+							"runAfter": {
+								"Initialize_variable_episode": [
+									"Succeeded"
+								]
+							},
+							"type": "InitializeVariable",
+							"inputs": {
+								"variables": [
+									{
+										"name": "ResponseObject",
+										"type": "object"
+									}
+								]
+							}
+						},
+            "Initialize_variable_LastShootDayValue": {
+                "runAfter": {
+                    "Initialize_variable_ShootDayFormat": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "InitializeVariable",
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "LastShootDayValue",
+                            "type": "string"
+                        }
+                    ]
+                }
+            },
+            "Initialize_variable_ShootDayFormat": {
+                "runAfter": {
+                    "Initialize_variable_block": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "InitializeVariable",
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "ShootDayFormat",
+                            "type": "string"
+                        }
+                    ]
+                }
+            },
+						"Initialize_variable_block": {
+							"runAfter": {
+								"Initialize_variable-ResponseObject": [
+									"Succeeded"
+								]
+							},
+							"type": "InitializeVariable",
+							"inputs": {
+								"variables": [
+									{
+										"name": "block",
+										"type": "array",
+										"value": []
+									}
+								]
+							}
+						},
+						"Initialize_variable_episode": {
+							"runAfter": {
+								"Initialize_variable_season1": [
+									"Succeeded"
+								]
+							},
+							"type": "InitializeVariable",
+							"inputs": {
+								"variables": [
+									{
+										"name": "episode",
+										"type": "array",
+										"value": []
+									}
+								]
+							}
+						},
+						"Initialize_variable_season": {
+							"runAfter": {},
+							"type": "InitializeVariable",
+							"inputs": {
+								"variables": [
+									{
+										"name": "season",
+										"type": "array",
+										"value": []
+									}
+								]
+							}
+						},
+						"Initialize_variable_season1": {
+							"runAfter": {
+								"Initialize_variable_season": [
+									"Succeeded"
+								]
+							},
+							"type": "InitializeVariable",
+							"inputs": {
+								"variables": [
+									{
+										"name": "season1",
+										"type": "array"
+									}
+								]
+							}
+						}
+					},
+					"outputs": {}
+				},
+				"parameters": {
+					"$connections": {
+						"value": {
+							"commondataservice": {
+								"connectionId": "[parameters('connection_commondataservice')]",
+								"connectionName": "commondataservice",
+								"id": "[concat(subscription().id, '/providers/Microsoft.Web/locations/', resourceGroup().location, '/managedApis/commondataservice')]"
+							}
+						}
+					}
+				}
+			}
+		}
+	]
+}

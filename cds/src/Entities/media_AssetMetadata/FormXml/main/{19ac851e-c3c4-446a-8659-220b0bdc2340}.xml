@@ -1,0 +1,203 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<forms xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <systemform>
+    <formid>{19ac851e-c3c4-446a-8659-220b0bdc2340}</formid>
+    <IntroducedVersion>1.0.0.0</IntroducedVersion>
+    <FormPresentation>1</FormPresentation>
+    <FormActivationState>1</FormActivationState>
+    <form headerdensity="HighWithControls">
+      <tabs>
+        <tab verticallayout="true" id="{37f377d2-1770-491e-87aa-2a5182eb722e}" IsUserDefined="1">
+          <labels>
+            <label description="General" languagecode="1033" />
+          </labels>
+          <columns>
+            <column width="100%">
+              <sections>
+                <section showlabel="false" showbar="false" IsUserDefined="0" id="{beec08b0-a02b-4ed8-b01a-1cd55ab317ec}" columns="11">
+                  <labels>
+                    <label description="General" languagecode="1033" />
+                  </labels>
+                  <rows>
+                    <row>
+                      <cell id="{81121f4b-a4aa-4894-8da1-f7a660a2a123}">
+                        <labels>
+                          <label description="Name" languagecode="1033" />
+                        </labels>
+                        <control id="media_name" classid="{4273EDBD-AC1D-40d3-9FB2-095C621B552D}" datafieldname="media_name" />
+                      </cell>
+                      <cell id="{5bba28fd-3999-41a4-b7b1-602912441555}" locklevel="0">
+                        <labels>
+                          <label description="File Extension" languagecode="1033" />
+                        </labels>
+                        <control id="media_fileextension" classid="{4273EDBD-AC1D-40D3-9FB2-095C621B552D}" datafieldname="media_fileextension" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{0c07622a-9d99-4f3b-a796-486cf33b8794}" locklevel="0">
+                        <labels>
+                          <label description="File Size(MB)" languagecode="1033" />
+                        </labels>
+                        <control id="media_filesize" classid="{C3EFE0C3-0EC6-42BE-8349-CBD9079DFD8E}" datafieldname="media_filesize" disabled="false" />
+                      </cell>
+                      <cell id="{17866eb1-37b8-47ba-a2bd-7ff0d68ab555}" locklevel="0">
+                        <labels>
+                          <label description="Duration(Second)" languagecode="1033" />
+                        </labels>
+                        <control id="media_duration" classid="{C3EFE0C3-0EC6-42BE-8349-CBD9079DFD8E}" datafieldname="media_duration" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{d4c89161-be8d-4430-808a-a9d52e5b8150}" locklevel="0">
+                        <labels>
+                          <label description="Audio Format" languagecode="1033" />
+                        </labels>
+                        <control id="media_audioformat" classid="{4273EDBD-AC1D-40D3-9FB2-095C621B552D}" datafieldname="media_audioformat" disabled="false" />
+                      </cell>
+                      <cell id="{1be881dd-f63e-48c1-b169-d0af9068c014}" locklevel="0">
+                        <labels>
+                          <label description="Video Format" languagecode="1033" />
+                        </labels>
+                        <control id="media_videoformat" classid="{4273EDBD-AC1D-40D3-9FB2-095C621B552D}" datafieldname="media_videoformat" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{72c817e7-c130-48af-8505-9f29d8dca2e6}" locklevel="0">
+                        <labels>
+                          <label description="Width(pixels)" languagecode="1033" />
+                        </labels>
+                        <control id="media_width" classid="{C6D124CA-7EDA-4A60-AEA9-7FB8D318B68F}" datafieldname="media_width" disabled="false" />
+                      </cell>
+                      <cell id="{3b27cf45-8535-4df2-9f11-2207d55c43b2}" locklevel="0">
+                        <labels>
+                          <label description="Hight(pixels)" languagecode="1033" />
+                        </labels>
+                        <control id="media_hight" classid="{C6D124CA-7EDA-4A60-AEA9-7FB8D318B68F}" datafieldname="media_hight" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{1fb78184-ca44-47cc-913a-857faf387a50}" locklevel="0">
+                        <labels>
+                          <label description="Frame Rate" languagecode="1033" />
+                        </labels>
+                        <control id="media_framerate" classid="{C3EFE0C3-0EC6-42BE-8349-CBD9079DFD8E}" datafieldname="media_framerate" disabled="false" />
+                      </cell>
+                      <cell id="{8f68b0e7-d35b-4a50-a8a3-87711f73bb18}" locklevel="0">
+                        <labels>
+                          <label description="General Format" languagecode="1033" />
+                        </labels>
+                        <control id="media_generalformat" classid="{4273EDBD-AC1D-40D3-9FB2-095C621B552D}" datafieldname="media_generalformat" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{a5c3b210-706c-4099-8ec1-6610cc007ad3}" locklevel="0">
+                        <labels>
+                          <label description="Frame Count" languagecode="1033" />
+                        </labels>
+                        <control id="media_framecount" classid="{C6D124CA-7EDA-4A60-AEA9-7FB8D318B68F}" datafieldname="media_framecount" disabled="false" />
+                      </cell>
+                      <cell id="{162a0f9d-efe4-473d-971a-671784e31308}" locklevel="0">
+                        <labels>
+                          <label description="Scan Type" languagecode="1033" />
+                        </labels>
+                        <control id="media_scantype" classid="{4273EDBD-AC1D-40D3-9FB2-095C621B552D}" datafieldname="media_scantype" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{8aef96c9-d166-4a6d-9af7-6c9af40d4211}" locklevel="0">
+                        <labels>
+                          <label description="Chroma Subsampling" languagecode="1033" />
+                        </labels>
+                        <control id="media_chromasubsampling" classid="{4273EDBD-AC1D-40D3-9FB2-095C621B552D}" datafieldname="media_chromasubsampling" disabled="false" />
+                      </cell>
+                      <cell id="{83cc641c-c70b-4b88-ba64-02b3718942ae}" locklevel="0">
+                        <labels>
+                          <label description="Bit Rate" languagecode="1033" />
+                        </labels>
+                        <control id="media_bitrate" classid="{C6D124CA-7EDA-4A60-AEA9-7FB8D318B68F}" datafieldname="media_bitrate" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{f97b3ecc-2f58-4749-ab49-660526e76d80}" locklevel="0" rowspan="14">
+                        <labels>
+                          <label description="Metadata" languagecode="1033" />
+                        </labels>
+                        <control id="media_metadata" classid="{E0DECE4B-6FC8-4A8F-A065-082708572369}" datafieldname="media_metadata" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{5a4a3931-9fc1-45fb-83bb-3bdb5d0817c1}" locklevel="0">
+                        <labels>
+                          <label description="Asset Files" languagecode="1033" />
+                        </labels>
+                        <control id="media_assetfiles" classid="{270BD3DB-D9AF-4782-9025-509E298DEC0A}" datafieldname="media_assetfiles" disabled="false" />
+                      </cell>
+                      <cell locklevel="0" id="{7b8b1406-1030-424b-88b6-b60230fc1af9}">
+                        <labels>
+                          <label description="" languagecode="1033" />
+                        </labels>
+                      </cell>
+                    </row>
+                  </rows>
+                </section>
+              </sections>
+            </column>
+          </columns>
+        </tab>
+      </tabs>
+      <header id="{52b54b13-359f-4893-b68b-9b2836ad034d}" celllabelposition="Top" columns="111" labelwidth="115" celllabelalignment="Left">
+        <rows>
+          <row>
+            <cell id="{c87c4a22-610e-4efe-acf0-d00d0cda57ab}" showlabel="false">
+              <labels>
+                <label description="" languagecode="1033" />
+              </labels>
+            </cell>
+            <cell id="{119ee42c-7203-4c6d-ae7d-5a0b09c07ac5}" showlabel="false">
+              <labels>
+                <label description="" languagecode="1033" />
+              </labels>
+            </cell>
+            <cell id="{ec4d05ca-d019-43a2-a63d-ae0854156450}" showlabel="false">
+              <labels>
+                <label description="" languagecode="1033" />
+              </labels>
+            </cell>
+          </row>
+        </rows>
+      </header>
+      <footer id="{ccf60755-a825-4c20-af08-d0383ce7c921}" celllabelposition="Top" columns="111" labelwidth="115" celllabelalignment="Left">
+        <rows>
+          <row>
+            <cell id="{3d9a6388-7a6a-4414-98e3-c5d669a00e1f}" showlabel="false">
+              <labels>
+                <label description="" languagecode="1033" />
+              </labels>
+            </cell>
+            <cell id="{ce572c7c-436e-4859-b3c4-ea2134bcfc4a}" showlabel="false">
+              <labels>
+                <label description="" languagecode="1033" />
+              </labels>
+            </cell>
+            <cell id="{5e5af9a4-47e9-444f-809d-0577b2c42918}" showlabel="false">
+              <labels>
+                <label description="" languagecode="1033" />
+              </labels>
+            </cell>
+          </row>
+        </rows>
+      </footer>
+      <DisplayConditions Order="0" FallbackForm="true">
+        <Everyone />
+      </DisplayConditions>
+    </form>
+    <IsCustomizable>1</IsCustomizable>
+    <CanBeDeleted>1</CanBeDeleted>
+    <LocalizedNames>
+      <LocalizedName description="Information" languagecode="1033" />
+    </LocalizedNames>
+    <Descriptions>
+      <Description description="A form for this entity." languagecode="1033" />
+    </Descriptions>
+  </systemform>
+</forms>
