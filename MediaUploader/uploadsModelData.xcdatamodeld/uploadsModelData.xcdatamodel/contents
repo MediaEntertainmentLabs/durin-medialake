@@ -9,6 +9,8 @@
         <attribute name="episodeId" optional="YES" attributeType="String"/>
         <attribute name="info" optional="YES" attributeType="String"/>
         <attribute name="isBlock" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="metadataJSONPresent" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="metaDataJSONTime" optional="YES" attributeType="String"/>
         <attribute name="notificationEmail" optional="YES" attributeType="String"/>
         <attribute name="progress" optional="YES" attributeType="Double" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="season" optional="YES" attributeType="String"/>
@@ -23,6 +25,6 @@
         <attribute name="unit" optional="YES" attributeType="String"/>
     </entity>
     <elements>
-        <element name="ShowEntity" positionX="-63" positionY="-18" width="128" height="343"/>
+        <element name="ShowEntity" positionX="-63" positionY="-18" width="128" height="373"/>
     </elements>
 </model>

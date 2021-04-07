@@ -204,6 +204,7 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
     
     func populateAfterRestore() {
         
+        self.uploadButton.isEnabled = false   // it will enable only fetchAPI success
         guard let populated = self.populated else { return }
         
         if let shootDay = populated.uploadParams["shootDay"] {
@@ -224,32 +225,6 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
         
         if let unit = populated.uploadParams["unit"] {
             unitPopup.selectItem(withTitle: unit as! String)
-        }
-        
-        var out_episodes = [(String,String)]()
-        if let episode = populated.uploadParams["blockOrEpisode"], let episodeId = populated.uploadParams["episodeId"]{
-            out_episodes.append((episode as! String ,episodeId as! String))
-            episodesCombo.addItem(withObjectValue:episode)
-        }
-        
-        var out_blocks = [(String,String)]()
-        if let block = populated.uploadParams["blockOrEpisode"], let blockId = populated.uploadParams["blockId"] {
-            out_blocks.append((block as! String ,blockId as! String))
-            blocksCombo.addItem(withObjectValue:block)
-        }
-        
-        
-        if let seasonName = populated.uploadParams["season"], let sessionId = populated.uploadParams["seasonId"],let lastShootDay = populated.uploadParams["shootDay"] {
-            self.seasons = [seasonName as! String : ((sessionId as! String), out_episodes , out_blocks , lastShootDay as! String, lastShootDay as! String)]
-            
-            for (key,_) in self.seasons {
-                self.seasonsCombo.addItem(withObjectValue: key)
-                self.seasonsCombo.isEnabled = true
-                self.uploadButton.isEnabled = true
-            }
-            if self.seasonsCombo.numberOfItems > 0 {
-                self.seasonsCombo.selectItem(at: 0)
-            }
         }
         
         if populated.isBlock {
@@ -298,6 +273,7 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
                 break
             }
         }
+        
     }
     
     override func viewDidAppear() {
@@ -381,8 +357,8 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
             return
         }
     }
-    
-    func prepareUploadFiles(fileType: String, inputDirs: [URL]) -> [String : [[String:Any]]] {
+/*
+func prepareUploadFiles(fileType: String, inputDirs: [URL]) -> [String : [[String:Any]]] {
         var outputFiles: [String: [[String:Any]]] = [:]
         
         if fileType.isEmpty {
@@ -434,9 +410,12 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
                 }
                 // WARNING: special requirement to be compliant with backend we need to trim trailinig dot for each folder
                 //          if folder name ends with dot.
-                parsed = parsed.replacingOccurrences(of: "./", with: "/")
+                //   parsed = parsed.replacingOccurrences(of: "./", with: "/")
+                //  let filePath = parsed.isEmpty ? filename : parsed + filename
+                //   print("filePath : \(filePath)")
                 
-                let filePath = parsed.isEmpty ? filename : parsed + filename
+                let rmvDot:String  = removeDot(dirNameArray:parsed.components(separatedBy: "/"))
+                let filePath = rmvDot+filename
                 let item : [String : Any] = ["name":filename,
                                              "filePath":fileDirPath + "/" + filePath,
                                              "filesize":scanItem.value,
@@ -449,7 +428,7 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
         }
         return outputFiles
     }
-    
+    */
     func isValidEmail(_ email: String) -> Bool {
         let emailRegEx = "[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,64}"
         
@@ -474,7 +453,7 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
         if byBlockRadio.state == NSControl.StateValue.on {
             if block.isEmpty {
                 if(self.blocksCombo.numberOfItems > 0) {
-                    showPopoverMessage(positioningView: blocksCombo, msg: "Invalid params for Block")
+                    showPopoverMessage(positioningView: blocksCombo, msg: "Blocks are not associated with this season")
                     return
                 }else{
                     showPopoverMessage(positioningView: blocksCombo, msg: "Blocks are not associated with this season")
@@ -485,7 +464,7 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
         } else {
             if episode.isEmpty {
                 if(self.blocksCombo.numberOfItems > 0) {
-                    showPopoverMessage(positioningView: episodesCombo, msg: "Invalid params for Episode")
+                    showPopoverMessage(positioningView: episodesCombo, msg: "Episodes are not associated with this season")
                     return
                 }else{
                     showPopoverMessage(positioningView: episodesCombo, msg: "Episodes are not associated with this season")
@@ -524,6 +503,10 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
             return
         }
         
+        if !checkAllDirPathExist() {
+            showPopoverMessage(positioningView: teamPopup, msg: StringConstant().dirPathNotExist)
+            return
+        }
         
         if blockOrEpisode == nil {
             return
@@ -661,7 +644,7 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
                 }
             }
         }
-        
+        let metaDataJSONTime = String(format:"%2X", Int(Date().timeIntervalSince1970 * 1000)) // in millsecs
         NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.OnStartUploadShow),
                                         object: nil,
                                         userInfo: ["json_main":json_main,
@@ -671,6 +654,7 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
                                                    "isBlock":isBlock,
                                                    "files": uploadFiles,
                                                    "srcDir": uploadDirs,
+                                                   "metaDataJSONTime":metaDataJSONTime,
                                         ])
         window?.performClose(nil) // nil because I'm not return a message
     }
@@ -755,12 +739,12 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
                             selectedSeasonIndex = tempIndex
                         }else{
                             tempIndex = +1
-                         }
+                        }
                     }
                     self.seasonsCombo.addItem(withObjectValue: key)
                     self.seasonsCombo.isEnabled = true
                     self.uploadButton.isEnabled = true
-                 }
+                }
                 
                 if self.seasonsCombo.numberOfItems > 0 {
                     self.seasonsCombo.selectItem(at: selectedSeasonIndex)
@@ -1341,6 +1325,7 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
                 }
             }
         }
+        let metaDataJSONTime = String(format:"%2X", Int(Date().timeIntervalSince1970 * 1000)) // in millsecs
         
         NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.OnStartUploadShow),
                                         object: nil,
@@ -1351,6 +1336,7 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
                                                    "isBlock":isBlock,
                                                    "files": uploadFilesWithALE,
                                                    "srcDir": uploadDirs,
+                                                   "metaDataJSONTime":metaDataJSONTime,
                                         ])
         window?.performClose(nil) // nil because I'm not return a message
         
@@ -1358,20 +1344,24 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
         
     }
     
-    func defaultMiscDict()-> [String : Any]{
-        var retDict = [String: Any]()
-        retDict["aleFileNameField"] = StringConstant().sourceFile
-        retDict["matchType"] = StringConstant().strMatchTypeExact
-        retDict["truncateCharFromStart"] = 0
-        retDict["truncateCharFromEnd"] = 0
-        return retDict;
-    }
+
     
     @IBAction func btnReloadSesionClicked(_ sender: Any) {
         self.progressFetch.isHidden = false
         self.progressFetch.startAnimation(true)
         self.btnReloadSeason.isHidden = true
         fetchSeasonsAndEpisodes(showId: self.showId)
+    }
+    
+    func checkAllDirPathExist() -> Bool {
+        for item in selectedFilePathsArray {
+            for (key,_) in item {
+                if !isCheckDirExist(dirPath: key){
+                    return false
+                }
+            }
+        }
+        return true
     }
 }
 

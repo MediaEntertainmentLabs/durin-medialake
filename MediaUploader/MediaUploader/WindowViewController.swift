@@ -138,6 +138,9 @@ class WindowViewController: NSViewController {
         static let AddUploadTask = "AddUploadTask"
         
         static let CancelPendingURLTasks = "CancelPendingURLTasks"
+        
+        static let reloadUploadTableView = "reloadUploadTableView"
+        
         static let otpMessage = "otpMessage"
     }
 }

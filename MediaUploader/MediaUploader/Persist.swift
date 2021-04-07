@@ -12,7 +12,6 @@ let storedKeys = ["shootDay", "batch", "unit", "team", "season", "blockOrEpisode
 func createData(index : Int, uploadTableRecord: UploadTableRow) {
     
     let managedContext = AppDelegate.appDelegate.persistentContainer.viewContext
-    
     guard let showEntity = NSEntityDescription.entity(forEntityName: "ShowEntity", in: managedContext) else { print(" ------ Could not createData."); return }
     
     let data = NSManagedObject(entity: showEntity, insertInto: managedContext)
@@ -26,6 +25,8 @@ func createData(index : Int, uploadTableRecord: UploadTableRow) {
     data.setValue(uploadTableRecord.dateModified, forKey: "dateModified")
     data.setValue(uploadTableRecord.isBlock, forKey: "isBlock")
     data.setValue(uploadTableRecord.seasonId, forKey: "seasonId")
+    data.setValue(uploadTableRecord.metaDataJSONTime, forKey: "metaDataJSONTime")
+    data.setValue(uploadTableRecord.metadataJSONPresent, forKey: "metadataJSONPresent")
     for key in storedKeys {
         data.setValue(uploadTableRecord.uploadParams[key], forKey: key)
     }
@@ -57,6 +58,8 @@ func retrieveData(completion: @escaping (_ record: UploadTableRow) -> Void) {
             record.dateModified = data.value(forKey: "dateModified") as! Date
             record.isBlock = data.value(forKey: "isBlock") as! Bool
             record.seasonId = data.value(forKey: "seasonId") as! String
+            record.metaDataJSONTime = data.value(forKey: "metaDataJSONTime") as! String
+            record.metadataJSONPresent = data.value(forKey: "metadataJSONPresent") as! Bool
             if equal(record.resumeProgress, 100.0) == false {
                 record.pauseResumeStatus = .pause
                 record.completionStatusString = OutlineViewController.NameConstants.kPausedStr
@@ -77,8 +80,6 @@ func retrieveData(completion: @escaping (_ record: UploadTableRow) -> Void) {
 }
 
 func updateData(row: Int, progress : Int, status: String) {
-    print ("------------ updateData for row: \(row), status: \(status)")
-    
     let managedContext = AppDelegate.appDelegate.persistentContainer.viewContext
     let fetchRequest: NSFetchRequest<NSFetchRequestResult> = NSFetchRequest.init(entityName: "ShowEntity")
     fetchRequest.predicate = NSPredicate(format: "sn = %@", String(row))
@@ -113,3 +114,31 @@ func deleteAllData() {
         print(error)
     }
 }
+
+func updateMetaDataPresent(metaDataTimeStamp: String) {
+    let managedContext = AppDelegate.appDelegate.persistentContainer.viewContext
+    let fetchRequest: NSFetchRequest<NSFetchRequestResult> = NSFetchRequest.init(entityName: "ShowEntity")
+    fetchRequest.predicate = NSPredicate(format: "metaDataJSONTime = %@", metaDataTimeStamp)
+    
+    do
+    {
+        let test = try managedContext.fetch(fetchRequest)
+        if test.count > 0 {
+            for item in test {
+                let objectUpdate = item as! NSManagedObject
+                objectUpdate.setValue(true, forKey: "metadataJSONPresent")
+                do {
+                    try managedContext.save()
+                    
+                } catch {
+                    print(error)
+                }
+            }
+        } else {
+            print("Data Not Found")
+        }
+    } catch {
+        print(error)
+    }
+}
+

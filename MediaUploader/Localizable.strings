@@ -36,3 +36,6 @@
 "verify OTP fail string" = "Failed to verify OTP!";
 "unableToFindUserToken" = "Unable to find UserToken";
 "userToken" = "userToken";
+
+"dirPathNotExist" = "Folder can't be found";
+
