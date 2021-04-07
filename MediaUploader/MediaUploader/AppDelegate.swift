@@ -16,6 +16,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         case kFailedUploadShowSASToken
         case kFailedFetchShowContent
         case kFailedFetchSeasonsAndEpisodes
+        case kFailedGenerateOTP
+        case kFailedVerifyOTP
     }
     
     var mainWindowController : NSWindowController!

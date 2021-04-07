@@ -125,13 +125,13 @@ class LoginViewController: NSViewController {
     @IBOutlet weak var versionLabel: NSTextField!
     
     @IBOutlet weak var newUserLabel: HyperlinkTextField!
-    
+    var verifyOTPViewController : VerifyOTPViewController!
     //"https://storage.azure.com/.default"
     let kScopes: [String] = ["user.read"]
- 
+    
     static var azcopyPath = Bundle.main.bundleURL.appendingPathComponent("Contents")
-                                                 .appendingPathComponent("Resources")
-                                                 .appendingPathComponent("azcopy")
+        .appendingPathComponent("Resources")
+        .appendingPathComponent("azcopy")
     
     
     var isConfigInitialized : Bool = false
@@ -383,29 +383,29 @@ class LoginViewController: NSViewController {
         }
         let signInStr = self.isConfigScreen ? "Save & Sign In" : "Sign In"
         self.loginButton.title = acc != nil ? "Sign Out" : signInStr
-   
-        /*
-        if (account != nil)
-        {
-            self.acquireTokenSilently(self.currentAccount)
-            
-            self.azureUserId = self.currentAccount!.identifier!.components(separatedBy: ".")[0]
-            
-            windowViewController = storyboard!.instantiateController(withIdentifier: "WindowViewController") as? WindowViewController
         
-            let windowController = storyboard!.instantiateController(withIdentifier: "WindowController") as! NSWindowController
-            
-            if let mainWindow = windowController.window {
-                let controller =  NSWindowController(window: mainWindow)
-                windowController.contentViewController = windowViewController
-                controller.showWindow(self)
-                window?.performClose(nil) // nil because I'm not return a message
-                
-                NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.updateUserNameLabel),
-                                                object: nil,
-                                                userInfo: ["azureUserName": self.currentAccount?.username])
-            }
-        }*/
+        /*
+         if (account != nil)
+         {
+         self.acquireTokenSilently(self.currentAccount)
+         
+         self.azureUserId = self.currentAccount!.identifier!.components(separatedBy: ".")[0]
+         
+         windowViewController = storyboard!.instantiateController(withIdentifier: "WindowViewController") as? WindowViewController
+         
+         let windowController = storyboard!.instantiateController(withIdentifier: "WindowController") as! NSWindowController
+         
+         if let mainWindow = windowController.window {
+         let controller =  NSWindowController(window: mainWindow)
+         windowController.contentViewController = windowViewController
+         controller.showWindow(self)
+         window?.performClose(nil) // nil because I'm not return a message
+         
+         NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.updateUserNameLabel),
+         object: nil,
+         userInfo: ["azureUserName": self.currentAccount?.username])
+         }
+         }*/
     }
     
     func updateLogging(text : String) {
@@ -449,35 +449,48 @@ class LoginViewController: NSViewController {
             print("-------- failed to read \(LoginViewController.keyLogicGetSeasonEpisodeForShow) from config.json")
             return false
         }
-
+        
         if let url = readConfig(key: LoginViewController.keyLogicSendEmail) {
             LoginViewController.apiUrls[LoginViewController.keyLogicSendEmail] = url
         } else {
             print("-------- failed to read \(LoginViewController.keyLogicSendEmail) from config.json")
             return false
         }
-
+        
         if let clientId = readConfig(key: LoginViewController.keyClientId) {
             LoginViewController.kClientID = clientId
         } else {
             print("-------- failed to read \(LoginViewController.keyClientId) from config.json")
             return false
         }
-
-//        if let tenantId = readConfig(key: LoginViewController.keyTenantId) {
-//            LoginViewController.kTenantID = tenantId
-//        } else {
-//            print("-------- failed to read \(LoginViewController.keyTenantId) from config.json")
-//            return false
-//        }
-
+        
+        //        if let tenantId = readConfig(key: LoginViewController.keyTenantId) {
+        //            LoginViewController.kTenantID = tenantId
+        //        } else {
+        //            print("-------- failed to read \(LoginViewController.keyTenantId) from config.json")
+        //            return false
+        //        }
+        
         if let redirectURI = readConfig(key: LoginViewController.keyRedirectURI) {
             LoginViewController.kRedirectUri = redirectURI
         } else {
             print("-------- failed to read \(LoginViewController.keyRedirectURI) from config.json")
             return false
         }
-
+        
+        if let url = readConfig(key: LoginViewController.keyLogicGenerateOTP) {
+            LoginViewController.apiUrls[LoginViewController.keyLogicGenerateOTP] = url
+        } else {
+            print("-------- failed to read \(LoginViewController.keyLogicGenerateOTP) from config.json")
+            return false
+        }
+        
+        if let url = readConfig(key: LoginViewController.keyLogicVerifyOTP) {
+            LoginViewController.apiUrls[LoginViewController.keyLogicVerifyOTP] = url
+        } else {
+            print("-------- failed to read \(LoginViewController.keyLogicVerifyOTP) from config.json")
+            return false
+        }
         return true
     }
     
@@ -578,7 +591,7 @@ class LoginViewController: NSViewController {
     }
     
     @objc func signOut(_ sender: Any) {
-        
+        deleteDataFromUserDefault(key: OutlineViewController.NameConstants.userToken)
         guard let applicationContext = LoginViewController.application else { return }
         guard let account = LoginViewController.currentAccount else { return }
         guard let webViewParamaters = self.webViewParamaters else { return }
@@ -598,7 +611,8 @@ class LoginViewController: NSViewController {
                 if let error = error {
                     self.updateLogging(text: "Couldn't sign out account with error: \(error)")
                 } else {
-                    self.updateLogging(text: "Sign out completed successfully")
+                    deleteDataFromUserDefault(key: OutlineViewController.NameConstants.userToken)
+                     self.updateLogging(text: "Sign out completed successfully")
                 }
                 self.accessToken = ""
                 self.updateCurrentAccount(acc: nil)
@@ -658,7 +672,7 @@ class LoginViewController: NSViewController {
                 
                 if isValid {
                     LoginViewController.account = result.account
-                  
+                    
                     DispatchQueue.main.async {
                         
                         if !self.saveCredentials() {
@@ -669,8 +683,12 @@ class LoginViewController: NSViewController {
                         self.clientIdTextField.stringValue = ""
                         self.redirectURITextField.stringValue = ""
                         self.configurationTextField.stringValue = ""
-                        
-                        self.onLoginSuccessfull(self)
+                       
+                        if getUserToken() != OutlineViewController.NameConstants.STRING_EMPTY{
+                            self.onLoginSuccessfull(self)
+                        }else {
+                            self.GenerateOTP()
+                        }
                     }
                 } else {
                     LoginViewController.account = nil
@@ -797,7 +815,12 @@ class LoginViewController: NSViewController {
                 // do something with the returned Bool
                 DispatchQueue.main.async {
                     if isValid {
-                        self.onLoginSuccessfull(self)
+                        if getUserToken() != OutlineViewController.NameConstants.STRING_EMPTY{
+                            self.onLoginSuccessfull(self)
+                        }else {
+                            self.GenerateOTP()
+                        }
+                      
                     } else {
                         self.hideProgress()
                     }
@@ -857,16 +880,18 @@ class LoginViewController: NSViewController {
         
         LoginViewController._azureUserId = identifier.components(separatedBy: ".")[0]
         
-        
-        //NSApplication.shared.mainWindow?.windowController!.showWindow(self)
+        let storyboard = NSStoryboard(name:"Main", bundle: nil)
         let appDelegate = NSApplication.shared.delegate as! AppDelegate
+        
         var windowController : NSWindowController! = appDelegate.mainWindowController
         if(windowController == nil) {
-            windowController = storyboard!.instantiateController(withIdentifier: "WindowController") as? WindowController
+            windowController = storyboard.instantiateController(withIdentifier: "WindowController") as? WindowController
         }
-
+        
         if let mainWindow = windowController!.window {
             let controller =  NSWindowController(window: mainWindow)
+            
+            controller.contentViewController = storyboard.instantiateController(withIdentifier: "WindowViewController") as? NSViewController
             controller.showWindow(self)
             window?.performClose(nil) // nil because I'm not return a message
             
@@ -876,6 +901,86 @@ class LoginViewController: NSViewController {
             
             NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.LoginSuccessfull),
                                             object: nil)
+        }
+    }
+    
+    private func GenerateOTP() {
+        print (" --------------- GenerateOTP ")
+     
+        generateOTP() { (result) in
+            
+            DispatchQueue.main.async { [self] in
+                if let error = result["error"] as? String {
+                    AppDelegate.retryContext["cdsUserId"] = LoginViewController.cdsUserId
+                    print("cdsUserId ::: : \(String(describing: LoginViewController.cdsUserId))")
+                    
+                    AppDelegate.lastError = AppDelegate.ErrorStatus.kFailedGenerateOTP
+                    NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.ShowProgressViewControllerOnlyText),
+                                                    object: nil,
+                                                    userInfo: ["progressLabel" : error,
+                                                               "disableProgress" : true,
+                                                               "enableButton" : OutlineViewController.NameConstants.kGenerateOTPFailedStr])
+                    
+                    return
+                }
+                self.hideProgress()
+                
+                let OTPMessage = result["message"] as! String
+                
+              
+                /*
+                guard let account = LoginViewController.account else { return }
+                guard let username = account.username else { return }
+                guard let identifier = account.identifier else { return }
+                let cdsUserId = identifier.components(separatedBy: ".")[0]
+              
+              //  guard let cdsUserId = LoginViewController.cdsUserId else { return }
+                NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.updateUserNameLabel),
+                                                object: nil,
+                                                userInfo: ["azureUserName": username])
+                 
+                 
+                
+                verifyOTPViewController = VerifyOTPViewController()
+                
+                verifyOTPViewController.strOTPMessage = OTPMessage
+                verifyOTPViewController.cdUserID = cdsUserId
+                
+                windowController.contentViewController = verifyOTPViewController
+                
+                windowController.showWindow(verifyOTPViewController)
+                window?.performClose(nil)
+                */
+                
+                
+                guard let account = LoginViewController.account else { return }
+                guard let username = account.username else { return }
+                guard let identifier = account.identifier else { return }
+                
+                LoginViewController._azureUserId = identifier.components(separatedBy: ".")[0]
+                
+                NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.updateUserNameLabel),
+                                                object: nil,
+                                                userInfo: ["azureUserName": username])
+                
+                let storyboard = NSStoryboard(name:"Main", bundle: nil)
+                let appDelegate = NSApplication.shared.delegate as! AppDelegate
+                var windowController : NSWindowController! = appDelegate.mainWindowController
+                if(windowController == nil) {
+                    windowController = storyboard.instantiateController(withIdentifier: "WindowController") as? WindowController
+                }
+                windowController.contentViewController = storyboard.instantiateController(withIdentifier: "VerifyOTPViewController") as? NSViewController
+                
+             
+                 
+                 NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.otpMessage),
+                                                     object: nil,
+                                                     userInfo: ["otpMessage": OTPMessage])
+                
+                windowController.showWindow(self)
+                window?.performClose(nil)
+            
+            }
         }
     }
 }

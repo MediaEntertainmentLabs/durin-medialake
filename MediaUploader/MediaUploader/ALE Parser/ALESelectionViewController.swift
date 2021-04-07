@@ -54,7 +54,8 @@ class ALESelectionViewController: NSViewController,SourceFileColumnSelectedDeleg
     
     func setStructDataReference(structDataReference:[fileInfo?])
     {
-        self.filesArray = structDataReference;
+        // self.filesArray = structDataReference;
+        self.filesArray = structDataReference.sorted { !($0?.aleFileDetail!.SourceFile)! && ($1?.aleFileDetail!.SourceFile)! }
         tblALEList.reloadData()
     }
     

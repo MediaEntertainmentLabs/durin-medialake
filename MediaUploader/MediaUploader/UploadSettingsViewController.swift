@@ -198,6 +198,7 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
     }
     
     @objc func onSignOutClicked(_ sender: Any) {
+        deleteDataFromUserDefault(key: OutlineViewController.NameConstants.userToken)
         window?.performClose(nil) // nil because I'm not return a message
     }
     
@@ -476,7 +477,7 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
                     showPopoverMessage(positioningView: blocksCombo, msg: "Invalid params for Block")
                     return
                 }else{
-                    showPopoverMessage(positioningView: blocksCombo, msg: "Block are not associated with this season")
+                    showPopoverMessage(positioningView: blocksCombo, msg: "Blocks are not associated with this season")
                     return
                 }
             }
@@ -580,7 +581,7 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
                 if(self.blocksCombo.numberOfItems > 0) {
                     return
                 }else{
-                    showPopoverMessage(positioningView: blocksCombo, msg: "Block are not associated with this season")
+                    showPopoverMessage(positioningView: blocksCombo, msg: "Blocks are not associated with this season")
                     return
                 }
             }

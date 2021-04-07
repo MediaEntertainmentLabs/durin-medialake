@@ -10,7 +10,7 @@ import Cocoa
 
 
 func postUploadFailureTask(params: [String:Any], completion: @escaping (_ result: Bool) -> Void) {
-
+    
     let json = [
         "showId": params["showId"],
         "seasonId":params["seasonId"],
@@ -33,31 +33,37 @@ func postUploadFailureTask(params: [String:Any], completion: @escaping (_ result
     var request = URLRequest(url: url)
     request.httpMethod = "POST"
     request.setValue("application/json; charset=utf-8", forHTTPHeaderField: "Content-Type")
+    guard let userToken = getUserToken() else {
+        writeFile(strToWrite: OutlineViewController.NameConstants.unableToFindUserToken)
+        return
+    }
+    request.setValue(userToken, forHTTPHeaderField: OutlineViewController.NameConstants.userAuthToken)
+    
     request.httpBody = jsonData
     
     let task = URLSession.shared.dataTask(with: request) { data, response, error in
-            if error != nil {
-                print("Error: \(String(describing: error))")
+        if error != nil {
+            print("Error: \(String(describing: error))")
+            completion(false)
+            return
+        }
+        
+        if let httpResponse = response as? HTTPURLResponse {
+            if httpResponse.statusCode != 200 {
+                if let data = data, let dataString = String(data: data, encoding: .utf8) {
+                    print("Response: \(dataString)")
+                }
                 completion(false)
                 return
             }
-
-            if let httpResponse = response as? HTTPURLResponse {
-                if httpResponse.statusCode != 200 {
-                    if let data = data, let dataString = String(data: data, encoding: .utf8) {
-                        print("Response: \(dataString)")
-                    }
-                    completion(false)
-                    return
-                }
-            }
-
-//            let responseJSON = try JSONSerialization.jsonObject(with: data!) as? [[String:String]]
-//            if responseJSON == nil {
-//                completion(false)
-//            }
-            completion(true)
-            return
+        }
+        
+        //            let responseJSON = try JSONSerialization.jsonObject(with: data!) as? [[String:String]]
+        //            if responseJSON == nil {
+        //                completion(false)
+        //            }
+        completion(true)
+        return
     }
     task.resume()
 }
@@ -74,7 +80,7 @@ func fetchListAPI_URLs(userApiURLs: String, completion: @escaping (_ shows: [Str
                 print("Error: \(String(describing: error))")
                 throw OutlineViewController.NameConstants.kFetchListOfShowsFailedStr
             }
-
+            
             if let httpResponse = response as? HTTPURLResponse {
                 if httpResponse.statusCode != 200 {
                     // Convert HTTP Response Data to a simple String
@@ -137,7 +143,7 @@ func fetchShowContentTask(sasURI : String, completion: @escaping (_ data: [Strin
 func fetchSASTokenURLTask(showId: String, synchronous: Bool, completion: @escaping (_ result: [String:Any]) -> Void) {
     
     let json = ["showId":showId, "userId":LoginViewController.cdsUserId]
-
+    
     let jsonData = try? JSONSerialization.data(withJSONObject: json, options: .prettyPrinted)
     
     guard let SASTokenURI = LoginViewController.generateSASTokenURI else { completion(["error": OutlineViewController.NameConstants.kFetchListOfShowsFailedStr]); return }
@@ -146,6 +152,12 @@ func fetchSASTokenURLTask(showId: String, synchronous: Bool, completion: @escapi
     var request = URLRequest(url: url)
     request.httpMethod = "POST"
     request.setValue("application/json; charset=utf-8", forHTTPHeaderField: "Content-Type")
+    guard let userToken = getUserToken() else {
+        writeFile(strToWrite: OutlineViewController.NameConstants.unableToFindUserToken)
+        return
+    }
+    request.setValue(userToken, forHTTPHeaderField: OutlineViewController.NameConstants.userAuthToken)
+    
     request.httpBody = jsonData
     
     let semaphore = DispatchSemaphore(value: 0)
@@ -156,7 +168,7 @@ func fetchSASTokenURLTask(showId: String, synchronous: Bool, completion: @escapi
                 print("Error: \(String(describing: error))")
                 throw OutlineViewController.NameConstants.kFetchShowContentFailedStr
             }
-
+            
             if let httpResponse = response as? HTTPURLResponse {
                 if httpResponse.statusCode != 200 {
                     // Convert HTTP Response Data to a simple String
@@ -202,7 +214,7 @@ func fetchSASTokenURLTask(showId: String, synchronous: Bool, completion: @escapi
 }
 
 enum FetchSASTokenState {
-  case pending, cached, completed
+    case pending, cached, completed
 }
 func fetchSASToken(showName : String, showId : String, synchronous: Bool, completion: @escaping (_ data: (String,FetchSASTokenState)) -> Void) {
     
@@ -229,7 +241,7 @@ func fetchSASToken(showName : String, showId : String, synchronous: Bool, comple
 }
 
 func fetchListOfShowsTask(completion: @escaping (_ shows: [String:Any]) -> Void) {
-
+    
     let json: [String: String] = ["userId" : LoginViewController.cdsUserId!]
     let jsonData = try? JSONSerialization.data(withJSONObject: json, options: .prettyPrinted)
     
@@ -239,6 +251,12 @@ func fetchListOfShowsTask(completion: @escaping (_ shows: [String:Any]) -> Void)
     var request = URLRequest(url: url)
     request.httpMethod = "POST"
     request.setValue("application/json; charset=utf-8", forHTTPHeaderField: "Content-Type")
+    guard let userToken = getUserToken() else {
+        writeFile(strToWrite: OutlineViewController.NameConstants.unableToFindUserToken)
+        return
+    }
+    request.setValue(userToken, forHTTPHeaderField: OutlineViewController.NameConstants.userAuthToken)
+    
     request.httpBody = jsonData
     
     let task = URLSession.shared.dataTask(with: request) { data, response, error in
@@ -247,7 +265,7 @@ func fetchListOfShowsTask(completion: @escaping (_ shows: [String:Any]) -> Void)
                 print("Error: \(String(describing: error))")
                 throw OutlineViewController.NameConstants.kFetchListOfShowsFailedStr
             }
-
+            
             if let httpResponse = response as? HTTPURLResponse {
                 if httpResponse.statusCode != 200 {
                     // Convert HTTP Response Data to a simple String
@@ -277,15 +295,15 @@ func fetchListOfShowsTask(completion: @escaping (_ shows: [String:Any]) -> Void)
                         
                         // NOTE: as special request I need to reverse this bit deliberately!
                         let allowed = !(item["media_uploadallowed"] as! Bool)
-
+                        
                         shows.append(["showName":showName, "showId":showId, "studio":studioName, "studioId":studioId, "allowed":allowed])
                     }
                     if (shows.count != 0) {
                         let sortedByStudio = shows.sorted(by: {
-                                                                if $0["studio"] as! String != $1["studio"] as! String {
-                                return ($0["studio"] as! String) < ($1["studio"] as! String)
-                            } else {
-                                return String(describing: $0["studio"] as! String) > String(describing: $1["studio"] as! String) } })
+                                                            if $0["studio"] as! String != $1["studio"] as! String {
+                                                                return ($0["studio"] as! String) < ($1["studio"] as! String)
+                                                            } else {
+                                                                return String(describing: $0["studio"] as! String) > String(describing: $1["studio"] as! String) } })
                         
                         completion(["data": sortedByStudio])
                     }
@@ -309,8 +327,8 @@ func fetchListOfShowsTask(completion: @escaping (_ shows: [String:Any]) -> Void)
 
 
 func fetchSeasonsAndEpisodesTask(showId: String, completion: @escaping (_ shows: [String:Any]) -> Void) {
-
-    let json: [String: String] = ["showid" : showId]
+    
+    let json: [String: String] = ["showid" : showId ,"userId" : LoginViewController.cdsUserId!]
     let jsonData = try? JSONSerialization.data(withJSONObject: json, options: .prettyPrinted)
     guard let seasonDetailsForShowURI = LoginViewController.getSeasonDetailsForShowURI else { completion(["error": OutlineViewController.NameConstants.kFetchListOfSeasonsFailedStr]); return }
     guard let url = URL(string: seasonDetailsForShowURI) else { completion(["error": OutlineViewController.NameConstants.kFetchListOfSeasonsFailedStr]); return }
@@ -318,7 +336,16 @@ func fetchSeasonsAndEpisodesTask(showId: String, completion: @escaping (_ shows:
     var request = URLRequest(url: url)
     request.httpMethod = "POST"
     request.setValue("application/json; charset=utf-8", forHTTPHeaderField: "Content-Type")
+    guard let userToken = getUserToken() else {
+        writeFile(strToWrite: OutlineViewController.NameConstants.unableToFindUserToken)
+        return
+    }
+    request.setValue(userToken, forHTTPHeaderField: OutlineViewController.NameConstants.userAuthToken)
+    
     request.httpBody = jsonData
+    
+    print("BODY \n \(String(decoding: request.httpBody!, as: UTF8.self))")
+    print("HEADERS \n \(String(describing: request.allHTTPHeaderFields))")
     
     let task = URLSession.shared.dataTask(with: request) { data, response, error in
         do {
@@ -344,13 +371,30 @@ func fetchSeasonsAndEpisodesTask(showId: String, completion: @escaping (_ shows:
             
             let responseJSON = try JSONSerialization.jsonObject(with: data) as! [String:Any]
             jsonFromDict(from: responseJSON)
-
-            guard let seasons = responseJSON["seasons"] as? [[String:Any]] else { throw OutlineViewController.NameConstants.kFetchListOfSeasonsFailedStr }
-            guard let episodes = responseJSON["episodes"] as? [[String:String]] else { throw OutlineViewController.NameConstants.kFetchListOfSeasonsFailedStr }
-            guard let blocks = responseJSON["blocks"] as? [[String:String]] else { throw OutlineViewController.NameConstants.kFetchListOfSeasonsFailedStr }
-            guard let lastShootDay = responseJSON["lastShootDay"] as? String else { throw OutlineViewController.NameConstants.kFetchListOfSeasonsFailedStr }
-            guard let shootDayFormat = responseJSON["shootDayFormat"] as? String else { throw OutlineViewController.NameConstants.kFetchListOfSeasonsFailedStr }
-          
+            
+            guard let seasons = responseJSON["seasons"] as? [[String:Any]] else {
+                throw OutlineViewController.NameConstants.kFetchListOfSeasonsFailedStr
+            }
+           
+            guard let episodes = responseJSON["episodes"] as? [[String:String]] else {
+                throw OutlineViewController.NameConstants.kFetchListOfSeasonsFailedStr
+             }
+            
+            guard let blocks = responseJSON["blocks"] as? [[String:String]] else {
+                throw OutlineViewController.NameConstants.kFetchListOfSeasonsFailedStr
+             }
+            
+            let lastShootDay = "day000"
+            let shootDayFormat = "day001"
+            /*   // TO DO : waiting for lastShootDay,shootDayFormat from server , till than I am setting this default value, post response Actual value should be updated ; As per SONU on 06April2021
+             
+             guard let lastShootDay = responseJSON["lastShootDay"] as? String else {
+             throw OutlineViewController.NameConstants.kFetchListOfSeasonsFailedStr
+             }
+             guard let shootDayFormat = responseJSON["shootDayFormat"] as? String else {
+             throw OutlineViewController.NameConstants.kFetchListOfSeasonsFailedStr
+             }
+             */
             for season in seasons {
                 var out_episodes = [(String,String)]()
                 for episode in episodes {
@@ -364,7 +408,7 @@ func fetchSeasonsAndEpisodesTask(showId: String, completion: @escaping (_ shows:
                         out_blocks.append((name,block["id"]! as String))
                     }
                 }
-            
+                
                 result[season["seasonName"] as! String] = (season["seasonId"] as! String, out_episodes, out_blocks, lastShootDay, shootDayFormat)
             }
             completion(["data": result])
@@ -379,8 +423,12 @@ func fetchSeasonsAndEpisodesTask(showId: String, completion: @escaping (_ shows:
     task.resume()
 }
 func generateOTP(completion: @escaping (_ optMessage: [String:Any]) -> Void) {
-
-    let json: [String: String] = ["userId" : LoginViewController.cdsUserId!]
+    
+    guard let account = LoginViewController.account else { return }
+    guard let identifier = account.identifier else { return }
+    
+    let json: [String: String] = ["userId" : identifier.components(separatedBy: ".")[0]]
+    //let json: [String: String] = ["userId" :"5b1c464a-f96e-4228-bbe7-33d5ccd18b3c"]
     let jsonData = try? JSONSerialization.data(withJSONObject: json, options: .prettyPrinted)
     
     guard let generateOTPForUserURI = LoginViewController.generateOTPForUserURI else { completion(["error": OutlineViewController.NameConstants.kGenerateOTPFailedStr]); return }
@@ -397,34 +445,90 @@ func generateOTP(completion: @escaping (_ optMessage: [String:Any]) -> Void) {
                 print("Error: \(String(describing: error))")
                 throw OutlineViewController.NameConstants.kGenerateOTPFailedStr
             }
-
+            print("Generate OTP Response : \(String(data: data!, encoding: .utf8) )")
             if let httpResponse = response as? HTTPURLResponse {
                 if httpResponse.statusCode != 200 {
                     // Convert HTTP Response Data to a simple String
                     if let data = data, let dataString = String(data: data, encoding: .utf8) {
-                        print("Generate OTP Response: \(dataString)")
+                        print("Generate OTP Response Error: \(dataString)")
+                        // Write a log file to catch OTP genration error
                     }
                     throw OutlineViewController.NameConstants.kGenerateOTPFailedStr
                 }
             }
             
-            var shows :[String:Any] = [:]
-            if let data = data {
-                if let responseJSON = try JSONSerialization.jsonObject(with: data) as? [[String:Any]] {
-                    for item in responseJSON {
-                    
-                    }
+            guard let data = data else { throw OutlineViewController.NameConstants.kGenerateOTPFailedStr }
+            if let responseJSON = try JSONSerialization.jsonObject(with: data) as? [String:Any] {
+                completion(["message": responseJSON["message"] as Any])
+            } else {
+                if let string = String(bytes: data, encoding: .utf8) {
+                    print (" ---------------- Response JSON \(string)")
+                    throw OutlineViewController.NameConstants.kGenerateOTPFailedStr
+                }
+            }
+        } catch let error as NSError {
+            completion(["error" : OutlineViewController.NameConstants.kGenerateOTPFailedStr])
+            print("\(error)")
+        } catch let error  {
+            completion(["error": error])
+        }
+    }
+    task.resume()
+}
 
-                } else {
-                    if let string = String(bytes: data, encoding: .utf8) {
-                        print (" ---------------- Response JSON \(string)")
-                        throw OutlineViewController.NameConstants.kGenerateOTPFailedStr
+func verifyOTP(otp: String,userID:String,completion: @escaping (_ userToken: [String:Any]) -> Void) {
+    
+    //let json: [String: String] = ["userId" :userID,"otp":otp]
+    
+    let json: [String: String] = ["userId" :LoginViewController.azureUserId!,"otp":otp]
+    let jsonData = try? JSONSerialization.data(withJSONObject: json, options: .prettyPrinted)
+    
+    guard let verifyOTPForUserURI = LoginViewController.verifyOTPForUserURI else { completion(["error": OutlineViewController.NameConstants.kVerifyOTPFailedStr]); return }
+    guard let url = URL(string: verifyOTPForUserURI) else { completion(["error": OutlineViewController.NameConstants.kVerifyOTPFailedStr]); return }
+    
+    var request = URLRequest(url: url)
+    request.httpMethod = "POST"
+    request.setValue("application/json; charset=utf-8", forHTTPHeaderField: "Content-Type")
+    request.httpBody = jsonData
+    
+    print("BODY \n \(String(decoding: request.httpBody!, as: UTF8.self))")
+    print("HEADERS \n \(String(describing: request.allHTTPHeaderFields))")
+    
+    let task = URLSession.shared.dataTask(with: request) { data, response, error in
+        do {
+            if error != nil {
+                print("Error: \(String(describing: error))")
+                throw OutlineViewController.NameConstants.kVerifyOTPFailedStr
+            }
+            
+            if let httpResponse = response as? HTTPURLResponse {
+                if httpResponse.statusCode != 200 {
+                    // Convert HTTP Response Data to a simple String
+                    if let data = data, let dataString = String(data: data, encoding: .utf8) {
+                        print("Verify OTP Response Error: \(dataString)")
+                        // Write a log file to catch OTP genration error
                     }
+                    throw OutlineViewController.NameConstants.kVerifyOTPFailedStr
                 }
             }
             
+            guard let data = data else { throw OutlineViewController.NameConstants.kVerifyOTPFailedStr }
+            if let responseJSON = try JSONSerialization.jsonObject(with: data) as? [String:Any] {
+                
+                if responseJSON["token"] != nil {
+                    setUserToken(userToken: responseJSON["token"] as! String)
+                    completion(["token": responseJSON["token"] as Any])
+                }else{
+                    throw OutlineViewController.NameConstants.kVerifyOTPFailedStr
+                }
+            } else {
+                if let string = String(bytes: data, encoding: .utf8) {
+                    print (" ---------------- Response JSON \(string)")
+                    throw OutlineViewController.NameConstants.kVerifyOTPFailedStr
+                }
+            }
         } catch let error as NSError {
-            completion(["error" : OutlineViewController.NameConstants.kGenerateOTPFailedStr])
+            completion(["error" : OutlineViewController.NameConstants.kVerifyOTPFailedStr])
             print("\(error)")
         } catch let error  {
             completion(["error": error])

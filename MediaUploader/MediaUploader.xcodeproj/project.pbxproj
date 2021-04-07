@@ -38,6 +38,7 @@
 		C96173A92593B4EF00F037EB /* SASToken.swift in Sources */ = {isa = PBXBuildFile; fileRef = C96173A82593B4EF00F037EB /* SASToken.swift */; };
 		C962D1A3258788420012F684 /* OutlineViewController+Expansion.swift in Sources */ = {isa = PBXBuildFile; fileRef = C962D1A2258788420012F684 /* OutlineViewController+Expansion.swift */; };
 		C962D1A5258AA3A40012F684 /* PopoverViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C962D1A4258AA3A40012F684 /* PopoverViewController.swift */; };
+		C96CF07C261B37F6005CF462 /* VerifyOTPViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = C96CF07A261B37F6005CF462 /* VerifyOTPViewController.xib */; };
 		C97621CF25682C3500C48E15 /* IconViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C97621CE25682C3500C48E15 /* IconViewController.swift */; };
 		C97621D4256BA90900C48E15 /* CollectionViewItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C97621D2256BA90900C48E15 /* CollectionViewItem.swift */; };
 		C97621D5256BA90900C48E15 /* CollectionViewItem.xib in Resources */ = {isa = PBXBuildFile; fileRef = C97621D3256BA90900C48E15 /* CollectionViewItem.xib */; };
@@ -53,6 +54,7 @@
 		C987BB2B2534CF5400A440A7 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = C987BB2A2534CF5400A440A7 /* Localizable.strings */; };
 		C987BB35253CC93E00A440A7 /* CustomTableCellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C987BB34253CC93E00A440A7 /* CustomTableCellView.swift */; };
 		C987BB37255BC97B00A440A7 /* LoginViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C987BB36255BC97B00A440A7 /* LoginViewController.swift */; };
+		C9BFDD0825F7E35400133229 /* VerifyOTPViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9BFDD0725F7E35400133229 /* VerifyOTPViewController.swift */; };
 		C9C5362A25DE74D7006AF531 /* TextFiledTypeFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9C5362925DE74D7006AF531 /* TextFiledTypeFormatter.swift */; };
 		C9C5364825DFB2C0006AF531 /* StringConstant.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9C5364725DFB2C0006AF531 /* StringConstant.swift */; };
 		C9C536E925E5635C006AF531 /* UploadStatusTableCellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9C536E825E5635C006AF531 /* UploadStatusTableCellView.swift */; };
@@ -124,6 +126,7 @@
 		C96173A82593B4EF00F037EB /* SASToken.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SASToken.swift; sourceTree = "<group>"; };
 		C962D1A2258788420012F684 /* OutlineViewController+Expansion.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "OutlineViewController+Expansion.swift"; sourceTree = "<group>"; };
 		C962D1A4258AA3A40012F684 /* PopoverViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = PopoverViewController.swift; path = MediaUploader/PopoverViewController.swift; sourceTree = SOURCE_ROOT; };
+		C96CF07A261B37F6005CF462 /* VerifyOTPViewController.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = VerifyOTPViewController.xib; sourceTree = "<group>"; };
 		C97621CE25682C3500C48E15 /* IconViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = IconViewController.swift; sourceTree = "<group>"; };
 		C97621D2256BA90900C48E15 /* CollectionViewItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CollectionViewItem.swift; sourceTree = "<group>"; };
 		C97621D3256BA90900C48E15 /* CollectionViewItem.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = CollectionViewItem.xib; sourceTree = "<group>"; };
@@ -142,6 +145,7 @@
 		C987BB2A2534CF5400A440A7 /* Localizable.strings */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; path = Localizable.strings; sourceTree = "<group>"; };
 		C987BB34253CC93E00A440A7 /* CustomTableCellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomTableCellView.swift; sourceTree = "<group>"; };
 		C987BB36255BC97B00A440A7 /* LoginViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginViewController.swift; sourceTree = "<group>"; };
+		C9BFDD0725F7E35400133229 /* VerifyOTPViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = VerifyOTPViewController.swift; path = OTP/VerifyOTPViewController.swift; sourceTree = "<group>"; };
 		C9C5362925DE74D7006AF531 /* TextFiledTypeFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextFiledTypeFormatter.swift; sourceTree = "<group>"; };
 		C9C5364725DFB2C0006AF531 /* StringConstant.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StringConstant.swift; sourceTree = "<group>"; };
 		C9C536E825E5635C006AF531 /* UploadStatusTableCellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UploadStatusTableCellView.swift; sourceTree = "<group>"; };
@@ -221,6 +225,7 @@
 		731C984B252DE9DB008E8A75 /* MediaUploader */ = {
 			isa = PBXGroup;
 			children = (
+				C9BFDD0625F7E33500133229 /* OTP */,
 				C9EBD23025DFDCED00C26041 /* TextFiledTypeFormatter.swift */,
 				C9DF48D425D59CF60016626F /* ALE Parser */,
 				C9E6C1F125C86B6A00F07B3D /* UI Utills */,
@@ -315,6 +320,15 @@
 				C917DDD025B2075F00B967B8 /* RightPaneToolPalette.xib */,
 			);
 			name = Resources;
+			sourceTree = "<group>";
+		};
+		C9BFDD0625F7E33500133229 /* OTP */ = {
+			isa = PBXGroup;
+			children = (
+				C9BFDD0725F7E35400133229 /* VerifyOTPViewController.swift */,
+				C96CF07A261B37F6005CF462 /* VerifyOTPViewController.xib */,
+			);
+			name = OTP;
 			sourceTree = "<group>";
 		};
 		C9DF48D425D59CF60016626F /* ALE Parser */ = {
@@ -458,6 +472,7 @@
 			files = (
 				C9E6C1DE25C17BFA00F07B3D /* azcopy in Resources */,
 				C9DF48DE25D59EF30016626F /* ALESelectionViewController.xib in Resources */,
+				C96CF07C261B37F6005CF462 /* VerifyOTPViewController.xib in Resources */,
 				C96173A72593AFA600F037EB /* azcopy in Resources */,
 				C9807E67257E8FD400488E46 /* ProgressViewController.xib in Resources */,
 				C96173A025911CAE00F037EB /* MediaUploader.plist in Resources */,
@@ -607,6 +622,7 @@
 				C987BB35253CC93E00A440A7 /* CustomTableCellView.swift in Sources */,
 				C95E74E7257ACEB80073410F /* AsyncOperation.swift in Sources */,
 				C961739C25910B5800F037EB /* CalculateChecksumOperation.swift in Sources */,
+				C9BFDD0825F7E35400133229 /* VerifyOTPViewController.swift in Sources */,
 				C9DF490825D717520016626F /* CustomALECell.swift in Sources */,
 				C917DDD325B226F500B967B8 /* RightPaneToolPalette.swift in Sources */,
 				C987BB37255BC97B00A440A7 /* LoginViewController.swift in Sources */,
@@ -786,7 +802,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
-				DEVELOPMENT_TEAM = 2CN2WP7M2D;
+				DEVELOPMENT_TEAM = DLJ2Y8U6J5;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/ThirdPartyFrameworks",
@@ -812,7 +828,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				DEVELOPMENT_TEAM = 2CN2WP7M2D;
+				DEVELOPMENT_TEAM = DLJ2Y8U6J5;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/ThirdPartyFrameworks",

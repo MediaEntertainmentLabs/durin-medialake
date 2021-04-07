@@ -33,7 +33,11 @@ class OutlineViewController: NSViewController,
         static let kVerifyOTPStr = NSLocalizedString("verify OTP  string", comment: "")
         static let kGenerateOTPFailedStr = NSLocalizedString("generate OTP fail string", comment: "")
         static let kVerifyOTPFailedStr = NSLocalizedString("verify OTP fail string", comment: "")
-    }
+        static let unableToFindUserToken = NSLocalizedString("unableToFindUserToken", comment: "")
+        static let userToken = NSLocalizedString("userToken", comment: "")
+        static let userAuthToken = NSLocalizedString("x-auth-token", comment: "")
+        static let STRING_EMPTY = NSLocalizedString("", comment: "")
+     }
         
     // The data source backing of the NSOutlineView.
     @IBOutlet weak var treeController: NSTreeController!

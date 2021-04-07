@@ -271,3 +271,20 @@ func writeFile(strToWrite : String) {
         
     }
 }
+func getUserToken() -> String? {
+    
+    guard let token =  UserDefaults.standard.value(forKey:OutlineViewController.NameConstants.userToken) as? String else {
+   return OutlineViewController.NameConstants.STRING_EMPTY
+    }
+    return token
+}
+
+func setUserToken(userToken: String){
+    let defaults = UserDefaults.standard
+    defaults.set(userToken, forKey: OutlineViewController.NameConstants.userToken)
+}
+
+func deleteDataFromUserDefault(key :String) {
+    UserDefaults.standard.removeObject(forKey:key)
+    print("Key Value after remove \(String(describing: UserDefaults.standard.value(forKey: key)))")
+}

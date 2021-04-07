@@ -34,3 +34,5 @@
 "verify OTP  string" = "Verify OTP!";
 "generate OTP fail string" = "Failed to generate OTP!";
 "verify OTP fail string" = "Failed to verify OTP!";
+"unableToFindUserToken" = "Unable to find UserToken";
+"userToken" = "userToken";
