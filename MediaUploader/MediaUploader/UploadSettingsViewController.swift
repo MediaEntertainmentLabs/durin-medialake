@@ -356,8 +356,8 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
             return
         }
     }
-    
-    func prepareUploadFiles(fileType: String, inputDirs: [URL]) -> [String : [[String:Any]]] {
+/*
+func prepareUploadFiles(fileType: String, inputDirs: [URL]) -> [String : [[String:Any]]] {
         var outputFiles: [String: [[String:Any]]] = [:]
         
         if fileType.isEmpty {
@@ -427,7 +427,7 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
         }
         return outputFiles
     }
-    
+    */
     func isValidEmail(_ email: String) -> Bool {
         let emailRegEx = "[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,64}"
         
@@ -643,7 +643,7 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
                 }
             }
         }
-        
+        let metaDataJSONTime = String(format:"%2X", Int(Date().timeIntervalSince1970 * 1000)) // in millsecs
         NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.OnStartUploadShow),
                                         object: nil,
                                         userInfo: ["json_main":json_main,
@@ -653,6 +653,7 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
                                                    "isBlock":isBlock,
                                                    "files": uploadFiles,
                                                    "srcDir": uploadDirs,
+                                                   "metaDataJSONTime":metaDataJSONTime,
                                         ])
         window?.performClose(nil) // nil because I'm not return a message
     }
@@ -1323,6 +1324,7 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
                 }
             }
         }
+        let metaDataJSONTime = String(format:"%2X", Int(Date().timeIntervalSince1970 * 1000)) // in millsecs
         
         NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.OnStartUploadShow),
                                         object: nil,
@@ -1333,6 +1335,7 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
                                                    "isBlock":isBlock,
                                                    "files": uploadFilesWithALE,
                                                    "srcDir": uploadDirs,
+                                                   "metaDataJSONTime":metaDataJSONTime,
                                         ])
         window?.performClose(nil) // nil because I'm not return a message
         
@@ -1340,14 +1343,7 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
         
     }
     
-    func defaultMiscDict()-> [String : Any]{
-        var retDict = [String: Any]()
-        retDict["aleFileNameField"] = StringConstant().sourceFile
-        retDict["matchType"] = StringConstant().strMatchTypeExact
-        retDict["truncateCharFromStart"] = 0
-        retDict["truncateCharFromEnd"] = 0
-        return retDict;
-    }
+
     
     @IBAction func btnReloadSesionClicked(_ sender: Any) {
         self.progressFetch.isHidden = false
@@ -1358,7 +1354,6 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
     
     func checkAllDirPathExist() -> Bool {
         for item in selectedFilePathsArray {
-            print("File Path item :\(item)")
             for (key,_) in item {
                 if !isCheckDirExist(dirPath: key){
                     return false

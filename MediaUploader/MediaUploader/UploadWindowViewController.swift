@@ -27,7 +27,8 @@ class UploadTableRow : NSObject {
     var pauseResumeStatus : pauseResumeStatus
     var isBlock : Bool
     var seasonId: String
-    
+    var metaDataJSONTime:String
+    var metadataJSONPresent:Bool
     // metadata
     var uploadParams: [String:Any] // we need to keep JSON params to send error report in case of failure occured
     
@@ -45,11 +46,13 @@ class UploadTableRow : NSObject {
         self.pauseResumeStatus = .resume
         self.isBlock = false
         self.seasonId = ""
+        self.metaDataJSONTime = ""
+        self.metadataJSONPresent = false
         
         super.init()
     }
     
-    init(showName: String, uploadParams: [String:String], srcPath: String, dstPath: String, isExistRemotely: Bool,isBlock: Bool,seasonId:String) {
+    init(showName: String, uploadParams: [String:String], srcPath: String, dstPath: String, isExistRemotely: Bool,isBlock: Bool,seasonId:String,metaDataJSONTime:String) {
         self.uniqueIndex = 0
         self.showName = showName
         self.srcPath = srcPath
@@ -63,6 +66,8 @@ class UploadTableRow : NSObject {
         self.pauseResumeStatus = .resume
         self.isBlock = isBlock
         self.seasonId = seasonId
+        self.metaDataJSONTime = metaDataJSONTime
+        self.metadataJSONPresent = false
         super.init()
     }
 }
@@ -92,6 +97,7 @@ class UploadWindowViewController: NSViewController,PauseResumeDelegate {
                     uploads[row].completionStatusString = OutlineViewController.NameConstants.kInProgressStr
                     uploads[row].uploadProgress = record.resumeProgress
                     uploads[row].resumeProgress = record.resumeProgress
+                    uploads[row].metadataJSONPresent = record.metadataJSONPresent
                 }
             }
             let record = uploads[row]
@@ -122,7 +128,6 @@ class UploadWindowViewController: NSViewController,PauseResumeDelegate {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        
         self.tableView.delegate = self
         self.tableView.dataSource = self
         
@@ -168,6 +173,13 @@ class UploadWindowViewController: NSViewController,PauseResumeDelegate {
             selector: #selector(onShowUploadCompleted(_:)),
             name: Notification.Name(WindowViewController.NotificationNames.ShowUploadCompleted),
             object: nil)
+        
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(reloadUploadTable(_:)),
+            name: Notification.Name(WindowViewController.NotificationNames.reloadUploadTableView),
+            object: nil)
+        
     }
 
     override var representedObject: Any? {
@@ -191,9 +203,9 @@ class UploadWindowViewController: NSViewController,PauseResumeDelegate {
     }
     
     @objc private func onShowUploadCompleted(_ notification: Notification) {
-        let uploadTableRecord  = notification.userInfo?["uploadRecord"] as! UploadTableRow
+       // let uploadTableRecord  = notification.userInfo?["uploadRecord"] as! UploadTableRow
         tableView.reloadData()
-        updateData(uploads: [uploadTableRecord])
+       // updateData(uploads: [uploadTableRecord])
     }
     
     func updateData(uploads: [UploadTableRow]) {
@@ -204,7 +216,7 @@ class UploadWindowViewController: NSViewController,PauseResumeDelegate {
             let fetchRequest: NSFetchRequest<NSFetchRequestResult> = NSFetchRequest.init(entityName: "ShowEntity")
             fetchRequest.predicate = NSPredicate(format: "sn = %@", String(record.uniqueIndex))
             
-            print (" ------- updateData for row: \(record.uniqueIndex), status: \(record.completionStatusString)")
+            //print (" ------- updateData for row: \(record.uniqueIndex), status: \(record.completionStatusString)")
             
             do
             {
@@ -241,6 +253,10 @@ class UploadWindowViewController: NSViewController,PauseResumeDelegate {
         NotificationCenter.default.removeObserver(
             self,
             name: Notification.Name(WindowViewController.NotificationNames.ShowUploadCompleted),
+            object: nil)
+        NotificationCenter.default.removeObserver(
+            self,
+            name: Notification.Name(WindowViewController.NotificationNames.reloadUploadTableView),
             object: nil)
     }
     
@@ -315,5 +331,28 @@ class UploadWindowViewController: NSViewController,PauseResumeDelegate {
                                         object: nil,
                                         userInfo: ["resumeUpload": record])
     }
+    
+    
+    @objc private func reloadUploadTable(_ notification: Notification) {
+        
+        let metaDataJSONTime = notification.userInfo?["metaDataJSONTime"] as! String// name:Id
+        let metadataPresent = notification.userInfo?["metadataPresent"] as! Bool
+        
+        DispatchQueue.main.async { [self] in
+            if (metadataPresent) {
+                let uploads : [UploadTableRow] = self.uploadContent.arrangedObjects as! [UploadTableRow]
+                for rowItem in uploads where rowItem.metaDataJSONTime == metaDataJSONTime {
+                    rowItem.pauseResumeStatus = .resume
+                    rowItem.metadataJSONPresent = true
+                 }
+                tableView.reloadData()
+            }else{
+                print("metadata not present")
+            }
+        }
+        
+    }
+    
+
 }
 
