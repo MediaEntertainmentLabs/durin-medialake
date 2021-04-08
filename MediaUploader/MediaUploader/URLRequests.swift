@@ -33,37 +33,33 @@ func postUploadFailureTask(params: [String:Any], completion: @escaping (_ result
     var request = URLRequest(url: url)
     request.httpMethod = "POST"
     request.setValue("application/json; charset=utf-8", forHTTPHeaderField: "Content-Type")
-    guard let userToken = getUserToken() else {
-        writeFile(strToWrite: OutlineViewController.NameConstants.unableToFindUserToken)
-        return
-    }
-    request.setValue(userToken, forHTTPHeaderField: OutlineViewController.NameConstants.userAuthToken)
-    
     request.httpBody = jsonData
     
     let task = URLSession.shared.dataTask(with: request) { data, response, error in
-        if error != nil {
-            print("Error: \(String(describing: error))")
-            completion(false)
-            return
-        }
-        
-        if let httpResponse = response as? HTTPURLResponse {
-            if httpResponse.statusCode != 200 {
-                if let data = data, let dataString = String(data: data, encoding: .utf8) {
-                    print("Response: \(dataString)")
-                }
+            if error != nil {
+                print("Error: \(String(describing: error))")
+                writeFile(strToWrite: (String(describing: error)), className: "URLRequest", functionName: "postUploadFailureTask")
                 completion(false)
                 return
             }
-        }
-        
-        //            let responseJSON = try JSONSerialization.jsonObject(with: data!) as? [[String:String]]
-        //            if responseJSON == nil {
-        //                completion(false)
-        //            }
-        completion(true)
-        return
+
+            if let httpResponse = response as? HTTPURLResponse {
+                if httpResponse.statusCode != 200 {
+                    if let data = data, let dataString = String(data: data, encoding: .utf8) {
+                        print("Response: \(dataString)")
+                        writeFile(strToWrite: dataString, className: "URLRequest", functionName: "postUploadFailureTask")
+                    }
+                    completion(false)
+                    return
+                }
+            }
+
+//            let responseJSON = try JSONSerialization.jsonObject(with: data!) as? [[String:String]]
+//            if responseJSON == nil {
+//                completion(false)
+//            }
+            completion(true)
+            return
     }
     task.resume()
 }
@@ -80,12 +76,13 @@ func fetchListAPI_URLs(userApiURLs: String, completion: @escaping (_ shows: [Str
                 print("Error: \(String(describing: error))")
                 throw OutlineViewController.NameConstants.kFetchListOfShowsFailedStr
             }
-            
+
             if let httpResponse = response as? HTTPURLResponse {
                 if httpResponse.statusCode != 200 {
                     // Convert HTTP Response Data to a simple String
                     if let data = data, let dataString = String(data: data, encoding: .utf8) {
                         print("Response: \(dataString)")
+                        writeFile(strToWrite: dataString, className: "URLRequest", functionName: "fetchListAPI_URLs")
                     }
                     throw OutlineViewController.NameConstants.kFetchListOfShowsFailedStr
                 }
@@ -98,8 +95,10 @@ func fetchListAPI_URLs(userApiURLs: String, completion: @escaping (_ shows: [Str
             
         } catch let error as NSError {
             completion(["error" : OutlineViewController.NameConstants.kFetchListOfShowsFailedStr])
+            writeFile(strToWrite: error.localizedDescription, className: "URLRequest", functionName: "fetchListAPI_URLs")
             print("\(error)")
         } catch let error  {
+            writeFile(strToWrite: error.localizedDescription, className: "URLRequest", functionName: "fetchListAPI_URLs")
             completion(["error": error])
         }
     }
@@ -122,6 +121,7 @@ func fetchShowContentTask(sasURI : String, completion: @escaping (_ data: [Strin
                     // Convert HTTP Response Data to a simple String
                     if let data = data, let dataString = String(data: data, encoding: .utf8) {
                         print("Response: \(dataString)")
+                        writeFile(strToWrite: dataString, className: "URLRequest", functionName: "fetchShowContentTask")
                     }
                     throw OutlineViewController.NameConstants.kFetchShowContentFailedStr
                 }
@@ -131,9 +131,11 @@ func fetchShowContentTask(sasURI : String, completion: @escaping (_ data: [Strin
             completion(["data" : data])
             
         } catch let error as NSError {
+            writeFile(strToWrite: error.localizedDescription, className: "URLRequest", functionName: "fetchShowContentTask")
             completion(["error" : OutlineViewController.NameConstants.kFetchShowContentFailedStr])
             print("\(error)")
         } catch let error  {
+            writeFile(strToWrite: error.localizedDescription, className: "URLRequest", functionName: "fetchShowContentTask")
             completion(["error": error])
         }
     }
@@ -153,7 +155,7 @@ func fetchSASTokenURLTask(showId: String, synchronous: Bool, completion: @escapi
     request.httpMethod = "POST"
     request.setValue("application/json; charset=utf-8", forHTTPHeaderField: "Content-Type")
     guard let userToken = getUserToken() else {
-        writeFile(strToWrite: OutlineViewController.NameConstants.unableToFindUserToken)
+        writeFile(strToWrite: OutlineViewController.NameConstants.unableToFindUserToken, className: "URLRequest", functionName: "fetchSASTokenURLTask")
         return
     }
     request.setValue(userToken, forHTTPHeaderField: OutlineViewController.NameConstants.userAuthToken)
@@ -252,7 +254,7 @@ func fetchListOfShowsTask(completion: @escaping (_ shows: [String:Any]) -> Void)
     request.httpMethod = "POST"
     request.setValue("application/json; charset=utf-8", forHTTPHeaderField: "Content-Type")
     guard let userToken = getUserToken() else {
-        writeFile(strToWrite: OutlineViewController.NameConstants.unableToFindUserToken)
+        writeFile(strToWrite: OutlineViewController.NameConstants.unableToFindUserToken,className: "URLRequest", functionName: "fetchListOfShowsTask")
         return
     }
     request.setValue(userToken, forHTTPHeaderField: OutlineViewController.NameConstants.userAuthToken)
@@ -337,7 +339,7 @@ func fetchSeasonsAndEpisodesTask(showId: String, completion: @escaping (_ shows:
     request.httpMethod = "POST"
     request.setValue("application/json; charset=utf-8", forHTTPHeaderField: "Content-Type")
     guard let userToken = getUserToken() else {
-        writeFile(strToWrite: OutlineViewController.NameConstants.unableToFindUserToken)
+        writeFile(strToWrite: OutlineViewController.NameConstants.unableToFindUserToken, className: "URLRequest", functionName: "fetchSeasonsAndEpisodesTask")
         return
     }
     request.setValue(userToken, forHTTPHeaderField: OutlineViewController.NameConstants.userAuthToken)

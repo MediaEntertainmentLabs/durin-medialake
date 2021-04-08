@@ -24,6 +24,7 @@
 		C917DDD325B226F500B967B8 /* RightPaneToolPalette.swift in Sources */ = {isa = PBXBuildFile; fileRef = C917DDD225B226F500B967B8 /* RightPaneToolPalette.swift */; };
 		C93C43B525D59F710032F417 /* CheckPathExistsOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = C93C43B425D59F710032F417 /* CheckPathExistsOperation.swift */; };
 		C93C43B725D687360032F417 /* XMLResponseParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = C93C43B625D687360032F417 /* XMLResponseParser.swift */; };
+		C941B6F4261EFC97007440D2 /* OnlyIntegerValueFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C941B6F3261EFC97007440D2 /* OnlyIntegerValueFormatter.swift */; };
 		C95E74E7257ACEB80073410F /* AsyncOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = C95E74E6257ACEB80073410F /* AsyncOperation.swift */; };
 		C95F6C1A2580B8B20008D8A0 /* ErrorHandling.swift in Sources */ = {isa = PBXBuildFile; fileRef = C95F6C192580B8B20008D8A0 /* ErrorHandling.swift */; };
 		C95F6C1C2582B6EE0008D8A0 /* FileUploadOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = C95F6C1B2582B6EE0008D8A0 /* FileUploadOperation.swift */; };
@@ -112,6 +113,7 @@
 		C917DDD225B226F500B967B8 /* RightPaneToolPalette.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RightPaneToolPalette.swift; sourceTree = "<group>"; };
 		C93C43B425D59F710032F417 /* CheckPathExistsOperation.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CheckPathExistsOperation.swift; sourceTree = "<group>"; };
 		C93C43B625D687360032F417 /* XMLResponseParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = XMLResponseParser.swift; sourceTree = "<group>"; };
+		C941B6F3261EFC97007440D2 /* OnlyIntegerValueFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnlyIntegerValueFormatter.swift; sourceTree = "<group>"; };
 		C95E74E6257ACEB80073410F /* AsyncOperation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncOperation.swift; sourceTree = "<group>"; };
 		C95F6C192580B8B20008D8A0 /* ErrorHandling.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorHandling.swift; sourceTree = "<group>"; };
 		C95F6C1B2582B6EE0008D8A0 /* FileUploadOperation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileUploadOperation.swift; sourceTree = "<group>"; };
@@ -301,6 +303,7 @@
 				C9C5362925DE74D7006AF531 /* TextFiledTypeFormatter.swift */,
 				C9C5364725DFB2C0006AF531 /* StringConstant.swift */,
 				C9FCF94925E4E4F3009335CF /* Persist.swift */,
+				C941B6F3261EFC97007440D2 /* OnlyIntegerValueFormatter.swift */,
 			);
 			name = Utils;
 			sourceTree = "<group>";
@@ -597,6 +600,7 @@
 				731C9881252E5216008E8A75 /* OutlineViewController+Helpers.swift in Sources */,
 				731C984F252DE9DB008E8A75 /* WindowViewController.swift in Sources */,
 				731C9879252E4D1A008E8A75 /* OutlineViewController.swift in Sources */,
+				C941B6F4261EFC97007440D2 /* OnlyIntegerValueFormatter.swift in Sources */,
 				C95F6C1F2583748B0008D8A0 /* UploadWindowViewController.swift in Sources */,
 				C9FCF94825E3D740009335CF /* uploadsModelData.xcdatamodeld in Sources */,
 				C9C5362A25DE74D7006AF531 /* TextFiledTypeFormatter.swift in Sources */,
@@ -801,6 +805,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 34;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = DLJ2Y8U6J5;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -828,6 +833,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 34;
 				DEVELOPMENT_TEAM = DLJ2Y8U6J5;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",

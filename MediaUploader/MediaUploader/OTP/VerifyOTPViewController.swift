@@ -8,12 +8,12 @@
 
 import Cocoa
 
-class VerifyOTPViewController: NSViewController {
+class VerifyOTPViewController: NSViewController, NSTextFieldDelegate {
     
     @IBOutlet weak var lblOTPMessage: NSTextField!
     @IBOutlet weak var txtOTP: NSTextField!
     @IBOutlet weak var btnSubmit: NSButton!
-    
+    let ACCEPTABLE_NUMBERS     = "0123456789"
     @IBOutlet weak var loadingIndicator: NSProgressIndicator!
     var strOTPMessage:String?
     var cdUserID:String?
@@ -24,24 +24,24 @@ class VerifyOTPViewController: NSViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do view setup here.
+        txtOTP.delegate = self
+        let onlyIntFormatter = OnlyIntegerValueFormatter()
+        txtOTP.formatter = onlyIntFormatter
         self.hideIndicator()
-        
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(passOTPMessage(_:)),
-            name: Notification.Name(WindowViewController.NotificationNames.otpMessage),
-            object: nil)
-        
-        
     }
     
     @IBAction func btnSubmitClicked(_ sender: Any) {
         self.showIndicator()
         if  !txtOTP.stringValue.isEmpty {
-            VerifyOtpStr(otpStr: txtOTP.stringValue)
+            if txtOTP.stringValue.count < getOTPLength()! {
+                hideIndicator()
+                showPopoverMessage(positioningView: txtOTP, msg: "Kindly enter correct OTP ")
+            }else {
+                VerifyOtpStr(otpStr: txtOTP.stringValue)
+            }
         } else {
             hideIndicator()
-            showPopoverMessage(positioningView: txtOTP, msg: "Kindly Enter OTP")
+            showPopoverMessage(positioningView: txtOTP, msg: "Kindly enter OTP")
         }
     }
     
@@ -62,7 +62,7 @@ class VerifyOTPViewController: NSViewController {
             DispatchQueue.main.async {
                 self.hideIndicator()
                 if let error = result["error"] as? String {
-                    dialogOKCancel(question: error, text: OutlineViewController.NameConstants.STRING_EMPTY)
+                    _ = dialogOKCancel(question: error, text: OutlineViewController.NameConstants.STRING_EMPTY)
                     return
                 }
                 
@@ -102,19 +102,15 @@ class VerifyOTPViewController: NSViewController {
         NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.LoginSuccessfull),
                                         object: nil)
         
-        NotificationCenter.default.removeObserver(
-            self,
-            name: Notification.Name(WindowViewController.NotificationNames.otpMessage),
-            object: nil)
-        
         self.view.window?.close()
     }
     
     
-    @objc func passOTPMessage(_ notification: NSNotification) {
-        
-        if let otpMessage = notification.userInfo?["otpMessage"] as? String {
-            lblOTPMessage.stringValue = otpMessage
-        }
-    }
+//    @objc func passOTPMessage(_ notification: NSNotification) {
+//
+//        if let otpMessage = notification.userInfo?["otpMessage"] as? String {
+//            lblOTPMessage.stringValue = otpMessage
+//        }
+//    }
+    
 }

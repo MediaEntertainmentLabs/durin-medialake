@@ -37,6 +37,7 @@ class OutlineViewController: NSViewController,
         static let userToken = NSLocalizedString("userToken", comment: "")
         static let userAuthToken = NSLocalizedString("x-auth-token", comment: "")
         static let STRING_EMPTY = NSLocalizedString("", comment: "")
+        static let otpLength = NSLocalizedString("otpLength", comment: "")
      }
         
     // The data source backing of the NSOutlineView.

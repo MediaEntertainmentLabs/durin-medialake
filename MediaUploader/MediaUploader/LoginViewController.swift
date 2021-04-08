@@ -927,31 +927,15 @@ class LoginViewController: NSViewController {
                 
                 let OTPMessage = result["message"] as! String
                 
-              
-                /*
-                guard let account = LoginViewController.account else { return }
-                guard let username = account.username else { return }
-                guard let identifier = account.identifier else { return }
-                let cdsUserId = identifier.components(separatedBy: ".")[0]
-              
-              //  guard let cdsUserId = LoginViewController.cdsUserId else { return }
-                NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.updateUserNameLabel),
-                                                object: nil,
-                                                userInfo: ["azureUserName": username])
-                 
-                 
+                _ = dialogOKCancel(question: "", text: OTPMessage)
                 
-                verifyOTPViewController = VerifyOTPViewController()
+                var OTPLength = 6
                 
-                verifyOTPViewController.strOTPMessage = OTPMessage
-                verifyOTPViewController.cdUserID = cdsUserId
+                if result["OTPLength"] != nil {
+                    OTPLength = result["OTPLength"] as! Int
+                }
                 
-                windowController.contentViewController = verifyOTPViewController
-                
-                windowController.showWindow(verifyOTPViewController)
-                window?.performClose(nil)
-                */
-                
+                setOTPLength(otpLength: OTPLength)
                 
                 guard let account = LoginViewController.account else { return }
                 guard let username = account.username else { return }
@@ -969,14 +953,9 @@ class LoginViewController: NSViewController {
                 if(windowController == nil) {
                     windowController = storyboard.instantiateController(withIdentifier: "WindowController") as? WindowController
                 }
+                windowController.window?.contentMinSize = NSSize(width: 800, height:700 )
+                windowController.window?.contentMaxSize = NSSize(width: 1115, height: 1115)
                 windowController.contentViewController = storyboard.instantiateController(withIdentifier: "VerifyOTPViewController") as? NSViewController
-                
-             
-                 
-                 NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.otpMessage),
-                                                     object: nil,
-                                                     userInfo: ["otpMessage": OTPMessage])
-                
                 windowController.showWindow(self)
                 window?.performClose(nil)
             
