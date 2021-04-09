@@ -203,9 +203,9 @@ class UploadWindowViewController: NSViewController,PauseResumeDelegate {
     }
     
     @objc private func onShowUploadCompleted(_ notification: Notification) {
-       // let uploadTableRecord  = notification.userInfo?["uploadRecord"] as! UploadTableRow
+        let uploadTableRecord  = notification.userInfo?["uploadRecord"] as! UploadTableRow
         tableView.reloadData()
-       // updateData(uploads: [uploadTableRecord])
+        updateRowData(row: uploadTableRecord.uniqueIndex, progress: Int(uploadTableRecord.uploadProgress), status: uploadTableRecord.completionStatusString)
     }
     
     func updateData(uploads: [UploadTableRow]) {

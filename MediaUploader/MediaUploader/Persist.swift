@@ -79,7 +79,7 @@ func retrieveData(completion: @escaping (_ record: UploadTableRow) -> Void) {
     }
 }
 
-func updateData(row: Int, progress : Int, status: String) {
+func updateRowData(row: Int, progress : Int, status: String) {
     let managedContext = AppDelegate.appDelegate.persistentContainer.viewContext
     let fetchRequest: NSFetchRequest<NSFetchRequestResult> = NSFetchRequest.init(entityName: "ShowEntity")
     fetchRequest.predicate = NSPredicate(format: "sn = %@", String(row))

@@ -142,6 +142,8 @@ class WindowViewController: NSViewController {
         static let reloadUploadTableView = "reloadUploadTableView"
         
         static let otpMessage = "otpMessage"
+        
+        static let generateOTP = "generateOTP"
     }
 }
 

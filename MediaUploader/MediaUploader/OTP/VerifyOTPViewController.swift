@@ -11,8 +11,10 @@ import Cocoa
 class VerifyOTPViewController: NSViewController, NSTextFieldDelegate {
     
     @IBOutlet weak var lblOTPMessage: NSTextField!
-    @IBOutlet weak var txtOTP: NSTextField!
+    @IBOutlet weak var txtPlainOTP: NSTextField!
+    @IBOutlet weak var txtSecureOTP: NSSecureTextField!
     @IBOutlet weak var btnSubmit: NSButton!
+    @IBOutlet weak var btnToggle: NSButton!
     let ACCEPTABLE_NUMBERS     = "0123456789"
     @IBOutlet weak var loadingIndicator: NSProgressIndicator!
     var strOTPMessage:String?
@@ -24,24 +26,30 @@ class VerifyOTPViewController: NSViewController, NSTextFieldDelegate {
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do view setup here.
-        txtOTP.delegate = self
-        let onlyIntFormatter = OnlyIntegerValueFormatter()
-        txtOTP.formatter = onlyIntFormatter
+
+        if let nonSecureTextField = txtPlainOTP{
+            nonSecureTextField.isHidden = true
+            btnToggle.image = NSImage(named: "closed-eye")
+        }
+ 
         self.hideIndicator()
     }
     
     @IBAction func btnSubmitClicked(_ sender: Any) {
+        
+        print("OTP : \(txtSecureOTP.stringValue)")
+        
         self.showIndicator()
-        if  !txtOTP.stringValue.isEmpty {
-            if txtOTP.stringValue.count < getOTPLength()! {
+        if  !txtSecureOTP.stringValue.isEmpty {
+            if txtSecureOTP.stringValue.count < getOTPLength()! {
                 hideIndicator()
-                showPopoverMessage(positioningView: txtOTP, msg: "Kindly enter correct OTP ")
+                showPopoverMessage(positioningView: txtSecureOTP, msg: "Kindly enter correct OTP ")
             }else {
-                VerifyOtpStr(otpStr: txtOTP.stringValue)
+                VerifyOtpStr(otpStr: txtSecureOTP.stringValue)
             }
         } else {
             hideIndicator()
-            showPopoverMessage(positioningView: txtOTP, msg: "Kindly enter OTP")
+            showPopoverMessage(positioningView: txtSecureOTP, msg: "Kindly enter OTP")
         }
     }
     
@@ -106,11 +114,24 @@ class VerifyOTPViewController: NSViewController, NSTextFieldDelegate {
     }
     
     
-//    @objc func passOTPMessage(_ notification: NSNotification) {
-//
-//        if let otpMessage = notification.userInfo?["otpMessage"] as? String {
-//            lblOTPMessage.stringValue = otpMessage
-//        }
-//    }
+    @IBAction func toggleSecureTextClicked(_ sender: Any) {
+        // If the secure text field is currently visible,
+        // then take its text and set it to the normal
+        // text field. Otherwise, do the opposite.
+        // In any case, don't forget to update the button's title.
+        
+        if !txtSecureOTP.isHidden {
+            txtPlainOTP.stringValue = txtSecureOTP.stringValue
+            btnToggle.image = NSImage(named: "openEye")
+        } else {
+            txtSecureOTP.stringValue = txtPlainOTP.stringValue
+            btnToggle.image = NSImage(named: "closed-eye")
+        }
+       // Change the hidden state of the secure text field
+        // and of the normal text field.
+        txtSecureOTP.isHidden = !txtSecureOTP.isHidden
+        txtPlainOTP.isHidden = !txtPlainOTP.isHidden
+ 
+    }
     
 }

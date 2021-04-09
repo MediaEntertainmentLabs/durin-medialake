@@ -215,6 +215,12 @@ class LoginViewController: NSViewController {
             selector: #selector(signOut(_:)),
             name: Notification.Name(WindowViewController.NotificationNames.logoutItem),
             object: nil)
+        
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(GenerateOTP),
+            name: Notification.Name(WindowViewController.NotificationNames.generateOTP),
+            object: nil)
     }
     
     
@@ -904,7 +910,7 @@ class LoginViewController: NSViewController {
         }
     }
     
-    private func GenerateOTP() {
+    @objc private func GenerateOTP() {
         print (" --------------- GenerateOTP ")
      
         generateOTP() { (result) in
@@ -953,8 +959,9 @@ class LoginViewController: NSViewController {
                 if(windowController == nil) {
                     windowController = storyboard.instantiateController(withIdentifier: "WindowController") as? WindowController
                 }
-                windowController.window?.contentMinSize = NSSize(width: 800, height:700 )
+                windowController.window?.contentMinSize = NSSize(width: 900, height:700 )
                 windowController.window?.contentMaxSize = NSSize(width: 1115, height: 1115)
+                
                 windowController.contentViewController = storyboard.instantiateController(withIdentifier: "VerifyOTPViewController") as? NSViewController
                 windowController.showWindow(self)
                 window?.performClose(nil)

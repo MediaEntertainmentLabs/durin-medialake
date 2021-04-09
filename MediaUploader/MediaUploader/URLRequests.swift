@@ -261,6 +261,11 @@ func fetchListOfShowsTask(completion: @escaping (_ shows: [String:Any]) -> Void)
     
     request.httpBody = jsonData
     
+    print("URL : \(showForUserURI)")
+    print("BODY \n \(String(decoding: request.httpBody!, as: UTF8.self))")
+    print("HEADERS \n \(String(describing: request.allHTTPHeaderFields))")
+    
+    
     let task = URLSession.shared.dataTask(with: request) { data, response, error in
         do {
             if error != nil {
@@ -270,11 +275,20 @@ func fetchListOfShowsTask(completion: @escaping (_ shows: [String:Any]) -> Void)
             
             if let httpResponse = response as? HTTPURLResponse {
                 if httpResponse.statusCode != 200 {
-                    // Convert HTTP Response Data to a simple String
-                    if let data = data, let dataString = String(data: data, encoding: .utf8) {
-                        print("Response: \(dataString)")
+                    
+                    if httpResponse.statusCode == 401 {
+                        if let data = data, let dataString = String(data: data, encoding: .utf8) {
+                            print("Response Code \(httpResponse.statusCode): Response : \(dataString)")
+                        }
+                        throw String(httpResponse.statusCode)
+                    }else {
+                        
+                        // Convert HTTP Response Data to a simple String
+                        if let data = data, let dataString = String(data: data, encoding: .utf8) {
+                            print("Response Code \(httpResponse.statusCode): Response : \(dataString)")
+                        }
+                        throw OutlineViewController.NameConstants.kFetchListOfShowsFailedStr
                     }
-                    throw OutlineViewController.NameConstants.kFetchListOfShowsFailedStr
                 }
             }
             
@@ -357,10 +371,16 @@ func fetchSeasonsAndEpisodesTask(showId: String, completion: @escaping (_ shows:
             }
             
             if let httpResponse = response as? HTTPURLResponse {
-                if httpResponse.statusCode != 200 {
+                
+                if httpResponse.statusCode == 401 {
+                    if let data = data, let dataString = String(data: data, encoding: .utf8) {
+                        print("Response Code \(httpResponse.statusCode): Response : \(dataString)")
+                    }
+                    throw String(httpResponse.statusCode)
+                }else {
                     // Convert HTTP Response Data to a simple String
                     if let data = data, let dataString = String(data: data, encoding: .utf8) {
-                        print("Response \(httpResponse.statusCode): \(dataString)")
+                        print("Response Code \(httpResponse.statusCode): Response : \(dataString)")
                     }
                     throw OutlineViewController.NameConstants.kFetchListOfSeasonsFailedStr
                 }
@@ -386,17 +406,19 @@ func fetchSeasonsAndEpisodesTask(showId: String, completion: @escaping (_ shows:
                 throw OutlineViewController.NameConstants.kFetchListOfSeasonsFailedStr
              }
             
-            let lastShootDay = "day000"
-            let shootDayFormat = "day001"
-            /*   // TO DO : waiting for lastShootDay,shootDayFormat from server , till than I am setting this default value, post response Actual value should be updated ; As per SONU on 06April2021
+            var lastShootDay = "day000"
+            var shootDayFormat = "day001"
+               // TO DO : waiting for lastShootDay,shootDayFormat from server , till than I am setting this default value, post response Actual value should be updated ; As per SONU on 06April2021
+            
+            if(responseJSON["lastShootDay"] as? String != nil){
+                lastShootDay = responseJSON["lastShootDay"] as? String ?? "day000"
+            }
+            
+            if(responseJSON["shootDayFormat"] as? String != nil){
+                shootDayFormat = responseJSON["shootDayFormat"] as? String ?? "day001"
+            }
+            
              
-             guard let lastShootDay = responseJSON["lastShootDay"] as? String else {
-             throw OutlineViewController.NameConstants.kFetchListOfSeasonsFailedStr
-             }
-             guard let shootDayFormat = responseJSON["shootDayFormat"] as? String else {
-             throw OutlineViewController.NameConstants.kFetchListOfSeasonsFailedStr
-             }
-             */
             for season in seasons {
                 var out_episodes = [(String,String)]()
                 for episode in episodes {

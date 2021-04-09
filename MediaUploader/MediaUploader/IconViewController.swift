@@ -203,14 +203,22 @@ class IconViewController: NSViewController {
             
             DispatchQueue.main.async {
                 if let error = result["error"] as? String {
-                    AppDelegate.retryContext["cdsUserId"] = LoginViewController.cdsUserId
-                    AppDelegate.lastError = AppDelegate.ErrorStatus.kFailedFetchListShows
-                    NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.ShowProgressViewControllerOnlyText),
-                                                    object: nil,
-                                                    userInfo: ["progressLabel" : error,
-                                                               "disableProgress" : true,
-                                                               "enableButton" : OutlineViewController.NameConstants.kRetryStr])
-                    return
+                    
+                    if error == "401" {
+                        self.view.window?.close()
+                        NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.logoutItem),
+                                                        object: nil)
+                        return
+                    }else {
+                        AppDelegate.retryContext["cdsUserId"] = LoginViewController.cdsUserId
+                        AppDelegate.lastError = AppDelegate.ErrorStatus.kFailedFetchListShows
+                        NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.ShowProgressViewControllerOnlyText),
+                                                        object: nil,
+                                                        userInfo: ["progressLabel" : error,
+                                                                   "disableProgress" : true,
+                                                                   "enableButton" : OutlineViewController.NameConstants.kRetryStr])
+                        return
+                    }
                 }
                 
                 self.listShows = result["data"] as! [[String : Any]]
