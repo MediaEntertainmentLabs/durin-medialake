@@ -204,7 +204,7 @@ class IconViewController: NSViewController {
             DispatchQueue.main.async {
                 if let error = result["error"] as? String {
                     
-                    if error == "401" {
+                    if error == OutlineViewController.NameConstants.OTPTokenExpired {
                         self.view.window?.close()
                         NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.logoutItem),
                                                         object: nil)
@@ -697,6 +697,9 @@ class IconViewController: NSViewController {
             if isResume {
                 args.append("--overwrite=false")
             }
+            args.append("--metadata")
+            args.append("source=mac client;type=raw file")
+            print("args :\(args)")
             uploadOperations.append(FileUploadOperation(showId: self.showId(showName: showName),
                                                         cdsUserId: LoginViewController.cdsUserId!,
                                                         sasToken: sasToken,

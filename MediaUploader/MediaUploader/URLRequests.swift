@@ -36,30 +36,30 @@ func postUploadFailureTask(params: [String:Any], completion: @escaping (_ result
     request.httpBody = jsonData
     
     let task = URLSession.shared.dataTask(with: request) { data, response, error in
-            if error != nil {
-                print("Error: \(String(describing: error))")
-                writeFile(strToWrite: (String(describing: error)), className: "URLRequest", functionName: "postUploadFailureTask")
+        if error != nil {
+            print("Error: \(String(describing: error))")
+            writeFile(strToWrite: (String(describing: error)), className: "URLRequest", functionName: "postUploadFailureTask")
+            completion(false)
+            return
+        }
+        
+        if let httpResponse = response as? HTTPURLResponse {
+            if httpResponse.statusCode != 200 {
+                if let data = data, let dataString = String(data: data, encoding: .utf8) {
+                    print("Response: \(dataString)")
+                    writeFile(strToWrite: dataString, className: "URLRequest", functionName: "postUploadFailureTask")
+                }
                 completion(false)
                 return
             }
-
-            if let httpResponse = response as? HTTPURLResponse {
-                if httpResponse.statusCode != 200 {
-                    if let data = data, let dataString = String(data: data, encoding: .utf8) {
-                        print("Response: \(dataString)")
-                        writeFile(strToWrite: dataString, className: "URLRequest", functionName: "postUploadFailureTask")
-                    }
-                    completion(false)
-                    return
-                }
-            }
-
-//            let responseJSON = try JSONSerialization.jsonObject(with: data!) as? [[String:String]]
-//            if responseJSON == nil {
-//                completion(false)
-//            }
-            completion(true)
-            return
+        }
+        
+        //            let responseJSON = try JSONSerialization.jsonObject(with: data!) as? [[String:String]]
+        //            if responseJSON == nil {
+        //                completion(false)
+        //            }
+        completion(true)
+        return
     }
     task.resume()
 }
@@ -76,7 +76,7 @@ func fetchListAPI_URLs(userApiURLs: String, completion: @escaping (_ shows: [Str
                 print("Error: \(String(describing: error))")
                 throw OutlineViewController.NameConstants.kFetchListOfShowsFailedStr
             }
-
+            
             if let httpResponse = response as? HTTPURLResponse {
                 if httpResponse.statusCode != 200 {
                     // Convert HTTP Response Data to a simple String
@@ -119,11 +119,19 @@ func fetchShowContentTask(sasURI : String, completion: @escaping (_ data: [Strin
             if let httpResponse = response as? HTTPURLResponse {
                 if httpResponse.statusCode != 200 {
                     // Convert HTTP Response Data to a simple String
-                    if let data = data, let dataString = String(data: data, encoding: .utf8) {
-                        print("Response: \(dataString)")
-                        writeFile(strToWrite: dataString, className: "URLRequest", functionName: "fetchShowContentTask")
+                    if httpResponse.statusCode == 401 {
+                        if let data = data, let dataString = String(data: data, encoding: .utf8) {
+                            print("Response Code \(httpResponse.statusCode): Response : \(dataString)")
+                        }
+                        throw String(httpResponse.statusCode)
+                    }else  {
+                        
+                        if let data = data, let dataString = String(data: data, encoding: .utf8) {
+                            print("Response: \(dataString)")
+                            writeFile(strToWrite: dataString, className: "URLRequest", functionName: "fetchShowContentTask")
+                        }
+                        throw OutlineViewController.NameConstants.kFetchShowContentFailedStr
                     }
-                    throw OutlineViewController.NameConstants.kFetchShowContentFailedStr
                 }
             }
             
@@ -173,11 +181,23 @@ func fetchSASTokenURLTask(showId: String, synchronous: Bool, completion: @escapi
             
             if let httpResponse = response as? HTTPURLResponse {
                 if httpResponse.statusCode != 200 {
-                    // Convert HTTP Response Data to a simple String
-                    if let data = data, let dataString = String(data: data, encoding: .utf8) {
-                        print("Response: \(dataString)")
+                    if httpResponse.statusCode == 401 {
+                        if let data = data, let dataString = String(data: data, encoding: .utf8) {
+                            print("Response Code \(httpResponse.statusCode): Response : \(dataString)")
+                            do {
+                                let dict = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any]
+                                throw "\(String(httpResponse.statusCode))?\(dict?["message"] ?? OutlineViewController.NameConstants.kFetchShowContentFailedStr)"
+                            }
+                        }else{
+                            throw OutlineViewController.NameConstants.kFetchShowContentFailedStr
+                        }
+                    }else {
+                        // Convert HTTP Response Data to a simple String
+                        if let data = data, let dataString = String(data: data, encoding: .utf8) {
+                            print("Response: \(dataString)")
+                        }
+                        throw OutlineViewController.NameConstants.kFetchShowContentFailedStr
                     }
-                    throw OutlineViewController.NameConstants.kFetchShowContentFailedStr
                 }
             }
             
@@ -228,8 +248,19 @@ func fetchSASToken(showName : String, showId : String, synchronous: Bool, comple
     } else {
         fetchSASTokenURLTask(showId: showId, synchronous: synchronous) { (result) in
             if let error = result["error"] as? String {
-                fetchShowContentErrorAndNotify(error: error, showName: showName, showId: showId)
-                return
+                
+                var strError = error
+                if error.contains(OutlineViewController.NameConstants.OTPTokenExpired) {
+                    let arrItem:[String]? = error.components(separatedBy: "?")
+                    if arrItem != nil , arrItem!.count > 1 {
+                        strError = arrItem![1]
+                    }
+                    otpExpiredShowLoginScreen(error: strError, showName: showName, showId: showId)
+                    return
+                }else {
+                    fetchShowContentErrorAndNotify(error: strError, showName: showName, showId: showId)
+                    return
+                }
             }
             
             if let value = result["data"] as? String {
@@ -281,8 +312,8 @@ func fetchListOfShowsTask(completion: @escaping (_ shows: [String:Any]) -> Void)
                             print("Response Code \(httpResponse.statusCode): Response : \(dataString)")
                         }
                         throw String(httpResponse.statusCode)
-                    }else {
-                        
+                    }else
+                    {
                         // Convert HTTP Response Data to a simple String
                         if let data = data, let dataString = String(data: data, encoding: .utf8) {
                             print("Response Code \(httpResponse.statusCode): Response : \(dataString)")
@@ -371,18 +402,19 @@ func fetchSeasonsAndEpisodesTask(showId: String, completion: @escaping (_ shows:
             }
             
             if let httpResponse = response as? HTTPURLResponse {
-                
-                if httpResponse.statusCode == 401 {
-                    if let data = data, let dataString = String(data: data, encoding: .utf8) {
-                        print("Response Code \(httpResponse.statusCode): Response : \(dataString)")
+                if httpResponse.statusCode != 200 {
+                    if httpResponse.statusCode == 401 {
+                        if let data = data, let dataString = String(data: data, encoding: .utf8) {
+                            print("Response Code \(httpResponse.statusCode): Response : \(dataString)")
+                        }
+                        throw String(httpResponse.statusCode)
+                    }else {
+                        // Convert HTTP Response Data to a simple String
+                        if let data = data, let dataString = String(data: data, encoding: .utf8) {
+                            print("Response Code \(httpResponse.statusCode): Response : \(dataString)")
+                        }
+                        throw OutlineViewController.NameConstants.kFetchListOfSeasonsFailedStr
                     }
-                    throw String(httpResponse.statusCode)
-                }else {
-                    // Convert HTTP Response Data to a simple String
-                    if let data = data, let dataString = String(data: data, encoding: .utf8) {
-                        print("Response Code \(httpResponse.statusCode): Response : \(dataString)")
-                    }
-                    throw OutlineViewController.NameConstants.kFetchListOfSeasonsFailedStr
                 }
             }
             
@@ -397,18 +429,18 @@ func fetchSeasonsAndEpisodesTask(showId: String, completion: @escaping (_ shows:
             guard let seasons = responseJSON["seasons"] as? [[String:Any]] else {
                 throw OutlineViewController.NameConstants.kFetchListOfSeasonsFailedStr
             }
-           
+            
             guard let episodes = responseJSON["episodes"] as? [[String:String]] else {
                 throw OutlineViewController.NameConstants.kFetchListOfSeasonsFailedStr
-             }
+            }
             
             guard let blocks = responseJSON["blocks"] as? [[String:String]] else {
                 throw OutlineViewController.NameConstants.kFetchListOfSeasonsFailedStr
-             }
+            }
             
             var lastShootDay = "day000"
             var shootDayFormat = "day001"
-               // TO DO : waiting for lastShootDay,shootDayFormat from server , till than I am setting this default value, post response Actual value should be updated ; As per SONU on 06April2021
+            // TO DO : waiting for lastShootDay,shootDayFormat from server , till than I am setting this default value, post response Actual value should be updated ; As per SONU on 06April2021
             
             if(responseJSON["lastShootDay"] as? String != nil){
                 lastShootDay = responseJSON["lastShootDay"] as? String ?? "day000"
@@ -418,7 +450,7 @@ func fetchSeasonsAndEpisodesTask(showId: String, completion: @escaping (_ shows:
                 shootDayFormat = responseJSON["shootDayFormat"] as? String ?? "day001"
             }
             
-             
+            
             for season in seasons {
                 var out_episodes = [(String,String)]()
                 for episode in episodes {

@@ -18,6 +18,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         case kFailedFetchSeasonsAndEpisodes
         case kFailedGenerateOTP
         case kFailedVerifyOTP
+        case kOTPExpired
     }
     
     var mainWindowController : NSWindowController!

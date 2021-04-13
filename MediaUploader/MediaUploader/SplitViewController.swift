@@ -152,6 +152,15 @@ class SplitViewController: NSSplitViewController {
         } else {
             progressViewController.progressButton.isHidden = true
         }
+        
+        if let buttonLabel = notification.userInfo?["TokenExpired"] as? String {
+            progressViewController.progressButton.title = buttonLabel
+            progressViewController.progressButton.isHidden = false
+            progressViewController.progressIndicator.isHidden = true
+        } else {
+            progressViewController.progressButton.isHidden = true
+        }
+        
         embedChildViewController(progressViewController)
     }
     

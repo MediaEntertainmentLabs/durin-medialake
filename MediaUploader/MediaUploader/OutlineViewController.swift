@@ -38,6 +38,9 @@ class OutlineViewController: NSViewController,
         static let userAuthToken = NSLocalizedString("x-auth-token", comment: "")
         static let STRING_EMPTY = NSLocalizedString("", comment: "")
         static let otpLength = NSLocalizedString("otpLength", comment: "")
+        static let OTPTokenExpired = NSLocalizedString("401", comment: "")
+        static let kSignIn = NSLocalizedString("Sign In", comment: "")
+        static let kProceed = NSLocalizedString("Proceed", comment: "")
      }
         
     // The data source backing of the NSOutlineView.
@@ -173,8 +176,16 @@ class OutlineViewController: NSViewController,
         fetchShowContentTask(sasURI: fetchShowContentURI) { (result) in
             
             if let error = result["error"] as? String {
-                fetchShowContentErrorAndNotify(error: error, showName: showName, showId: showId)
-                return
+                
+                if error == OutlineViewController.NameConstants.OTPTokenExpired {
+                    self.view.window?.close()
+                    NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.logoutItem),
+                                                    object: nil)
+                    return
+                }else {
+                    fetchShowContentErrorAndNotify(error: error, showName: showName, showId: showId)
+                    return
+                }
             }
             guard let data = result["data"] as? Data else { fetchShowContentErrorAndNotify(error: "Failed to retrieve show content!", showName: showName, showId: showId); return }
             self.xmlParser = XMLResponseParser(data: data)

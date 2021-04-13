@@ -44,6 +44,12 @@ class ProgressViewController: NSViewController {
                     object: nil,
                     userInfo: ["showName" : showName, "showId": showId, "cdsUserId" : cdsUserId])
             }
+        } else if AppDelegate.lastError == AppDelegate.ErrorStatus.kOTPExpired {
+            updateUI(label: OutlineViewController.NameConstants.kProceed)
+            self.view.window?.close()
+            NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.logoutItem),
+                                                object: nil)
+            
         } else if AppDelegate.lastError == AppDelegate.ErrorStatus.kFailedUploadShowSASToken{
             if let cdsUserId = AppDelegate.retryContext["cdsUserId"],
                let showId = AppDelegate.retryContext["showId"] {

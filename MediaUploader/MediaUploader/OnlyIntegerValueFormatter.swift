@@ -18,7 +18,7 @@ class OnlyIntegerValueFormatter: NumberFormatter {
         }
 
         guard let otpLength = getOTPLength() else {
-            writeFile(strToWrite: OutlineViewController.NameConstants.unableToFindUserToken, className: "URLRequest", functionName: "fetchSASTokenURLTask")
+            writeFile(strToWrite: OutlineViewController.NameConstants.unableToFindUserToken, className: "OnlyIntegerValueFormatter", functionName: "isPartialStringValid")
             return true
         }
         
