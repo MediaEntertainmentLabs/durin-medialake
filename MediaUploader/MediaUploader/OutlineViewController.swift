@@ -26,6 +26,8 @@ class OutlineViewController: NSViewController,
         static let kFetchShowContentFailedStr = NSLocalizedString("fetch show content fail string", comment: "")
         static let kFetchListOfSeasonsFailedStr = NSLocalizedString("fetch seasons fail string", comment: "")
         static let kUploadShowFailedStr = NSLocalizedString("upload show fail string", comment: "")
+        static let kInProgressStr = NSLocalizedString("in progress string", comment: "")
+        static let kPausedStr = NSLocalizedString("paused string", comment: "")
     }
         
     // The data source backing of the NSOutlineView.
@@ -39,7 +41,6 @@ class OutlineViewController: NSViewController,
     // Outline view content top-level content (backed by NSTreeController).
     @objc dynamic var contents: [AnyObject] = []
     
-    //var sasToken : String!
     var currentShowName:  String!
     var currentShowId: String!
     
@@ -47,20 +48,12 @@ class OutlineViewController: NSViewController,
     
     var rowToAdd = -1 // A flagged row being added (for later renaming after it was added).
     
-    // MARK: XMLParser variables
-    let recordKey = "Blob"
-    let dictionaryKeys = Set<String>(["Name", "Content-Length"])
-
+    var xmlParser: XMLResponseParser?
+    var root: TreeElement!
     
-    // a few variables to hold the results as we parse the XML
-    var results: [[String: String]]?           // the whole array of dictionaries
-    var currentDictionary: [String: String]? // the current dictionary
-    var currentValue: String?                  // the current value for one of the keys in the dictionary
-    var root : TreeElement!
-    
-    var cancelTask : Bool = false
+    var cancelTask: Bool = false
 
-    var expireTimer : Timer!
+    var expireTimer: Timer!
     
     // MARK: View Controller Lifecycle
     
@@ -142,37 +135,30 @@ class OutlineViewController: NSViewController,
             userInfo: ["showName" : currentShowName, "showId": currentShowId])
     }
     
-    
     private func fetchShowContent(showName : String, showId : String) {
         
-        var fetchShowContentURI : String!
-        if let sasToken = AppDelegate.cacheSASTokens[showName] {
-            if let value = sasToken.value() {
-                fetchShowContentURI = value + "&restype=container&comp=list"
-            }
-        } else {
-            fetchSASTokenURLTask(showId: showId, synchronous: false) { (result) in
-                if let error = result["error"] as? String {
-                    fetchShowContentErrorAndNotify(error: error, showName: showName, showId: showId)
-                    return
-                }
-                
-                if let sasToken = result["data"] as? String {
-                    fetchShowContentURI = sasToken + "&restype=container&comp=list"
-                    AppDelegate.cacheSASTokens[showName]=SASToken(showId : showId, sasToken: sasToken)
-                    
-                    NotificationCenter.default.post(
-                        name: Notification.Name(WindowViewController.NotificationNames.IconSelectionChanged),
-                        object: nil,
-                        userInfo: ["showName" : showName, "showId" : showId, "cdsUserId" : LoginViewController.cdsUserId!])
-                }
+        var sasToken : String!
+        
+        fetchSASToken(showName: showName, showId: showId, synchronous: false) { (result,state) in
+            switch state {
+            case .pending:
+                return
+            case .cached:
+                sasToken = result
+            case .completed:
+                NotificationCenter.default.post(
+                    name: Notification.Name(WindowViewController.NotificationNames.IconSelectionChanged),
+                    object: nil,
+                    userInfo: ["showName" : showName, "showId" : showId, "cdsUserId" : LoginViewController.cdsUserId!])
             }
         }
         
         // pending task completion
-        if fetchShowContentURI == nil {
+        if sasToken == nil {
             return
         }
+        
+        let fetchShowContentURI = sasToken + "&restype=container&comp=list"
         
         fetchShowContentTask(sasURI: fetchShowContentURI) { (result) in
             
@@ -181,18 +167,17 @@ class OutlineViewController: NSViewController,
                 return
             }
             guard let data = result["data"] as? Data else { fetchShowContentErrorAndNotify(error: "Failed to retrieve show content!", showName: showName, showId: showId); return }
-            let parser = XMLParser(data: data)
-            parser.delegate = self
-            parser.parse()
+            self.xmlParser = XMLResponseParser(data: data)
             
+            guard let parser = self.xmlParser else {  fetchShowContentErrorAndNotify(error: "Failed to retrieve show content!", showName: showName, showId: showId); return }
             self.root = nil
             
-            if self.results == nil {
+            if parser.results == nil {
                 fetchShowContentErrorAndNotify(error: "Failed to retrieve show content!", showName: showName, showId: showId)
                 return
             }
             
-            for item in self.results! as [[String : String]] {
+            for item in parser.results! as [[String : String]] {
                 let components = NSString(string: item["Name"]!).pathComponents
                 var reversedComponents : [String] = Array(components.reversed())
                 if self.root == nil {
@@ -311,59 +296,6 @@ class OutlineViewController: NSViewController,
             self,
             name: Notification.Name(WindowViewController.NotificationNames.ClearShowContent),
             object: nil)
-    }
-}
-
-extension OutlineViewController: XMLParserDelegate {
-    
-    // initialize results structure
-    func parserDidStartDocument(_ parser: XMLParser) {
-        results = []
-    }
-    
-    // start element
-    //
-    // - If we're starting a "record" create the dictionary that will hold the results
-    // - If we're starting one of our dictionary keys, initialize `currentValue` (otherwise leave `nil`)
-    func parser(_ parser: XMLParser, didStartElement elementName: String, namespaceURI: String?, qualifiedName qName: String?, attributes attributeDict: [String : String]) {
-        
-        if elementName == recordKey {
-            currentDictionary = [:]
-        } else if dictionaryKeys.contains(elementName) {
-            currentValue = ""
-        }
-    }
-    
-    // found characters
-    //
-    // - If this is an element we care about, append those characters.
-    // - If `currentValue` still `nil`, then do nothing.
-    func parser(_ parser: XMLParser, foundCharacters string: String) {
-        currentValue? += string
-    }
-    
-    // end element
-    //
-    // - If we're at the end of the whole dictionary, then save that dictionary in our array
-    // - If we're at the end of an element that belongs in the dictionary, then save that value in the dictionary
-    func parser(_ parser: XMLParser, didEndElement elementName: String, namespaceURI: String?, qualifiedName qName: String?) {
-        if results != nil && elementName == recordKey {
-            results!.append(currentDictionary!)
-            currentDictionary = nil
-        } else if dictionaryKeys.contains(elementName) {
-            currentDictionary![elementName] = currentValue
-            currentValue = nil
-        }
-    }
-    
-    // Just in case, if there an error, report it. (We don't want to fly blind here.)
-    
-    func parser(_ parser: XMLParser, parseErrorOccurred parseError: Error) {
-        print(parseError)
-        
-        currentValue = nil
-        currentDictionary = nil
-        results = nil
     }
 }
     

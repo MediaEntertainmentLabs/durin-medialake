@@ -22,6 +22,7 @@ class Node: NSObject, Codable {
     var url: URL?
     var is_group_node : Bool = false
     var is_upload_allowed : Bool = false
+    var studioName:String = ""
     @objc dynamic var children = [Node]()
 }
 

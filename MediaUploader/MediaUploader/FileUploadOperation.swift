@@ -13,6 +13,7 @@ final class FileUploadOperation: AsyncOperation {
     enum UploadType {
         case kMetadataJsonUpload
         case kDataUpload
+        case kDataRemove
     }
     
     private let showId: String
@@ -21,8 +22,8 @@ final class FileUploadOperation: AsyncOperation {
     
     var uploadRecord : UploadTableRow?
     var completionStatus : Int
-
-    private let args: [String]
+    
+    var args: [String]
     private let step: FileUploadOperation.UploadType
     
     // upload being performed in two steps:
@@ -44,13 +45,19 @@ final class FileUploadOperation: AsyncOperation {
 
     override func main() {
         let (_, error, status) = runAzCopyCommand(cmd: LoginViewController.azcopyPath.path, args: self.args)
+        if isCancelled {
+            print ("------------(\(addressHeap(o: self))) Upload canceled!")
+            uploadRecord?.completionStatusString = OutlineViewController.NameConstants.kPausedStr
+            uploadRecord?.pauseResumeStatus = .pause
+            return
+        }
         
- 
         if status == 0 {
-            
-            if self.step == UploadType.kMetadataJsonUpload {
-                print ("------------  Completed successfully: \(sasToken) ")
-                print ("------------  Cleanup of ", self.args[1])
+            if self.step == UploadType.kDataRemove {
+                print ("------------(\(addressHeap(o: self))) Remove of data completed successfully!")
+            } else if self.step == UploadType.kMetadataJsonUpload {
+                print ("------------(\(addressHeap(o: self))) Completed successfully: \(sasToken) ")
+                print ("------------(\(addressHeap(o: self))) Cleanup of ", self.args[1])
                 removeFile(path: self.args[1])
                 
 
@@ -61,46 +68,36 @@ final class FileUploadOperation: AsyncOperation {
                    
                     uploadRecord.uploadProgress = 100.0
                     uploadRecord.completionStatusString = "Completed"
-                    print ("------------  Upload of data completed successfully!")
-                    NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.UpdateShowUploadProgress),
+                    print ("------------\(self.addressHeap(o: self)) Upload of data completed successfully!")
+                    NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.ShowUploadCompleted),
                                                     object: nil,
-                                                    userInfo: ["showName" : uploadRecord.showName,
-                                                               "progress" : uploadRecord.uploadProgress])
-                    // update show content
-//                    NotificationCenter.default.post(
-//                        name: Notification.Name(WindowViewController.NotificationNames.ShowProgressViewController),
-//                        object: nil,
-//                        userInfo: ["progressLabel" : kFetchingShowContentStr])
-//
-//                    NotificationCenter.default.post(
-//                        name: Notification.Name(WindowViewController.NotificationNames.IconSelectionChanged),
-//                        object: nil,
-//                        userInfo: ["showName" : self.showName, "showId": self.showId, "cdsUserId" : self.cdsUserId])
-                    
+                                                    userInfo: ["uploadRecord" : uploadRecord])
                 }
             }
         } else {
             DispatchQueue.main.async {
                 if self.step == UploadType.kMetadataJsonUpload {
-                    for dep in self.dependens {
-                        print(dep.uploadRecord!.completionStatusString)
-                        dep.uploadRecord!.uploadProgress = 100.0
-                        print ("------------  Upload failed, error: ", error)
+                    for dep in self.dependens where dep.uploadRecord != nil {
+                        dep.uploadRecord!.completionStatusString = "Failed"
+                        print ("------------(\(self.addressHeap(o: self))) Metadata.json upload failed, error: ", error)
                         
                         uploadShowErrorAndNotify(error: OutlineViewController.NameConstants.kUploadShowFailedStr, params: dep.uploadRecord!.uploadParams, operation: self)
+                        
+                        NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.ShowUploadCompleted),
+                                                        object: nil,
+                                                        userInfo: ["uploadRecord" : dep.uploadRecord!])
                     }
                 } else if self.step == UploadType.kDataUpload {
                     
                     guard let uploadRecord = self.uploadRecord else { return }
-                   
-                    print(uploadRecord.completionStatusString)
-                    uploadRecord.uploadProgress = 100.0
-                    print ("------------  Upload failed, error: ", error)
+                    uploadRecord.completionStatusString = "Failed"
+                    print ("------------(\(self.addressHeap(o: self)))  Data upload failed, status: \(status) error: \(error)")
                     uploadShowErrorAndNotify(error: OutlineViewController.NameConstants.kUploadShowFailedStr, params: uploadRecord.uploadParams, operation: self)
+                    
+                    NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.ShowUploadCompleted),
+                                                    object: nil,
+                                                    userInfo: ["uploadRecord" : uploadRecord])
                 }
- 
-                NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.UpdateShowUploadProgress),
-                                                object: nil)
             }
         }
         self.finish()
@@ -128,16 +125,23 @@ final class FileUploadOperation: AsyncOperation {
         //task.standardError = errpipe
 
         var terminationObserver : NSObjectProtocol!
+        var outpipeObserver : NSObjectProtocol!
         terminationObserver = NotificationCenter.default.addObserver(forName: Process.didTerminateNotification,
                                                       object: task, queue: nil) { notification -> Void in
+            print("------------(\(self.addressHeap(o: self))) terminationObserver completion: terminate")
             if let observer = terminationObserver {
+                print("------------(\(self.addressHeap(o: self))) terminationObserver(\(observer)) completion: remove terminationObserver")
+                NotificationCenter.default.removeObserver(observer)
+            }
+            if let observer = outpipeObserver {
+                print("------------(\(self.addressHeap(o: self))) terminationObserver(\(observer)) completion: remove outpipeObserver")
                 NotificationCenter.default.removeObserver(observer)
             }
         }
         
         
         outpipe.fileHandleForReading.waitForDataInBackgroundAndNotify()
-        var outpipeObserver : NSObjectProtocol!
+
         outpipeObserver = NotificationCenter.default.addObserver(forName: NSNotification.Name.NSFileHandleDataAvailable, object: outpipe.fileHandleForReading , queue: nil) {
             notification in
             let output = outpipe.fileHandleForReading.availableData
@@ -188,14 +192,23 @@ final class FileUploadOperation: AsyncOperation {
                 error = error_output
                 return
             }
-     
+            
+            if self.uploadRecord?.pauseResumeStatus == .pause {
+                task.terminate()
+                self.cancel()
+                return
+            }
+            
             // advance progress only for actually upload data stage
             if !result.isEmpty && self.step == FileUploadOperation.UploadType.kDataUpload {
                 
                 guard let uploadRecord = self.uploadRecord else { return }
-               
-                uploadRecord.uploadProgress = ceil(Double(result[0][0])! + 0.5)
-                print("------------ progress : ", uploadRecord.showName, " ", uploadRecord.uploadProgress, " >> ", result[0])
+                let progress = ceil(Double(result[0][0])!)
+                // normalize progress after resume
+                let newRange = 100.0 - min(100.0, uploadRecord.resumeProgress)
+                let oldRange = 100.0
+                uploadRecord.uploadProgress = uploadRecord.resumeProgress + progress*(newRange/oldRange)
+                print("------------(\(self.addressHeap(o: self))) progress: \(uploadRecord.showName) resume: \(uploadRecord.resumeProgress) curr: \(uploadRecord.uploadProgress) azcopy: \(result[0])")
             }
             
             DispatchQueue.main.async {
@@ -252,7 +265,8 @@ final class FileUploadOperation: AsyncOperation {
         let resultString = getCompletionStatusString(inputString: inputString)
         if !resultString.isEmpty {
             
-            if resultString != "Completed" {
+            // CompletedWithSkipped will occur if dir remotely exist but we choose Append mode at start of Upload
+            if resultString != "Completed" && resultString != "CompletedWithSkipped" {
                 if self.step == UploadType.kMetadataJsonUpload {
                     for dep in self.dependens {
                         guard let uploadRecord = dep.uploadRecord else { continue }
@@ -263,6 +277,7 @@ final class FileUploadOperation: AsyncOperation {
                     if self.uploadRecord != nil {
                         self.uploadRecord!.completionStatusString = resultString
                     }
+                    print ("------------(\(addressHeap(o: self)) AzCopy resultString: \(resultString)")
                     error = "Failed AzCopy data Upload!"
                 }
                 
@@ -271,6 +286,15 @@ final class FileUploadOperation: AsyncOperation {
         }
         return (0, error)
     }
+    
+    func address(o: UnsafeRawPointer) -> Int {
+        return Int(bitPattern: o)
+    }
+    
+    func addressHeap<T: AnyObject>(o: T) -> Int {
+        return unsafeBitCast(o, to: Int.self)
+    }
+    
 }
 
 

@@ -20,9 +20,10 @@
 		731C9887252EEAE0008E8A75 /* SplitViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 731C9886252EEAE0008E8A75 /* SplitViewController.swift */; };
 		731C9889252EF427008E8A75 /* WindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 731C9888252EF427008E8A75 /* WindowController.swift */; };
 		C917DDCC25B01D7F00B967B8 /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C917DDCA25B01D6400B967B8 /* AppKit.framework */; };
-		C917DDCF25B0229B00B967B8 /* IconViewSectionHeader.xib in Resources */ = {isa = PBXBuildFile; fileRef = C97A62D625AF915F0062A3D9 /* IconViewSectionHeader.xib */; };
 		C917DDD125B2075F00B967B8 /* RightPaneToolPalette.xib in Resources */ = {isa = PBXBuildFile; fileRef = C917DDD025B2075F00B967B8 /* RightPaneToolPalette.xib */; };
 		C917DDD325B226F500B967B8 /* RightPaneToolPalette.swift in Sources */ = {isa = PBXBuildFile; fileRef = C917DDD225B226F500B967B8 /* RightPaneToolPalette.swift */; };
+		C93C43B525D59F710032F417 /* CheckPathExistsOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = C93C43B425D59F710032F417 /* CheckPathExistsOperation.swift */; };
+		C93C43B725D687360032F417 /* XMLResponseParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = C93C43B625D687360032F417 /* XMLResponseParser.swift */; };
 		C95E74E7257ACEB80073410F /* AsyncOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = C95E74E6257ACEB80073410F /* AsyncOperation.swift */; };
 		C95F6C1A2580B8B20008D8A0 /* ErrorHandling.swift in Sources */ = {isa = PBXBuildFile; fileRef = C95F6C192580B8B20008D8A0 /* ErrorHandling.swift */; };
 		C95F6C1C2582B6EE0008D8A0 /* FileUploadOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = C95F6C1B2582B6EE0008D8A0 /* FileUploadOperation.swift */; };
@@ -52,6 +53,17 @@
 		C987BB2B2534CF5400A440A7 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = C987BB2A2534CF5400A440A7 /* Localizable.strings */; };
 		C987BB35253CC93E00A440A7 /* CustomTableCellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C987BB34253CC93E00A440A7 /* CustomTableCellView.swift */; };
 		C987BB37255BC97B00A440A7 /* LoginViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C987BB36255BC97B00A440A7 /* LoginViewController.swift */; };
+		C9C5362A25DE74D7006AF531 /* TextFiledTypeFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9C5362925DE74D7006AF531 /* TextFiledTypeFormatter.swift */; };
+		C9C5364825DFB2C0006AF531 /* StringConstant.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9C5364725DFB2C0006AF531 /* StringConstant.swift */; };
+		C9C536E925E5635C006AF531 /* UploadStatusTableCellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9C536E825E5635C006AF531 /* UploadStatusTableCellView.swift */; };
+		C9DF48DD25D59EF30016626F /* ALESelectionViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9DF48DB25D59EF30016626F /* ALESelectionViewController.swift */; };
+		C9DF48DE25D59EF30016626F /* ALESelectionViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = C9DF48DC25D59EF30016626F /* ALESelectionViewController.xib */; };
+		C9DF490825D717520016626F /* CustomALECell.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9DF490725D717520016626F /* CustomALECell.swift */; };
+		C9E6C1DE25C17BFA00F07B3D /* azcopy in Resources */ = {isa = PBXBuildFile; fileRef = C9E6C1DD25C17BFA00F07B3D /* azcopy */; };
+		C9E6C1E825C17DCB00F07B3D /* IconViewSectionHeader.xib in Resources */ = {isa = PBXBuildFile; fileRef = C9E6C1E725C17DCB00F07B3D /* IconViewSectionHeader.xib */; };
+		C9E6C1F325C86BFF00F07B3D /* CustomUploadCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9E6C1F225C86BFF00F07B3D /* CustomUploadCell.swift */; };
+		C9FCF94825E3D740009335CF /* uploadsModelData.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = C9FCF94625E3D740009335CF /* uploadsModelData.xcdatamodeld */; };
+		C9FCF94A25E4E4F3009335CF /* Persist.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9FCF94925E4E4F3009335CF /* Persist.swift */; };
 		E27783F0928EA7F319BDE5D4 /* Pods_MediaUploader.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 78F0B96BC353C152F8ADDF9A /* Pods_MediaUploader.framework */; };
 /* End PBXBuildFile section */
 
@@ -96,6 +108,8 @@
 		C917DDCA25B01D6400B967B8 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
 		C917DDD025B2075F00B967B8 /* RightPaneToolPalette.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = RightPaneToolPalette.xib; sourceTree = "<group>"; };
 		C917DDD225B226F500B967B8 /* RightPaneToolPalette.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RightPaneToolPalette.swift; sourceTree = "<group>"; };
+		C93C43B425D59F710032F417 /* CheckPathExistsOperation.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CheckPathExistsOperation.swift; sourceTree = "<group>"; };
+		C93C43B625D687360032F417 /* XMLResponseParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = XMLResponseParser.swift; sourceTree = "<group>"; };
 		C95E74E6257ACEB80073410F /* AsyncOperation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncOperation.swift; sourceTree = "<group>"; };
 		C95F6C192580B8B20008D8A0 /* ErrorHandling.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorHandling.swift; sourceTree = "<group>"; };
 		C95F6C1B2582B6EE0008D8A0 /* FileUploadOperation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileUploadOperation.swift; sourceTree = "<group>"; };
@@ -119,7 +133,6 @@
 		C97795AC256EC65100BEE3CE /* AzureCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AzureCore.framework; path = ThirdPartyFrameworks/AzureCore.framework; sourceTree = "<group>"; };
 		C97795B0256EC65D00BEE3CE /* AzureIdentity.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AzureIdentity.framework; path = ThirdPartyFrameworks/AzureIdentity.framework; sourceTree = "<group>"; };
 		C97795B3256EC66700BEE3CE /* AzureStorageBlob.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AzureStorageBlob.framework; path = ThirdPartyFrameworks/AzureStorageBlob.framework; sourceTree = "<group>"; };
-		C97A62D625AF915F0062A3D9 /* IconViewSectionHeader.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = IconViewSectionHeader.xib; path = "/Users/codecs/Documents/git/durin-medialake/MediaUploader/IconViewSectionHeader.xib"; sourceTree = "<absolute>"; };
 		C97A62D725AF93950062A3D9 /* IconViewSectionHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IconViewSectionHeader.swift; sourceTree = "<group>"; };
 		C9807E64257E8FD400488E46 /* ProgressViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressViewController.swift; sourceTree = "<group>"; };
 		C9807E65257E8FD400488E46 /* ProgressViewController.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = ProgressViewController.xib; sourceTree = "<group>"; };
@@ -129,6 +142,18 @@
 		C987BB2A2534CF5400A440A7 /* Localizable.strings */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; path = Localizable.strings; sourceTree = "<group>"; };
 		C987BB34253CC93E00A440A7 /* CustomTableCellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomTableCellView.swift; sourceTree = "<group>"; };
 		C987BB36255BC97B00A440A7 /* LoginViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginViewController.swift; sourceTree = "<group>"; };
+		C9C5362925DE74D7006AF531 /* TextFiledTypeFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextFiledTypeFormatter.swift; sourceTree = "<group>"; };
+		C9C5364725DFB2C0006AF531 /* StringConstant.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StringConstant.swift; sourceTree = "<group>"; };
+		C9C536E825E5635C006AF531 /* UploadStatusTableCellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UploadStatusTableCellView.swift; sourceTree = "<group>"; };
+		C9DF48DB25D59EF30016626F /* ALESelectionViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ALESelectionViewController.swift; sourceTree = "<group>"; };
+		C9DF48DC25D59EF30016626F /* ALESelectionViewController.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = ALESelectionViewController.xib; sourceTree = "<group>"; };
+		C9DF490725D717520016626F /* CustomALECell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomALECell.swift; sourceTree = "<group>"; };
+		C9E6C1DD25C17BFA00F07B3D /* azcopy */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = azcopy; sourceTree = "<group>"; };
+		C9E6C1E725C17DCB00F07B3D /* IconViewSectionHeader.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = IconViewSectionHeader.xib; sourceTree = SOURCE_ROOT; };
+		C9E6C1F225C86BFF00F07B3D /* CustomUploadCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomUploadCell.swift; sourceTree = "<group>"; };
+		C9EBD23025DFDCED00C26041 /* TextFiledTypeFormatter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TextFiledTypeFormatter.swift; sourceTree = "<group>"; };
+		C9FCF94725E3D740009335CF /* uploadsModelData.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = uploadsModelData.xcdatamodel; sourceTree = "<group>"; };
+		C9FCF94925E4E4F3009335CF /* Persist.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Persist.swift; sourceTree = "<group>"; };
 		D31C6861B88CE631791592C4 /* Pods-MediaUploader.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MediaUploader.debug.xcconfig"; path = "Target Support Files/Pods-MediaUploader/Pods-MediaUploader.debug.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -171,6 +196,7 @@
 		731C9840252DE9DB008E8A75 = {
 			isa = PBXGroup;
 			children = (
+				C9E6C1DD25C17BFA00F07B3D /* azcopy */,
 				731C984B252DE9DB008E8A75 /* MediaUploader */,
 				C961739E25911C7500F037EB /* Package */,
 				C97621D6256BA93700C48E15 /* Resources */,
@@ -195,6 +221,10 @@
 		731C984B252DE9DB008E8A75 /* MediaUploader */ = {
 			isa = PBXGroup;
 			children = (
+				C9EBD23025DFDCED00C26041 /* TextFiledTypeFormatter.swift */,
+				C9DF48D425D59CF60016626F /* ALE Parser */,
+				C9E6C1F125C86B6A00F07B3D /* UI Utills */,
+				C9E6C1E725C17DCB00F07B3D /* IconViewSectionHeader.xib */,
 				C962D1A6258AA7000012F684 /* Utils */,
 				731C984C252DE9DB008E8A75 /* AppDelegate.swift */,
 				C97621D2256BA90900C48E15 /* CollectionViewItem.swift */,
@@ -253,6 +283,7 @@
 		C962D1A6258AA7000012F684 /* Utils */ = {
 			isa = PBXGroup;
 			children = (
+				C93C43B425D59F710032F417 /* CheckPathExistsOperation.swift */,
 				C95E74E6257ACEB80073410F /* AsyncOperation.swift */,
 				C961739B25910B5800F037EB /* CalculateChecksumOperation.swift */,
 				C95F6C192580B8B20008D8A0 /* ErrorHandling.swift */,
@@ -261,6 +292,10 @@
 				C9807E68257F923A00488E46 /* Utils.swift */,
 				C96173A325933C2A00F037EB /* URLRequests.swift */,
 				C96173A82593B4EF00F037EB /* SASToken.swift */,
+				C93C43B625D687360032F417 /* XMLResponseParser.swift */,
+				C9C5362925DE74D7006AF531 /* TextFiledTypeFormatter.swift */,
+				C9C5364725DFB2C0006AF531 /* StringConstant.swift */,
+				C9FCF94925E4E4F3009335CF /* Persist.swift */,
 			);
 			name = Utils;
 			sourceTree = "<group>";
@@ -269,9 +304,9 @@
 			isa = PBXGroup;
 			children = (
 				C96173A62593AFA600F037EB /* azcopy */,
+				C9FCF94625E3D740009335CF /* uploadsModelData.xcdatamodeld */,
 				731C9852252DE9DC008E8A75 /* Main.storyboard */,
 				C97621D3256BA90900C48E15 /* CollectionViewItem.xib */,
-				C97A62D625AF915F0062A3D9 /* IconViewSectionHeader.xib */,
 				C97621DC256C1C4400C48E15 /* UploadSettingsViewController.xib */,
 				731C9856252DE9DD008E8A75 /* MediaUploader.entitlements */,
 				C97621D7256BABCA00C48E15 /* Info.plist */,
@@ -280,6 +315,25 @@
 				C917DDD025B2075F00B967B8 /* RightPaneToolPalette.xib */,
 			);
 			name = Resources;
+			sourceTree = "<group>";
+		};
+		C9DF48D425D59CF60016626F /* ALE Parser */ = {
+			isa = PBXGroup;
+			children = (
+				C9DF48DB25D59EF30016626F /* ALESelectionViewController.swift */,
+				C9DF48DC25D59EF30016626F /* ALESelectionViewController.xib */,
+				C9DF490725D717520016626F /* CustomALECell.swift */,
+			);
+			path = "ALE Parser";
+			sourceTree = "<group>";
+		};
+		C9E6C1F125C86B6A00F07B3D /* UI Utills */ = {
+			isa = PBXGroup;
+			children = (
+				C9E6C1F225C86BFF00F07B3D /* CustomUploadCell.swift */,
+				C9C536E825E5635C006AF531 /* UploadStatusTableCellView.swift */,
+			);
+			path = "UI Utills";
 			sourceTree = "<group>";
 		};
 		E3F4A5FCDAAF2D923869E980 /* Frameworks */ = {
@@ -402,7 +456,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				C917DDCF25B0229B00B967B8 /* IconViewSectionHeader.xib in Resources */,
+				C9E6C1DE25C17BFA00F07B3D /* azcopy in Resources */,
+				C9DF48DE25D59EF30016626F /* ALESelectionViewController.xib in Resources */,
 				C96173A72593AFA600F037EB /* azcopy in Resources */,
 				C9807E67257E8FD400488E46 /* ProgressViewController.xib in Resources */,
 				C96173A025911CAE00F037EB /* MediaUploader.plist in Resources */,
@@ -412,6 +467,7 @@
 				C97621DE256C1C4400C48E15 /* UploadSettingsViewController.xib in Resources */,
 				C917DDD125B2075F00B967B8 /* RightPaneToolPalette.xib in Resources */,
 				C987BB2B2534CF5400A440A7 /* Localizable.strings in Resources */,
+				C9E6C1E825C17DCB00F07B3D /* IconViewSectionHeader.xib in Resources */,
 				C97621D8256BABCA00C48E15 /* Info.plist in Resources */,
 				731C9854252DE9DC008E8A75 /* Main.storyboard in Resources */,
 			);
@@ -521,11 +577,14 @@
 				C96173A92593B4EF00F037EB /* SASToken.swift in Sources */,
 				731C9889252EF427008E8A75 /* WindowController.swift in Sources */,
 				C9807E69257F923A00488E46 /* Utils.swift in Sources */,
+				C9DF48DD25D59EF30016626F /* ALESelectionViewController.swift in Sources */,
 				C96173A425933C2A00F037EB /* URLRequests.swift in Sources */,
 				731C9881252E5216008E8A75 /* OutlineViewController+Helpers.swift in Sources */,
 				731C984F252DE9DB008E8A75 /* WindowViewController.swift in Sources */,
 				731C9879252E4D1A008E8A75 /* OutlineViewController.swift in Sources */,
 				C95F6C1F2583748B0008D8A0 /* UploadWindowViewController.swift in Sources */,
+				C9FCF94825E3D740009335CF /* uploadsModelData.xcdatamodeld in Sources */,
+				C9C5362A25DE74D7006AF531 /* TextFiledTypeFormatter.swift in Sources */,
 				731C987F252E4FF3008E8A75 /* Node.swift in Sources */,
 				C95F6C22258388650008D8A0 /* HorizontalSplitViewController.swift in Sources */,
 				C95F6C202583748B0008D8A0 /* UploadWindowViewController+Delegate.swift in Sources */,
@@ -533,19 +592,26 @@
 				C97621CF25682C3500C48E15 /* IconViewController.swift in Sources */,
 				C97A62D825AF93950062A3D9 /* IconViewSectionHeader.swift in Sources */,
 				C984960425948C3E00A1FED5 /* StartupPopupViewController.swift in Sources */,
+				C9C5364825DFB2C0006AF531 /* StringConstant.swift in Sources */,
 				731C9887252EEAE0008E8A75 /* SplitViewController.swift in Sources */,
 				C95F6C1C2582B6EE0008D8A0 /* FileUploadOperation.swift in Sources */,
+				C9C536E925E5635C006AF531 /* UploadStatusTableCellView.swift in Sources */,
 				C962D1A3258788420012F684 /* OutlineViewController+Expansion.swift in Sources */,
 				731C984D252DE9DB008E8A75 /* AppDelegate.swift in Sources */,
 				C962D1A5258AA3A40012F684 /* PopoverViewController.swift in Sources */,
+				C93C43B525D59F710032F417 /* CheckPathExistsOperation.swift in Sources */,
+				C9FCF94A25E4E4F3009335CF /* Persist.swift in Sources */,
 				C97621D4256BA90900C48E15 /* CollectionViewItem.swift in Sources */,
+				C93C43B725D687360032F417 /* XMLResponseParser.swift in Sources */,
 				731C9885252EE911008E8A75 /* OutlineViewController+Restoration.swift in Sources */,
 				C987BB35253CC93E00A440A7 /* CustomTableCellView.swift in Sources */,
 				C95E74E7257ACEB80073410F /* AsyncOperation.swift in Sources */,
 				C961739C25910B5800F037EB /* CalculateChecksumOperation.swift in Sources */,
+				C9DF490825D717520016626F /* CustomALECell.swift in Sources */,
 				C917DDD325B226F500B967B8 /* RightPaneToolPalette.swift in Sources */,
 				C987BB37255BC97B00A440A7 /* LoginViewController.swift in Sources */,
 				C987BB292534CA9500A440A7 /* OutlineViewController+Delegate.swift in Sources */,
+				C9E6C1F325C86BFF00F07B3D /* CustomUploadCell.swift in Sources */,
 				C9807E66257E8FD400488E46 /* ProgressViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -730,7 +796,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = durin.MediaUploader;
+				PRODUCT_BUNDLE_IDENTIFIER = durin.MediaUploader2;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_VERSION = 5.0;
@@ -756,7 +822,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = durin.MediaUploader;
+				PRODUCT_BUNDLE_IDENTIFIER = durin.MediaUploader2;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_VERSION = 5.0;
@@ -881,6 +947,19 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCVersionGroup section */
+		C9FCF94625E3D740009335CF /* uploadsModelData.xcdatamodeld */ = {
+			isa = XCVersionGroup;
+			children = (
+				C9FCF94725E3D740009335CF /* uploadsModelData.xcdatamodel */,
+			);
+			currentVersion = C9FCF94725E3D740009335CF /* uploadsModelData.xcdatamodel */;
+			path = uploadsModelData.xcdatamodeld;
+			sourceTree = "<group>";
+			versionGroupType = wrapper.xcdatamodel;
+		};
+/* End XCVersionGroup section */
 	};
 	rootObject = 731C9841252DE9DB008E8A75 /* Project object */;
 }

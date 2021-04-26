@@ -8,21 +8,21 @@
 import Cocoa
 
 extension UploadWindowViewController: NSTableViewDataSource {
-  
-  func numberOfRows(in tableView: NSTableView) -> Int {
-    return uploadTasks.count
-  }
+    
+    func numberOfRows(in tableView: NSTableView) -> Int {
+        return uploadTasks.count
+    }
 }
 
 final class CustomTableHeaderCell : NSTableHeaderCell {
-
+    
     override init(textCell: String) {
         super.init(textCell: textCell)
         self.font = NSFont.boldSystemFont(ofSize: 11) // Or set NSFont to your choice
         self.textColor = NSColor.controlColor
         self.backgroundColor = NSColor.green
     }
-
+    
     required init(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
@@ -33,7 +33,7 @@ final class CustomTableHeaderCell : NSTableHeaderCell {
         //cellFrame.fill()
         super.draw(withFrame: cellFrame, in: controlView)
     }
-
+    
     override func drawInterior(withFrame cellFrame: NSRect, in controlView: NSView) {
         let titleRect = self.titleRect(forBounds: cellFrame)
         self.attributedStringValue.draw(in: titleRect)
@@ -43,19 +43,20 @@ final class CustomTableHeaderCell : NSTableHeaderCell {
 
 
 extension UploadWindowViewController: NSTableViewDelegate {
-
-//    enum CellIdentifiers {
-//        static let Num = "NumCellID"
-//        static let ShowName = "ShowNameCellID"
-//        static let SrcPath = "SrcPathCellID"
-//        static let DstPath = "DstPathCellID"
-//        static let Date = "DateCellID"
-//        static let Size = "SizeCellID"
-//        static let ProgressBar = "ProgressBarCellID"
-//    }
-
+    
+    //    enum CellIdentifiers {
+    //        static let Num = "NumCellID"
+    //        static let ShowName = "ShowNameCellID"
+    //        static let SrcPath = "SrcPathCellID"
+    //        static let DstPath = "DstPathCellID"
+    //        static let Date = "DateCellID"
+    //        static let Size = "SizeCellID"
+    //        static let ProgressBar = "ProgressBarCellID"
+    //    }
+    
     enum ColumnIdentifiers {
         static let Num = "NumColumn"
+        static let DateModified = "DateModifiedColumn"
         static let ShowName = "ShowNameColumn"
         static let SrcPath = "SrcPathColumn"
         static let DstPath = "DstPathColumn"
@@ -81,7 +82,11 @@ extension UploadWindowViewController: NSTableViewDelegate {
         
         if tableColumn?.identifier == NSUserInterfaceItemIdentifier(rawValue: ColumnIdentifiers.Num) {
             text = "\(row+1)"
-        } else if tableColumn?.identifier == NSUserInterfaceItemIdentifier(rawValue: ColumnIdentifiers.ShowName) {
+        }else if tableColumn?.identifier == NSUserInterfaceItemIdentifier(rawValue: ColumnIdentifiers.DateModified) {
+            text = stringFromDate(date: item.dateModified)
+        }
+        else if tableColumn?.identifier == NSUserInterfaceItemIdentifier(rawValue: ColumnIdentifiers.ShowName) {
+            
             text = item.showName
         } else if tableColumn?.identifier == NSUserInterfaceItemIdentifier(rawValue: ColumnIdentifiers.SrcPath) {
             text = item.srcPath
@@ -95,8 +100,8 @@ extension UploadWindowViewController: NSTableViewDelegate {
             if let cell: CustomTableCellView = tableView.makeView(withIdentifier: tableColumn!.identifier, owner: self) as? CustomTableCellView {
                 cell.progress.doubleValue = item.uploadProgress
                 cell.progressCompletionStatus.isHidden = true
-
-                if doubleEqual(item.uploadProgress, 100.0) {
+                
+                if equal(item.uploadProgress, 100.0) {
                     cell.progress.controlTint = .graphiteControlTint
                     //cell.subviews.remove(at:0)
                     cell.progress.isHidden = true
@@ -107,19 +112,37 @@ extension UploadWindowViewController: NSTableViewDelegate {
                 return cell
             }
         } else if tableColumn?.identifier == NSUserInterfaceItemIdentifier(rawValue: ColumnIdentifiers.StatusColumn) {
-            if let cell = tableView.makeView(withIdentifier: tableColumn!.identifier, owner: self) as? NSTableCellView {
-                cell.textField?.stringValue = item.completionStatusString
-               
-                if doubleEqual(item.uploadProgress, 100.0) {
-                    cell.imageView?.isHidden = false
-                    if item.completionStatusString == "Completed" {
-                        cell.imageView?.image = NSImage(named: NSImage.statusAvailableName)
-                    } else {
-                        cell.imageView?.image = NSImage(named: NSImage.statusUnavailableName)
-                    }
+            if let cell : UploadStatusTableCellView = tableView.makeView(withIdentifier: tableColumn!.identifier, owner: self) as? UploadStatusTableCellView {
+                cell.pauseResumeDelegate = self
+                cell.lblStatus?.stringValue = item.completionStatusString
+                cell.btnPauseResume.tag = row
+                
+                if item.completionStatusString == "Completed" {
+                    cell.imgStatus?.isHidden = false
+                    cell.btnPauseResume?.isHidden = true;
+                    cell.imgStatus?.image = NSImage(named: NSImage.statusAvailableName)
+                } else if item.completionStatusString == "Failed" {
+                    cell.imgStatus?.isHidden = false
+                    cell.btnPauseResume?.isHidden = true;
+                    cell.imgStatus?.image = NSImage(named: NSImage.statusUnavailableName)
                 } else {
-                    cell.imageView?.isHidden = true
+                    cell.imgStatus?.isHidden = true
+                    cell.btnPauseResume?.isHidden = false;
+                    
+                    switch item.pauseResumeStatus {
+                    case .none:
+                        cell.btnPauseResume?.isHidden = true;
+                    case .pause:
+                        cell.btnPauseResume?.isHidden = false;
+                        cell.btnPauseResume?.image = NSImage(named:"resume")
+                        cell.btnPauseResume?.toolTip = "Resume"
+                    case .resume:
+                        cell.btnPauseResume?.isHidden = false;
+                        cell.btnPauseResume?.image = NSImage(named:"pause")
+                        cell.btnPauseResume?.toolTip = "Pause"
+                    }
                 }
+            
                 return cell
             }
         }
@@ -129,9 +152,5 @@ extension UploadWindowViewController: NSTableViewDelegate {
         }
         
         return nil
-    }
-    
-    func doubleEqual(_ a: Double, _ b: Double) -> Bool {
-        return fabs(a - b) < Double.ulpOfOne
     }
 }
