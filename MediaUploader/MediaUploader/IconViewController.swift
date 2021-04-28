@@ -647,7 +647,7 @@ class IconViewController: NSViewController {
                                                           step: FileUploadOperation.UploadType.kMetadataJsonUpload,
                                                           uploadRecord : nil,
                                                           dependens : dependens,
-                                                          args: ["copy", metadataFilePath, sasTokenWithDestPath])
+                                                          args: ["copy", metadataFilePath, sasTokenWithDestPath,"--metadata","source=mac client;FileType=raw file"])
                 uploadOperation.completionBlock = {
                     if uploadOperation.isCancelled {
                         return
@@ -689,6 +689,8 @@ class IconViewController: NSViewController {
             if isResume {
                 args.append("--overwrite=false")
             }
+            args.append("--metadata")
+            args.append("source=mac client;FileType=raw file")
             uploadOperations.append(FileUploadOperation(showId: self.showId(showName: showName),
                                                         cdsUserId: LoginViewController.cdsUserId!,
                                                         sasToken: sasToken,

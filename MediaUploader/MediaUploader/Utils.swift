@@ -303,3 +303,83 @@ func removeDot(dirNameArray :[String]) -> String {
     }
     return retVal;
 }
+
+func prepareUploadFiles(fileType: String, inputDirs: [URL]) -> [String : [[String:Any]]] {
+    var outputFiles: [String: [[String:Any]]] = [:]
+    
+    if fileType.isEmpty {
+        return [:]
+    }
+    
+    var fileDirPath = fileType
+    if fileType == StringConstant().reportNotesType {
+        fileDirPath = StringConstant().reportNotesFilePath
+    }
+    
+    for result in inputDirs {
+        
+        let pathURL = NSURL(fileURLWithPath: result.path, isDirectory: true)
+        var filePaths : [String : UInt64]    = [:]
+        
+        let enumerator = FileManager.default.enumerator(atPath: result.path)
+        while let element = enumerator?.nextObject() as? String {
+            let filename = URL(fileURLWithPath: element).lastPathComponent
+            if filename == ".DS_Store" {
+                continue
+            }
+            if let fType = enumerator?.fileAttributes?[FileAttributeKey.type] as? FileAttributeType {
+                
+                switch fType{
+                case .typeRegular:
+                    let path = NSURL(fileURLWithPath: element, relativeTo: pathURL as URL).path
+                    if let fSize = enumerator?.fileAttributes?[FileAttributeKey.size] as? UInt64 {
+                        filePaths[path!]=fSize
+                    }
+                case .typeDirectory:
+                    break
+                default:
+                    continue
+                }
+            }
+            
+        }
+        
+        let scanItems = filePaths
+        var files = [[String:Any]]()
+        for scanItem in scanItems {
+            let filename = URL(fileURLWithPath: scanItem.key).lastPathComponent
+            let filefolder = URL(fileURLWithPath: scanItem.key).deletingLastPathComponent()
+            
+            var parsed = filefolder.path.replacingOccurrences(of: pathURL.deletingLastPathComponent!.path, with: "")
+            if parsed.hasPrefix("/") {
+                parsed = String(parsed.dropFirst()) + "/"
+            }
+            // WARNING: special requirement to be compliant with backend we need to trim trailinig dot for each folder
+            //          if folder name ends with dot.
+            //   parsed = parsed.replacingOccurrences(of: "./", with: "/")
+            //  let filePath = parsed.isEmpty ? filename : parsed + filename
+            //   print("filePath : \(filePath)")
+            
+            let rmvDot:String  = removeDot(dirNameArray:parsed.components(separatedBy: "/"))
+            let filePath = rmvDot+filename
+            let item : [String : Any] = ["name":filename,
+                                         "filePath":fileDirPath + "/" + filePath,
+                                         "filesize":scanItem.value,
+                                         "checksum":fileDirPath + "/" + filePath, //randomString(length: 32),/* will be replaced latter by real checksum value */
+                                         "type":fileType]
+            files.append([scanItem.key : item])
+            
+        }
+        outputFiles[result.path] = files
+    }
+    return outputFiles
+}
+
+func defaultMiscDict()-> [String : Any]{
+    var retDict = [String: Any]()
+    retDict["aleFileNameField"] = StringConstant().sourceFile
+    retDict["matchType"] = StringConstant().strMatchTypeExact
+    retDict["truncateCharFromStart"] = 0
+    retDict["truncateCharFromEnd"] = 0
+    return retDict;
+}

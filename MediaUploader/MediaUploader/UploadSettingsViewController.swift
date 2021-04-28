@@ -356,7 +356,7 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
             return
         }
     }
-/*
+
 func prepareUploadFiles(fileType: String, inputDirs: [URL]) -> [String : [[String:Any]]] {
         var outputFiles: [String: [[String:Any]]] = [:]
         
@@ -427,7 +427,7 @@ func prepareUploadFiles(fileType: String, inputDirs: [URL]) -> [String : [[Strin
         }
         return outputFiles
     }
-    */
+    
     func isValidEmail(_ email: String) -> Bool {
         let emailRegEx = "[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,64}"
         
