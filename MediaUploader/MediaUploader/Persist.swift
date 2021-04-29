@@ -27,8 +27,6 @@ func createData(index : Int, uploadTableRecord: UploadTableRow) {
     data.setValue(uploadTableRecord.seasonId, forKey: "seasonId")
     data.setValue(uploadTableRecord.metaDataJSONTime, forKey: "metaDataJSONTime")
     data.setValue(uploadTableRecord.metadataJSONPresent, forKey: "metadataJSONPresent")
-    data.setValue(uploadTableRecord.fileType, forKey: "fileType")
-  //  data.setValue(Data(), forKey: "fileListToUpload")
     for key in storedKeys {
         data.setValue(uploadTableRecord.uploadParams[key], forKey: key)
     }
@@ -62,7 +60,6 @@ func retrieveData(completion: @escaping (_ record: UploadTableRow) -> Void) {
             record.seasonId = data.value(forKey: "seasonId") as! String
             record.metaDataJSONTime = data.value(forKey: "metaDataJSONTime") as! String
             record.metadataJSONPresent = data.value(forKey: "metadataJSONPresent") as! Bool
-            record.fileType = data.value(forKey: "fileType") as! String
             if equal(record.resumeProgress, 100.0) == false {
                 record.pauseResumeStatus = .pause
                 record.completionStatusString = OutlineViewController.NameConstants.kPausedStr
@@ -118,7 +115,7 @@ func deleteAllData() {
     }
 }
 
-func updateMetaDataPresent(metaDataTimeStamp: String,jsonFilesData:Data) {
+func updateMetaDataPresent(metaDataTimeStamp: String) {
     let managedContext = AppDelegate.appDelegate.persistentContainer.viewContext
     let fetchRequest: NSFetchRequest<NSFetchRequestResult> = NSFetchRequest.init(entityName: "ShowEntity")
     fetchRequest.predicate = NSPredicate(format: "metaDataJSONTime = %@", metaDataTimeStamp)
@@ -130,7 +127,6 @@ func updateMetaDataPresent(metaDataTimeStamp: String,jsonFilesData:Data) {
             for item in test {
                 let objectUpdate = item as! NSManagedObject
                 objectUpdate.setValue(true, forKey: "metadataJSONPresent")
-                objectUpdate.setValue(jsonFilesData, forKey: "fileListToUpload")
                 do {
                     try managedContext.save()
                     

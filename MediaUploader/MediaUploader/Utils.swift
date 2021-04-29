@@ -337,18 +337,6 @@ func prepareUploadFiles(fileType: String, inputDirs: [URL]) -> [String : [[Strin
         let pathURL = NSURL(fileURLWithPath: result.path, isDirectory: true)
         var filePaths : [String : UInt64]    = [:]
         
-        let fileExist = FileManager.default.fileExists(atPath: result.path)
-        
-        do {
-            let items = try FileManager.default.contentsOfDirectory(atPath: result.path)
-
-            for item in items {
-                print("Found \(item)")
-            }
-        } catch let error as NSError {
-            print("\(error.localizedDescription)")
-        }
-        
         let enumerator = FileManager.default.enumerator(atPath: result.path)
         while let element = enumerator?.nextObject() as? String {
             let filename = URL(fileURLWithPath: element).lastPathComponent
@@ -422,34 +410,5 @@ func getOTPLength() -> Int? {
     return UserDefaults.standard.value(forKey:OutlineViewController.NameConstants.otpLength) as? Int
 }
 
-func filesListFromMetadataJson(data: Data) -> [String]? {
-   do {
-    let json = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any]
-    
-    print("json :\(String(describing: json))")
-    var fileArray = [String]()
-    if let dict = json{
-        print("dict count :\(dict.count)")
-        for(_,value) in dict{
-            fileArray.append(value as! String)
-        }
-    }
-    
-    print("filesArray count : \(fileArray.count) : files : \(fileArray)")
-    
-    return fileArray
-    
-   } catch let myJSONError {
-       print(myJSONError)
-   }
-   return nil
-}
 
-func jsonToData(json: Any) -> Data? {
-    do {
-        return try JSONSerialization.data(withJSONObject: json, options: JSONSerialization.WritingOptions.prettyPrinted)
-    } catch let myJSONError {
-        print(myJSONError)
-    }
-    return nil;
-}
+
