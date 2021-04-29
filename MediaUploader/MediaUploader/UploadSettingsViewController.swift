@@ -114,6 +114,8 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
     
     var totalFileStoUpload:[String:[[String:Any]]] = [:]
     
+    var bIsFromResume:Bool = false
+    var resumeFileDict:[NSString:Any]=[:]
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -186,6 +188,12 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
             self,
             selector: #selector(onSignOutClicked(_:)),
             name: Notification.Name(WindowViewController.NotificationNames.logoutItem),
+            object: nil)
+        
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(updateFilesToUploadPostResume(_:)),
+            name: Notification.Name(WindowViewController.NotificationNames.updateFilesToUploadPostResume),
             object: nil)
         
     }
@@ -348,6 +356,7 @@ class UploadSettingsViewController: NSViewController,NSTableViewDelegate,NSTable
         
         if (dialog.runModal() ==  NSApplication.ModalResponse.OK) {
             let results = dialog.urls
+            print("dialog.urls :\(dialog.urls)")
             
             let outputFiles = prepareUploadFiles(fileType: fileType, inputDirs: results)
             completion(outputFiles)
@@ -1222,126 +1231,189 @@ func prepareUploadFiles(fileType: String, inputDirs: [URL]) -> [String : [[Strin
     
     func startUploadWithALEParsing(uploadFilesWithALE:[String: Any]) {
         
-        let dateformat: String = "yyyy-MM-dd"
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = dateformat
-        //let strdate = dateFormatter.string(from: shootDate.dateValue)
-        
-        // [show name]/[season name]/[block name]/[shootday]/[batch]/[unit ]/Camera RAW/browsed folder
-        let season = self.seasonsCombo.selectedCell()!.stringValue as String
-        let block = self.blocksCombo.selectedCell()!.stringValue as String
-        let episode = self.episodesCombo.selectedCell()!.stringValue as String
-        
-        var blockOrEpisode : (String,String)!
-        let isBlock : Bool = byBlockRadio.state == NSControl.StateValue.on
-        
-        if byBlockRadio.state == NSControl.StateValue.on {
-            if block.isEmpty {
-                if(self.blocksCombo.numberOfItems > 0) {
-                    showPopoverMessage(positioningView: blocksCombo, msg: "Invalid params for Block")
-                    return
-                }else{
-                    showPopoverMessage(positioningView: blocksCombo, msg: "Block are not associated with this season")
-                    return
+        if(bIsFromResume){
+            
+            if(resumeFileDict.count > 0){
+                
+                let dateformat: String = "yyyy-MM-dd"
+                let dateFormatter = DateFormatter()
+                dateFormatter.dateFormat = dateformat
+                
+                
+                let showName = resumeFileDict["showName"] as! String
+                
+                let isBlock = resumeFileDict["isBlock"] as! Bool
+                
+               // let metaDataJSONTime = resumeFileDict["metaDataJSONTime"] as! String
+                
+               let resumeUpload = resumeFileDict["resumeUpload"] as? UploadTableRow
+                
+                let jsonMainDict = resumeFileDict["json_main"] as! [String : String]
+                let blockOrEpisodeID = ((jsonMainDict["episodeId"]) != nil) ? jsonMainDict["episodeId"] :jsonMainDict["blockId"]
+                let json_main : [String:String] = [
+                    "showId": (jsonMainDict["showId"] != nil) ? jsonMainDict["showId"]!:"",
+                    "seasonId":(jsonMainDict["seasonId"] != nil) ? jsonMainDict["seasonId"]!:"",
+                    "episodeId":(jsonMainDict["episodeId"] != nil) ? jsonMainDict["episodeId"]!:"",
+                    "blockId":(jsonMainDict["blockId"] != nil) ? jsonMainDict["blockId"]!:"",
+                    "batch":(jsonMainDict["batch"] != nil) ? jsonMainDict["batch"]!:"",
+                    "unit":(jsonMainDict["unit"] != nil) ? jsonMainDict["unit"]!:"",
+                    "team":(jsonMainDict["team"] != nil) ? jsonMainDict["team"]!:"",
+                    "shootDay":(jsonMainDict["shootDay"] != nil) ? jsonMainDict["shootDay"]!:"",
+                    "info":(jsonMainDict["info"] != nil) ? jsonMainDict["info"]!:"",
+                    "notificationEmail":(jsonMainDict["notificationEmail"] != nil) ? jsonMainDict["notificationEmail"]!:"",
+                    "checksum":"md5",
+                    "season":(jsonMainDict["season"] != nil) ? jsonMainDict["season"]!:"",
+                    "blockOrEpisode":(jsonMainDict["blockOrEpisode"] != nil) ? jsonMainDict["blockOrEpisode"]!:"",
+                ]
+                
+                var uploadFiles : [String:[[String:Any]]] = [:]
+                var uploadDirs : [String:[String]] = [:]
+                
+                for i in 0 ..< selectedArray.count {
+                    uploadDirs[selectedArray[i]] = []
+                    uploadFiles[selectedArray[i]] = []
+                    for (key, value) in selectedFilePathsArray[i] {
+                        uploadDirs[selectedArray[i]]?.append(key)
+                        for f in value {
+                            uploadFiles[selectedArray[i]]?.append(f)
+                        }
+                    }
                 }
+                let metaDataJSONTime = String(format:"%2X", Int(Date().timeIntervalSince1970 * 1000)) // in millsecs
+                
+                NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.OnStartUploadShow),
+                                                object: nil,
+                                                userInfo: ["json_main":json_main,
+                                                           "showName": showName,
+                                                           "season": (jsonMainDict["season"],jsonMainDict["seasonId"]),
+                                                           "blockOrEpisode":(jsonMainDict["blockOrEpisode"]!,blockOrEpisodeID),
+                                                           "isBlock":isBlock,
+                                                           "files": uploadFilesWithALE,
+                                                           "srcDir": uploadDirs,
+                                                           "metaDataJSONTime":metaDataJSONTime,
+                                                           "updateFilesfromResume":true,
+                                                           "resumeUpload" : resumeUpload
+                                                ])
             }
-            blockOrEpisode = getBlock(seasonName: season, blockName: block)
-        } else {
-            if episode.isEmpty {
-                if(self.episodesCombo.numberOfItems > 0) {
-                    showPopoverMessage(positioningView: episodesCombo, msg: "Invalid params for Episode")
-                    return
-                }else{
-                    showPopoverMessage(positioningView: episodesCombo, msg: "Episodes are not associated with this season")
-                    return
+        }else {
+            let dateformat: String = "yyyy-MM-dd"
+            let dateFormatter = DateFormatter()
+            dateFormatter.dateFormat = dateformat
+            //let strdate = dateFormatter.string(from: shootDate.dateValue)
+            
+            // [show name]/[season name]/[block name]/[shootday]/[batch]/[unit ]/Camera RAW/browsed folder
+            let season = self.seasonsCombo.selectedCell()!.stringValue as String
+            let block = self.blocksCombo.selectedCell()!.stringValue as String
+            let episode = self.episodesCombo.selectedCell()!.stringValue as String
+            
+            var blockOrEpisode : (String,String)!
+            let isBlock : Bool = byBlockRadio.state == NSControl.StateValue.on
+            
+            if byBlockRadio.state == NSControl.StateValue.on {
+                if block.isEmpty {
+                    if(self.blocksCombo.numberOfItems > 0) {
+                        showPopoverMessage(positioningView: blocksCombo, msg: "Invalid params for Block")
+                        return
+                    }else{
+                        showPopoverMessage(positioningView: blocksCombo, msg: "Block are not associated with this season")
+                        return
+                    }
                 }
-            }
-            blockOrEpisode = getEpisode(seasonName: season, episopeName: episode)
-        }
-        
-        var isEmpty: Bool = true
-        for item in selectedFilePathsArray {
-            if !item.isEmpty {
-                isEmpty = false
-                break
-            }
-        }
-        
-        if isEmpty {
-            showPopoverMessage(positioningView: teamPopup, msg: StringConstant().specifyPathMedia)
-            return
-        }
-        
-        if shootDayField.stringValue.isEmpty {
-            showPopoverMessage(positioningView: shootDayField, msg:StringConstant().specifyShootDay)
-            return
-        } else {
-            if shootDayField.stringValue.isStringPatternMatch(withstring: shootDayFormat ?? " "){
-                // print("shootDay string: \(shootDayField.stringValue)")
+                blockOrEpisode = getBlock(seasonName: season, blockName: block)
             } else {
-                showPopoverMessage(positioningView: shootDayField, msg: StringConstant().invalidShootday)
+                if episode.isEmpty {
+                    if(self.episodesCombo.numberOfItems > 0) {
+                        showPopoverMessage(positioningView: episodesCombo, msg: "Invalid params for Episode")
+                        return
+                    }else{
+                        showPopoverMessage(positioningView: episodesCombo, msg: "Episodes are not associated with this season")
+                        return
+                    }
+                }
+                blockOrEpisode = getEpisode(seasonName: season, episopeName: episode)
+            }
+            
+            var isEmpty: Bool = true
+            for item in selectedFilePathsArray {
+                if !item.isEmpty {
+                    isEmpty = false
+                    break
+                }
+            }
+            
+            if isEmpty {
+                showPopoverMessage(positioningView: teamPopup, msg: StringConstant().specifyPathMedia)
                 return
             }
-        }
-        
-        if !emailField.stringValue.isEmpty && !isValidEmail(emailField.stringValue){
-            showPopoverMessage(positioningView: emailField, msg:StringConstant().wrongEmailFormat)
-            return
-        }
-        
-        if blockOrEpisode == nil {
-            return
-        }
-        
-        let episodeId = isBlock ? "" : blockOrEpisode.1
-        let blockId = isBlock ? blockOrEpisode.1 : ""
-        
-        let json_main : [String:String] = [
-            "showId": self.showId,
-            "seasonId":getSeasonId(seasonName: season),
-            "episodeId":episodeId,
-            "blockId":blockId,
-            "batch":batchPopup.titleOfSelectedItem!,
-            "unit":unitPopup.titleOfSelectedItem!,
-            "team":teamPopup.titleOfSelectedItem!,
-            "shootDay":shootDayField.stringValue,
-            "info":infoField.stringValue,
-            "notificationEmail":emailField.stringValue,
-            "checksum":"md5",
-            "season":season,
-            "blockOrEpisode":blockOrEpisode.0,
-        ]
-        
-        var uploadFiles : [String:[[String:Any]]] = [:]
-        var uploadDirs : [String:[String]] = [:]
-        
-        for i in 0 ..< selectedArray.count {
-            uploadDirs[selectedArray[i]] = []
-            uploadFiles[selectedArray[i]] = []
-            for (key, value) in selectedFilePathsArray[i] {
-                uploadDirs[selectedArray[i]]?.append(key)
-                for f in value {
-                    uploadFiles[selectedArray[i]]?.append(f)
+            
+            if shootDayField.stringValue.isEmpty {
+                showPopoverMessage(positioningView: shootDayField, msg:StringConstant().specifyShootDay)
+                return
+            } else {
+                if shootDayField.stringValue.isStringPatternMatch(withstring: shootDayFormat ?? " "){
+                    // print("shootDay string: \(shootDayField.stringValue)")
+                } else {
+                    showPopoverMessage(positioningView: shootDayField, msg: StringConstant().invalidShootday)
+                    return
                 }
             }
+            
+            if !emailField.stringValue.isEmpty && !isValidEmail(emailField.stringValue){
+                showPopoverMessage(positioningView: emailField, msg:StringConstant().wrongEmailFormat)
+                return
+            }
+            
+            if blockOrEpisode == nil {
+                return
+            }
+            
+            let episodeId = isBlock ? "" : blockOrEpisode.1
+            let blockId = isBlock ? blockOrEpisode.1 : ""
+            
+            let json_main : [String:String] = [
+                "showId": self.showId,
+                "seasonId":getSeasonId(seasonName: season),
+                "episodeId":episodeId,
+                "blockId":blockId,
+                "batch":batchPopup.titleOfSelectedItem!,
+                "unit":unitPopup.titleOfSelectedItem!,
+                "team":teamPopup.titleOfSelectedItem!,
+                "shootDay":shootDayField.stringValue,
+                "info":infoField.stringValue,
+                "notificationEmail":emailField.stringValue,
+                "checksum":"md5",
+                "season":season,
+                "blockOrEpisode":blockOrEpisode.0,
+            ]
+            
+            var uploadFiles : [String:[[String:Any]]] = [:]
+            var uploadDirs : [String:[String]] = [:]
+            
+            for i in 0 ..< selectedArray.count {
+                uploadDirs[selectedArray[i]] = []
+                uploadFiles[selectedArray[i]] = []
+                for (key, value) in selectedFilePathsArray[i] {
+                    uploadDirs[selectedArray[i]]?.append(key)
+                    for f in value {
+                        uploadFiles[selectedArray[i]]?.append(f)
+                    }
+                }
+            }
+            let metaDataJSONTime = String(format:"%2X", Int(Date().timeIntervalSince1970 * 1000)) // in millsecs
+            
+            NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.OnStartUploadShow),
+                                            object: nil,
+                                            userInfo: ["json_main":json_main,
+                                                       "showName": self.showNameField.stringValue,
+                                                       "season": (season, getSeasonId(seasonName: season)),
+                                                       "blockOrEpisode":blockOrEpisode!,
+                                                       "isBlock":isBlock,
+                                                       "files": uploadFilesWithALE,
+                                                       "srcDir": uploadDirs,
+                                                       "metaDataJSONTime":metaDataJSONTime,
+                                            ])
         }
-        let metaDataJSONTime = String(format:"%2X", Int(Date().timeIntervalSince1970 * 1000)) // in millsecs
-        
-        NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.OnStartUploadShow),
-                                        object: nil,
-                                        userInfo: ["json_main":json_main,
-                                                   "showName": self.showNameField.stringValue,
-                                                   "season": (season, getSeasonId(seasonName: season)),
-                                                   "blockOrEpisode":blockOrEpisode!,
-                                                   "isBlock":isBlock,
-                                                   "files": uploadFilesWithALE,
-                                                   "srcDir": uploadDirs,
-                                                   "metaDataJSONTime":metaDataJSONTime,
-                                        ])
         window?.performClose(nil) // nil because I'm not return a message
-        
-        
-        
     }
     
 
@@ -1362,6 +1434,167 @@ func prepareUploadFiles(fileType: String, inputDirs: [URL]) -> [String : [[Strin
             }
         }
         return true
+    }
+
+    @objc func updateFilesToUploadPostResume(_ notification: Notification) {
+        
+        
+        NotificationCenter.default.removeObserver(
+            self,
+            name: Notification.Name(WindowViewController.NotificationNames.updateFilesToUploadPostResume),
+            object: nil)
+        
+        bIsFromResume = true
+        let fileType  = notification.userInfo?["fileType"] as! String
+        let files  = notification.userInfo?["files"] as! [String: [[String:Any]]]
+        let jsonMainDict  = notification.userInfo?["json_main"] as! [String:String]
+        let isBlock = notification.userInfo?["isBlock"] as! Bool
+        let showName = notification.userInfo?["showName"] as! String
+        let metaDataJSONTime = notification.userInfo?["metaDataJSONTime"] as! String
+        guard let resumeUpload = notification.userInfo?["resumeUpload"] as? UploadTableRow else { return }
+    
+        if !fileType.isEmpty {
+            resumeFileDict["fileType"] = fileType
+        }
+        if  files.count > 0 {
+            resumeFileDict["files"] = files
+        }
+        if  jsonMainDict.count > 0 {
+            resumeFileDict["json_main"] = jsonMainDict
+        }
+        
+        if  !showName.isEmpty {
+            resumeFileDict["showName"] = showName
+        }
+        
+        if  !metaDataJSONTime.isEmpty {
+            resumeFileDict["metaDataJSONTime"] = metaDataJSONTime
+        }
+        
+        resumeFileDict["isBlock"] = isBlock
+        resumeFileDict["resumeUpload"] = resumeUpload
+        
+        
+        uploadedFileList = [fileInfo]()
+        aleSouceFilesArray = [fileInfo]()
+        selectedArray = [String]()
+        selectedFilePathsArray = [[String:[[String:Any]]]]()
+        totalFileStoUpload = [:]
+        
+        selectedArray.removeAll()
+        selectedFilePathsArray.removeAll()
+        
+        selectedArray.append(fileType)
+        selectedFilePathsArray.append(files )
+        
+        checkAllFilesForSourceName()
+        
+        if aleSouceFilesArray.isEmpty || isAllFileHaveSourceFile {
+            
+            // To DO : Go to Upload files   //KUSH 12 Feb 2021
+            let dateformat: String = "yyyy-MM-dd"
+            let dateFormatter = DateFormatter()
+            dateFormatter.dateFormat = dateformat
+            
+            let json_main : [String:String] = [
+                "showId": (jsonMainDict["showId"] != nil) ? jsonMainDict["showId"]!:"",
+                "seasonId":(jsonMainDict["seasonId"] != nil) ? jsonMainDict["seasonId"]!:"",
+                "episodeId":(jsonMainDict["episodeId"] != nil) ? jsonMainDict["episodeId"]!:"",
+                "blockId":(jsonMainDict["blockId"] != nil) ? jsonMainDict["blockId"]!:"",
+                "batch":(jsonMainDict["batch"] != nil) ? jsonMainDict["batch"]!:"",
+                "unit":(jsonMainDict["unit"] != nil) ? jsonMainDict["unit"]!:"",
+                "team":(jsonMainDict["team"] != nil) ? jsonMainDict["team"]!:"",
+                "shootDay":(jsonMainDict["shootDay"] != nil) ? jsonMainDict["shootDay"]!:"",
+                "info":(jsonMainDict["info"] != nil) ? jsonMainDict["info"]!:"",
+                "notificationEmail":(jsonMainDict["notificationEmail"] != nil) ? jsonMainDict["notificationEmail"]!:"",
+                "checksum":"md5",
+                "season":(jsonMainDict["season"] != nil) ? jsonMainDict["season"]!:"",
+                "blockOrEpisode":(jsonMainDict["blockOrEpisode"] != nil) ? jsonMainDict["blockOrEpisode"]!:"",
+            ]
+            
+            var uploadFiles : [String:[[String:Any]]] = [:]
+            var uploadDirs : [String:[String]] = [:]
+            
+            var miscDict = [String : Any]()
+            
+            miscDict = defaultMiscDict()
+            
+            for i in 0 ..< selectedArray.count {
+                uploadDirs[selectedArray[i]] = []
+                uploadFiles[selectedArray[i]] = []
+                for (key, value) in selectedFilePathsArray[i] {
+                    uploadDirs[selectedArray[i]]?.append(key)
+                    for f in value {
+                        var dictWithDirPath = [String:Any]()
+                        for (key, value1) in f {  //key means dir path
+                            var fDict:[String:Any]
+                            fDict = value1 as! [String : Any]
+                            
+                            if let fileName = fDict["name"] {
+                                let strArray = (fileName as AnyObject).components(separatedBy: ".")
+                                if ( strArray.count > 1 ){
+                                    if(strArray[1] == "ale"){
+                                        fDict["checksum"] = fDict["checksum"] as! String
+                                        fDict["filePath"] = fDict["filePath"] as! String
+                                        fDict["name"] = fDict["name"] as! String
+                                        fDict["type"] = fDict["type"] as! String
+                                        fDict["filesize"] = (fDict["filesize"] as! UInt64)
+                                        fDict["miscInfo"] = miscDict
+                                    }
+                                }
+                            }
+                            
+                            dictWithDirPath[key] = fDict
+                        }
+                        uploadFiles[selectedArray[i]]?.append(dictWithDirPath)   // Kush
+                        
+                    }
+                }
+            }
+            let metaDataJSONTime = String(format:"%2X", Int(Date().timeIntervalSince1970 * 1000)) // in millsecs
+            
+            bIsFromResume = false
+            
+            let blockOrEpisodeID = ((jsonMainDict["episodeId"]) != nil) ? jsonMainDict["episodeId"] :jsonMainDict["blockId"]
+            NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.OnStartUploadShow),
+                                            object: nil,
+                                            userInfo: ["json_main":json_main,
+                                                       "showName": showName,
+                                                       "season": (jsonMainDict["season"],jsonMainDict["seasonId"]),
+                                                       "blockOrEpisode":(jsonMainDict["blockOrEpisode"]!,blockOrEpisodeID),
+                                                       "isBlock":isBlock,
+                                                       "files": uploadFiles,
+                                                       "srcDir": uploadDirs,
+                                                       "metaDataJSONTime":metaDataJSONTime,
+                                                       "updateFilesfromResume":true,
+                                                       "resumeUpload" : resumeUpload
+                                            ])
+            
+        } else {
+            aleSelectionViewController = ALESelectionViewController()
+            let storyboard = NSStoryboard(name: "Main", bundle: nil)
+            guard let ALESelectionViewController = storyboard.instantiateController(withIdentifier: "ALESelectionWindow") as? NSWindowController else { return }
+            if let aleSelectionViewWindow = ALESelectionViewController.window {
+                //let application = NSApplication.shared
+                //application.runModal(for: downloadWindow)
+                aleSelectionViewWindow.level = NSWindow.Level.modalPanel
+                
+                aleSelectionViewWindow.contentMinSize = NSSize(width: 1200, height: 591)
+                aleSelectionViewWindow.contentMaxSize = NSSize(width: 1200, height: 591)
+                
+                let controller =  NSWindowController(window: aleSelectionViewWindow)
+                aleSelectionViewWindow.contentViewController = aleSelectionViewController
+                aleSelectionViewController.aleFileDelegate = self
+                aleSelectionViewController.setStructDataReference(structDataReference:aleSouceFilesArray)
+                controller.showWindow(self)
+                
+                NotificationCenter.default.addObserver(
+                    self,
+                    selector: #selector(resetViewController(_:)),
+                    name: Notification.Name(WindowViewController.NotificationNames.DismissUploadSettingsDialog),
+                    object: nil)
+            }
+        }
     }
 }
 

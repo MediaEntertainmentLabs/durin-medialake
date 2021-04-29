@@ -144,6 +144,8 @@ class WindowViewController: NSViewController {
         static let otpMessage = "otpMessage"
         
         static let generateOTP = "generateOTP"
+        
+        static let updateFilesToUploadPostResume = "updateFilesToUploadPostResume"
     }
 }
 

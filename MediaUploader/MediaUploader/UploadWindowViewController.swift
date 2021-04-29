@@ -29,6 +29,8 @@ class UploadTableRow : NSObject {
     var seasonId: String
     var metaDataJSONTime:String
     var metadataJSONPresent:Bool
+    var fileListToUpload : Data
+    var fileType : String
     // metadata
     var uploadParams: [String:Any] // we need to keep JSON params to send error report in case of failure occured
     
@@ -48,11 +50,13 @@ class UploadTableRow : NSObject {
         self.seasonId = ""
         self.metaDataJSONTime = ""
         self.metadataJSONPresent = false
+        self.fileListToUpload = Data()
+        self.fileType = ""
         
         super.init()
     }
     
-    init(showName: String, uploadParams: [String:String], srcPath: String, dstPath: String, isExistRemotely: Bool,isBlock: Bool,seasonId:String,metaDataJSONTime:String) {
+    init(showName: String, uploadParams: [String:String], srcPath: String, dstPath: String, isExistRemotely: Bool,isBlock: Bool,seasonId:String,metaDataJSONTime:String,fileType:String) {
         self.uniqueIndex = 0
         self.showName = showName
         self.srcPath = srcPath
@@ -68,6 +72,8 @@ class UploadTableRow : NSObject {
         self.seasonId = seasonId
         self.metaDataJSONTime = metaDataJSONTime
         self.metadataJSONPresent = false
+        self.fileListToUpload = Data()
+        self.fileType = fileType
         super.init()
     }
 }
@@ -102,6 +108,9 @@ class UploadWindowViewController: NSViewController,PauseResumeDelegate {
             }
             let record = uploads[row]
             tableView.reloadData()
+            
+            print("if uploads[row].pauseResumeStatus == .pause :::::::::")
+            
             NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.OnResumeUploadShow),
                                             object: nil,
                                             userInfo: ["resumeUpload" : record])
@@ -152,7 +161,7 @@ class UploadWindowViewController: NSViewController,PauseResumeDelegate {
             //               // Optional: you can change title color also jsut by adding NSForegroundColorAttributeName
         }
         //deleteAllData()
-        retrieveData() { (record) in
+        `retrieveData`() { (record) in
             self.uploadContent.insert(record, atArrangedObjectIndex: 0)
         }
         
@@ -180,6 +189,10 @@ class UploadWindowViewController: NSViewController,PauseResumeDelegate {
             name: Notification.Name(WindowViewController.NotificationNames.reloadUploadTableView),
             object: nil)
         
+    }
+    
+    override func viewWillAppear() {
+        print("view will appear")
     }
 
     override var representedObject: Any? {
@@ -335,24 +348,21 @@ class UploadWindowViewController: NSViewController,PauseResumeDelegate {
     
     @objc private func reloadUploadTable(_ notification: Notification) {
         
-        let metaDataJSONTime = notification.userInfo?["metaDataJSONTime"] as! String// name:Id
-        let metadataPresent = notification.userInfo?["metadataPresent"] as! Bool
-        
-        DispatchQueue.main.async { [self] in
-            if (metadataPresent) {
-                let uploads : [UploadTableRow] = self.uploadContent.arrangedObjects as! [UploadTableRow]
-                for rowItem in uploads where rowItem.metaDataJSONTime == metaDataJSONTime {
-                    rowItem.pauseResumeStatus = .resume
-                    rowItem.metadataJSONPresent = true
-                 }
-                tableView.reloadData()
-            }else{
-                print("metadata not present")
+        if let metaDataJSONTime = notification.userInfo?["metaDataJSONTime"] as? String, // name:Id
+           let metadataPresent = notification.userInfo?["metadataPresent"] as? Bool {
+            DispatchQueue.main.async { [self] in
+                if (metadataPresent) {
+                    let uploads : [UploadTableRow] = self.uploadContent.arrangedObjects as! [UploadTableRow]
+                    for rowItem in uploads where rowItem.metaDataJSONTime == metaDataJSONTime {
+                        rowItem.pauseResumeStatus = .resume
+                        rowItem.metadataJSONPresent = true
+                    }
+                    tableView.reloadData()
+                }else{
+                    print("metadata not present")
+                }
             }
         }
-        
     }
-    
-
 }
 

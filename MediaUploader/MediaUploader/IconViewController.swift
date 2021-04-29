@@ -27,6 +27,8 @@ class IconViewController: NSViewController {
     private var failedOperations = Set<FileUploadOperation>()
     var uploadSettingsViewController : UploadSettingsViewController!
     
+    var resumeUploadFiles:UploadTableRow!
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         configureCollectionView()
@@ -72,7 +74,7 @@ class IconViewController: NSViewController {
             selector: #selector(onShowUploadSettings(_:)),
             name: Notification.Name(WindowViewController.NotificationNames.ShowUploadSettings),
             object: nil)
- 
+        
     }
     
     func showId(showName: String) -> String {
@@ -104,7 +106,7 @@ class IconViewController: NSViewController {
         
         if tableRecord != nil {
             uploadSettingsViewController.populated = tableRecord
-            uploadSettingsViewController.showId = tableRecord?.uploadParams["showId"] as! String
+            uploadSettingsViewController.showId = tableRecord?.uploadParams["showId"] as? String
             uploadSettingsViewController.showName = tableRecord?.showName
             uploadSettingsViewController.dataFromCoredata = true
         }
@@ -377,6 +379,14 @@ class IconViewController: NSViewController {
         let metadataJsonFilename = NSUUID().uuidString + "_metadata.json"
         let metaDataJSONTime = notification.userInfo?["metaDataJSONTime"] as! String
         
+        var updateFilesfromResume:Bool = false
+        if(notification.userInfo?["updateFilesfromResume"] != nil){
+            updateFilesfromResume = ((notification.userInfo?["updateFilesfromResume"]) != nil)
+            if notification.userInfo?["resumeUpload"] != nil{
+                resumeUploadFiles = notification.userInfo?["resumeUpload"] as? UploadTableRow
+            }
+        }
+        
         if (pendingUploads == nil) {
             pendingUploads = [:]
             for (type, value) in srcDirs {
@@ -392,13 +402,15 @@ class IconViewController: NSViewController {
                     
                     
                     // create UI row in TableView (one per each folder being upload) before all upload tasks will be created
-                    let uploadRecord = UploadTableRow(showName: showName, uploadParams: json_main, srcPath: dir, dstPath: folderLayoutStr, isExistRemotely: false,isBlock: isBlock,seasonId: season.1,metaDataJSONTime: metaDataJSONTime)
+                    let uploadRecord = UploadTableRow(showName: showName, uploadParams: json_main, srcPath: dir, dstPath: folderLayoutStr, isExistRemotely: false,isBlock: isBlock,seasonId: season.1,metaDataJSONTime: metaDataJSONTime,fileType:type)
                     pendingUploads![type]!.append(uploadRecord)
                     
-                    writeFile(strToWrite: dir, className: "IconViewController", functionName: "OnstartUploadShow")
-                    NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.AddUploadTask),
-                                                    object: nil,
-                                                    userInfo: ["uploadRecord" : uploadRecord])
+                    
+                    if !updateFilesfromResume{
+                        NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.AddUploadTask),
+                                                        object: nil,
+                                                        userInfo: ["uploadRecord" : uploadRecord])
+                    }
                 }
             }
         }
@@ -459,8 +471,16 @@ class IconViewController: NSViewController {
             
             // metadata.json upload task is root task, all data tasks are subtasks
             // sasToken is unavailable here, will be filled in latter
-            let op = self.createUploadDirTask(showName: showName, folderLayoutStr: folderLayoutStr, sasToken: sasToken, isResume: false, uploadRecords: pendingUploads![type]!)
+            
+            
+            var op:[FileUploadOperation]=[]
+            op = self.createUploadDirTask(showName: showName, folderLayoutStr: folderLayoutStr, sasToken: sasToken, isResume: updateFilesfromResume, uploadRecords: pendingUploads![type]!)  // kush updated default value from isResume:false to updateFilesfromResume value
+            
+            if(updateFilesfromResume){
+                op = self.createUploadDirTask(showName: showName, folderLayoutStr: folderLayoutStr, sasToken: sasToken, isResume: updateFilesfromResume, uploadRecords: [resumeUploadFiles])  // kush updated default value from isResume:false to updateFilesfromResume value
+            }
             dataSubTasks.append(contentsOf: op)
+            
             
             for item in value {    // Item is having array of dictionary
                 for (key, rec) in item {
@@ -476,7 +496,7 @@ class IconViewController: NSViewController {
         
         var json : [String:Any] = json_main
         json["files"] = jsonRecords
-        jsonFromDict(from: json)
+        _ = jsonFromDict(from: json)
         guard let jsonData = try? JSONSerialization.data(withJSONObject: json, options: [.sortedKeys, .prettyPrinted]) else { return }
         
         var metadataPath : URL!
@@ -568,6 +588,7 @@ class IconViewController: NSViewController {
                         
                     default:
                         //let metaDataJSONTime = String(format:"%2X", Int(Date().timeIntervalSince1970 * 1000)) // in millsecs  // updated by kush
+                        _ = jsonFromDict(from: filesToUpload)
                         self.uploadMetadataJsonOperation(showName: showName,
                                                          sasToken: sasToken,
                                                          dataFiles: filesToUpload,
@@ -576,7 +597,9 @@ class IconViewController: NSViewController {
                                                          dependens : dataSubTasks,
                                                          appendOnly : appendOnly,
                                                          recoveryContext : recoveryContext,
-                                                         metaDataTimeStamp:metaDataJSONTime)
+                                                         metaDataTimeStamp:metaDataJSONTime,
+                                                         isFromResume:updateFilesfromResume
+                                                         )
                         break
                     }
                 }
@@ -584,30 +607,137 @@ class IconViewController: NSViewController {
         }
     }
     
+    /*
+     @objc func onResumeUploadShow(_ notification: NSNotification) throws {
+     guard let resumeUpload = notification.userInfo?["resumeUpload"] as? UploadTableRow else { return }
+     var sasToken : String!
+     
+     fetchSASToken(showName: resumeUpload.showName, showId: self.showId(showName: resumeUpload.showName), synchronous: false) { (result,state) in
+     switch state {
+     case .pending:
+     return
+     case .cached:
+     sasToken = result
+     case .completed:
+     NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.OnResumeUploadShow),
+     object: nil,
+     userInfo: ["resumeUpload": resumeUpload])
+     }
+     }
+     
+     // async wait for token to aquire in background
+     if sasToken == nil {
+     return
+     }
+     
+     let uploadOperation = self.createUploadDirTask(showName: resumeUpload.showName, folderLayoutStr: resumeUpload.dstPath, sasToken: sasToken, isResume: true, uploadRecords: [resumeUpload])
+     self.uploadQueue.addOperations(uploadOperation, waitUntilFinished: false)
+     }
+     */
     @objc func onResumeUploadShow(_ notification: NSNotification) throws {
+        
+        print("onResumeUploadShow(_ notification: NSNotification) :::::")
+        
         guard let resumeUpload = notification.userInfo?["resumeUpload"] as? UploadTableRow else { return }
-        var sasToken : String!
         
-        fetchSASToken(showName: resumeUpload.showName, showId: self.showId(showName: resumeUpload.showName), synchronous: false) { (result,state) in
-            switch state {
-            case .pending:
-                return
-            case .cached:
-                sasToken = result
-            case .completed:
-                NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.OnResumeUploadShow),
-                                                object: nil,
-                                                userInfo: ["resumeUpload": resumeUpload])
+        var filesListFromCoreData = [String]()
+        
+        let managedContext = AppDelegate.appDelegate.persistentContainer.viewContext
+        let fetchRequest: NSFetchRequest<NSFetchRequestResult> = NSFetchRequest.init(entityName: "ShowEntity")
+        fetchRequest.predicate = NSPredicate(format: "sn = %@", String(resumeUpload.uniqueIndex))
+        var fileType:String = ""
+        var isBlock = false
+        var showName:String = ""
+        var metaDataJSONTime:String = ""
+        
+        do
+            {
+                let test = try managedContext.fetch(fetchRequest)
+                
+                let dataFromCoreData = test[0] as! NSManagedObject
+                
+                filesListFromCoreData = filesListFromMetadataJson(data:dataFromCoreData.value(forKey: "fileListToUpload") as! Data)!
+                fileType = (dataFromCoreData.value(forKey: "fileType") as? String)!
+                isBlock = (dataFromCoreData.value(forKey: "isBlock") as? Bool)!
+                showName = (dataFromCoreData.value(forKey: "showName") as? String)!
+                metaDataJSONTime = (dataFromCoreData.value(forKey: "metaDataJSONTime") as? String)!
+              
+                print("filesListFromCoreData ::\(filesListFromCoreData)")
+                
+                
+            } catch {
+                print(" ------- updateData \(error)")
             }
+        
+        let fileFromResume = filesArrayFromResume(fileDirectoryURL: URL(fileURLWithPath: resumeUpload.srcPath))
+        
+        if fileFromResume.sorted() == filesListFromCoreData.sorted(){
+            print("Files are same ")
+            
+            var sasToken : String!
+            
+            fetchSASToken(showName: resumeUpload.showName, showId: self.showId(showName: resumeUpload.showName), synchronous: false) { (result,state) in
+                switch state {
+                case .pending:
+                    return
+                case .cached:
+                    sasToken = result
+                case .completed:
+                    NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.OnResumeUploadShow),
+                                                    object: nil,
+                                                    userInfo: ["resumeUpload": resumeUpload])
+                }
+            }
+            
+            // async wait for token to aquire in background
+            if sasToken == nil {
+                return
+            }
+            
+            let uploadOperation = self.createUploadDirTask(showName: resumeUpload.showName, folderLayoutStr: resumeUpload.dstPath, sasToken: sasToken, isResume: true, uploadRecords: [resumeUpload])
+            self.uploadQueue.addOperations(uploadOperation, waitUntilFinished: false)
+            
+            
+        }else {
+            print("Go to  re upload MetadataJSON")
+            
+            let fileUrl = URL(fileURLWithPath: resumeUpload.srcPath)
+            var arrURL = [URL]()
+            
+            arrURL.append(fileUrl)
+            let outputFiles = calculateUploadFiles(fileType: fileType, inputDirs: arrURL)
+            
+            let json_main : [String:String] = [
+                "showId": (resumeUpload.uploadParams["showId"] != nil) ? resumeUpload.uploadParams["showId"] as! String:"",
+                "seasonId":resumeUpload.seasonId,
+                "episodeId":(resumeUpload.uploadParams["episodeId"] != nil) ? resumeUpload.uploadParams["episodeId"] as! String:"",
+                "blockId":(resumeUpload.uploadParams["blockId"] != nil) ? resumeUpload.uploadParams["blockId"] as! String:"",
+                "batch":(resumeUpload.uploadParams["batch"] != nil) ? resumeUpload.uploadParams["batch"] as! String:"",
+                "unit":(resumeUpload.uploadParams["unit"] != nil) ? resumeUpload.uploadParams["unit"] as! String:"",
+                "team":(resumeUpload.uploadParams["team"] != nil) ? resumeUpload.uploadParams["team"] as! String:"",
+                "shootDay":(resumeUpload.uploadParams["shootDay"] != nil) ? resumeUpload.uploadParams["shootDay"] as! String:"",
+                "info":(resumeUpload.uploadParams["info"] != nil) ? resumeUpload.uploadParams["info"] as! String:"",
+                "notificationEmail":(resumeUpload.uploadParams["notificationEmail"] != nil) ? resumeUpload.uploadParams["notificationEmail"] as! String:"",
+                "checksum":"md5",
+                "season":(resumeUpload.uploadParams["season"] != nil) ? resumeUpload.uploadParams["season"] as! String:"",
+                "blockOrEpisode":resumeUpload.uploadParams["blockOrEpisode"] as! String
+            ]
+            
+            
+            NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.updateFilesToUploadPostResume),
+                                            object: nil,
+                                            userInfo: ["json_main" : json_main,
+                                                       "fileType" : fileType,
+                                                       "files" : outputFiles,"showName" : showName,"isBlock" : isBlock,"metaDataJSONTime":metaDataJSONTime,"resumeUpload" : resumeUpload]
+                                            )
+            
+            
+            print("Files are not same")
+            print("fileFromResume :\(fileFromResume)")
+            print("filesListFromCoreData :\(filesListFromCoreData)")
         }
         
-        // async wait for token to aquire in background
-        if sasToken == nil {
-            return
-        }
-        
-        let uploadOperation = self.createUploadDirTask(showName: resumeUpload.showName, folderLayoutStr: resumeUpload.dstPath, sasToken: sasToken, isResume: true, uploadRecords: [resumeUpload])
-        self.uploadQueue.addOperations(uploadOperation, waitUntilFinished: false)
+      
     }
     
     @objc func onPauseUploadShow(_ notification: NSNotification) throws {
@@ -622,9 +752,14 @@ class IconViewController: NSViewController {
                                      dependens : [FileUploadOperation],
                                      appendOnly: Bool,
                                      recoveryContext : [String : Any],
-                                     metaDataTimeStamp:String) {
+                                     metaDataTimeStamp:String,
+                                     isFromResume:Bool)
+                                    {
         
         print("------------ uploadMetadataJsonOperation: metadataFilePath: \(metadataFilePath), dstPath: \(dstPath)")
+        
+        let jsonFilesData = jsonToData(json: dataFiles)
+        print("jsonData :\(String(describing: jsonFilesData))")
         
         if appendOnly == true {
             for op in dependens {
@@ -656,6 +791,8 @@ class IconViewController: NSViewController {
                                                           uploadRecord : nil,
                                                           dependens : dependens,
                                                           args: ["copy", metadataFilePath, sasTokenWithDestPath,"--metadata","source=mac client;FileType=raw file"])
+                
+                
                 uploadOperation.completionBlock = {
                     if uploadOperation.isCancelled {
                         return
@@ -665,7 +802,7 @@ class IconViewController: NSViewController {
                         uploadShowFetchSASTokenErrorAndNotify(error: OutlineViewController.NameConstants.kUploadShowFailedStr, recoveryContext: recoveryContext)
                         return
                     }
-                    updateMetaDataPresent(metaDataTimeStamp: metaDataTimeStamp)
+                    updateMetaDataPresent(metaDataTimeStamp: metaDataTimeStamp,jsonFilesData: jsonFilesData!)
                     NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.reloadUploadTableView),
                                                     object: nil,
                                                     userInfo: ["metadataPresent":true,
@@ -673,12 +810,14 @@ class IconViewController: NSViewController {
                                                     ])
                     
                     // WARNING: delay after metadata JSON uploading completed successfully
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 10 /* delay 10 secs */) {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 10 /* delay 10 secs */) { [self] in
+                        
                         self.uploadQueue.addOperations(uploadOperation.dependens , waitUntilFinished: false)
                     }
                 }
                 
                 self.uploadQueue.addOperations([uploadOperation], waitUntilFinished: false)
+                
             }
         }
     }
@@ -692,7 +831,6 @@ class IconViewController: NSViewController {
         
         var uploadOperations = [FileUploadOperation]()
         for uploadRecord in uploadRecords {
-            writeFile(strToWrite: uploadRecord.srcPath, className: "iCONViewController", functionName: "createUploadDirTask")
             var args = ["copy", uploadRecord.srcPath, sasTokenWithDestPath, "--recursive", "--put-md5"]
             if isResume {
                 args.append("--overwrite=false")
@@ -802,238 +940,135 @@ class IconViewController: NSViewController {
         NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.LoginSuccessfull), object: nil)
         NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.ClearShowContent), object: nil)
     }
-    
-    
-    func reUploadMetadataJSON(json_Main:[String:String])
-    {
-        /*
-         let json_main = notification.userInfo?["json_main"] as! [String:String]
-         let shootDay = json_main["shootDay"]!
-         let batch = json_main["batch"]!
-         let unit = json_main["unit"]!
-         
-         let showName = notification.userInfo?["showName"] as! String
-         let season = notification.userInfo?["season"] as! (String,String) // name:Id
-         let blockOrEpisode = notification.userInfo?["blockOrEpisode"] as! (String,String) // name:Id
-         let isBlock = notification.userInfo?["isBlock"] as! Bool
-         guard let files = notification.userInfo?["files"] as? [String:[[String:Any]]] else { return }
-         guard let srcDirs = notification.userInfo?["srcDir"] as? [String:[String]] else { return }
-         var pendingUploads = notification.userInfo?["pendingUploads"] as? [String:[UploadTableRow]]
-         
-         // template for full path for upload:
-         //      [show name]/[season name]/[block name]/[shootday]/[batch]/[unit ]/Camera RAW/browsed folder
-         //
-         let metadatafolderLayout = "\(season.0)/\(blockOrEpisode.0 as String)/\(shootDay)/\(batch)/\(unit)/"
-         let metadataJsonFilename = NSUUID().uuidString + "_metadata.json"
-         let metaDataJSONTime = notification.userInfo?["metaDataJSONTime"] as! String
-         
-         if (pendingUploads == nil) {
-         pendingUploads = [:]
-         for (type, value) in srcDirs {
-         pendingUploads![type] = []
-         for dir in value {
-         // folderLayoutStr -> [season name]/[block name]/[shootday]/[batch]/[unit ]/[type]
-         var folderLayoutStr : String
-         if  type == StringConstant().reportNotesType{
-         folderLayoutStr = metadatafolderLayout + "\(StringConstant().reportNotesFilePath)/"
-         }else{
-         folderLayoutStr = metadatafolderLayout + "\(type)/"
-         }
-         
-         
-         // create UI row in TableView (one per each folder being upload) before all upload tasks will be created
-         let uploadRecord = UploadTableRow(showName: showName, uploadParams: json_main, srcPath: dir, dstPath: folderLayoutStr, isExistRemotely: false,isBlock: isBlock,seasonId: season.1,metaDataJSONTime: metaDataJSONTime)
-         pendingUploads![type]!.append(uploadRecord)
-         
-         writeFile(strToWrite: dir, className: "IconViewController", functionName: "OnstartUploadShow")
-         NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.AddUploadTask),
-         object: nil,
-         userInfo: ["uploadRecord" : uploadRecord])
-         }
-         }
-         }
-         
-         let recoveryContext : [String : Any] = ["json_main": json_main,
-         "showName": showName,
-         "season": season,
-         "blockOrEpisode": blockOrEpisode,
-         "isBlock": isBlock,
-         "files": files,
-         "srcDir": srcDirs,
-         "pendingUploads": pendingUploads!]
-         
-         var sasToken : String!
-         
-         fetchSASToken(showName: showName, showId: self.showId(showName: showName), synchronous: false) { (result,state) in
-         switch state {
-         case .pending:
-         return
-         case .cached:
-         sasToken = result
-         case .completed:
-         NotificationCenter.default.post(name: Notification.Name(WindowViewController.NotificationNames.OnStartUploadShow),
-         object: nil,
-         userInfo: ["json_main": json_main,
-         "showName": showName,
-         "season": season,
-         "blockOrEpisode": blockOrEpisode,
-         "isBlock": isBlock,
-         "files": files,
-         "srcDir": srcDirs,
-         "pendingUploads": pendingUploads!,
-         "metaDataJSONTime":metaDataJSONTime])
-         }
-         }
-         
-         // wait for token to aquire in background task
-         if sasToken == nil {
-         return
-         }
-         
-         var jsonRecords : [Any] = []
-         var filesToUpload : [String:String] = [:]
-         var dataSubTasks: [FileUploadOperation] = []
-         
-         for (type, value) in files {
-         if value.isEmpty {
-         continue
-         }
-         // folderLayoutStr -> [season name]/[block name]/[shootday]/[batch]/[unit ]/[type]
-         var folderLayoutStr : String
-         
-         if  type == StringConstant().reportNotesType{
-         folderLayoutStr = metadatafolderLayout + "\(StringConstant().reportNotesFilePath)/"
-         }else{
-         folderLayoutStr = metadatafolderLayout + "\(type)/"
-         }
-         
-         // metadata.json upload task is root task, all data tasks are subtasks
-         // sasToken is unavailable here, will be filled in latter
-         let op = self.createUploadDirTask(showName: showName, folderLayoutStr: folderLayoutStr, sasToken: sasToken, isResume: false, uploadRecords: pendingUploads![type]!)
-         dataSubTasks.append(contentsOf: op)
-         
-         for item in value {    // Item is having array of dictionary
-         for (key, rec) in item {
-         if let dict = rec as? [String:Any] {     //Updated by kush
-         if let filePathkey = dict["filePath"] as? String {
-         filesToUpload[filePathkey] = key
-         jsonRecords.append(rec)
-         }
-         }
-         }
-         }
-         }
-         
-         var json : [String:Any] = json_main
-         json["files"] = jsonRecords
-         jsonFromDict(from: json)
-         guard let jsonData = try? JSONSerialization.data(withJSONObject: json, options: [.sortedKeys, .prettyPrinted]) else { return }
-         
-         var metadataPath : URL!
-         if let metadataJsonPath = FileManager.default.urls(for: .applicationSupportDirectory, in: .allDomainsMask).first {
-         
-         metadataPath = metadataJsonPath.appendingPathComponent(metadataJsonFilename)
-         print ("---------------------- metadataPath: ", metadataPath!)
-         do {
-         try jsonData.write(to: metadataPath)
-         } catch let error as NSError {
-         print(error)
-         // TODO: show Alert
-         return
-         }
-         }
-         
-         if metadataPath == nil { return }
-         
-         DispatchQueue.global(qos: .background).async {
-         
-         let checkPathQueue = OperationQueue()
-         
-         var dialogMessage : String = ""
-         var isExistRemotely: Bool = false
-         for (type, value) in files {
-         if value.isEmpty {
-         continue
-         }
-         
-         for v in pendingUploads![type]! {
-         let pathElements = v.srcPath.components(separatedBy: "/")
-         var tail : String = pathElements.last!
-         if tail.hasSuffix(".") {
-         let rmvDot:String  = removeDot(dirNameArray:pathElements)
-         let rmvDotLastDir = URL(fileURLWithPath: rmvDot).lastPathComponent
-         if(!rmvDotLastDir.isEmpty) {
-         tail = rmvDotLastDir
-         }
-         }
-         print("dst :\(String(describing: "\(v.dstPath)\(tail)".addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)))")
-         if let dst = "\(v.dstPath)\(tail)".addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) {
-         let checkPathOperation = CheckPathExistsOperation(showName: showName, showId: self.showId(showName: showName), srcDir: dst) { (result) in
-         if result == true {
-         v.isExistRemotely = result
-         isExistRemotely = true
-         dialogMessage += "\r\n\(v.dstPath)\(tail)"
-         }
-         }
-         checkPathQueue.addOperations([checkPathOperation], waitUntilFinished: false)
-         }
-         }
-         }
-         
-         checkPathQueue.waitUntilAllOperationsAreFinished()
-         
-         // default just fallback to upload step
-         var modalResult: NSApplication.ModalResponse = NSApplication.ModalResponse.alertSecondButtonReturn
-         
-         DispatchQueue.main.async {
-         var appendOnly: Bool = false
-         // show dilaog only if at least one remote directory exists
-         if isExistRemotely {
-         dialogMessage += "\r\n\r\nPlease choose \"\(StringConstant().append)\" or \"\(StringConstant().replace)\" to proceed."
-         modalResult = dialogOverwrite(question:StringConstant().pathExist, text: dialogMessage)
-         }
-         
-         DispatchQueue.global(qos: .background).async {
-         switch modalResult {
-         case NSApplication.ModalResponse.alertFirstButtonReturn:
-         for (type, value) in files {
-         if value.isEmpty {
-         continue
-         }
-         // folderLayoutStr -> [season name]/[block name]/[shootday]/[batch]/[unit ]/[type]
-         let folderLayoutStr = metadatafolderLayout + "\(type)/"
-         
-         let result = self.removeDirTask(showName: showName, folderLayoutStr: folderLayoutStr, sasToken: sasToken, uploadRecords: pendingUploads![type]!)
-         if result == false {
-         uploadShowFetchSASTokenErrorAndNotify(error: OutlineViewController.NameConstants.kUploadShowFailedStr, recoveryContext: recoveryContext)
-         return
-         }
-         }
-         // trigger upload operation
-         fallthrough
-         
-         case NSApplication.ModalResponse.alertSecondButtonReturn:
-         appendOnly = true
-         fallthrough
-         
-         default:
-         //let metaDataJSONTime = String(format:"%2X", Int(Date().timeIntervalSince1970 * 1000)) // in millsecs  // updated by kush
-         self.uploadMetadataJsonOperation(showName: showName,
-         sasToken: sasToken,
-         dataFiles: filesToUpload,
-         metadataFilePath: metadataPath.path,
-         dstPath: metadatafolderLayout + "\(metaDataJSONTime)_metadata.json",
-         dependens : dataSubTasks,
-         appendOnly : appendOnly,
-         recoveryContext : recoveryContext,
-         metaDataTimeStamp:metaDataJSONTime)
-         break
-         }
-         }
-         }
-         }
-         */
+        
+
+    func calculateUploadFiles(fileType: String, inputDirs: [URL]) -> [String : [[String:Any]]] {
+        
+        // let dialog = NSOpenPanel();
+        var outputFiles: [String: [[String:Any]]] = [:]
+        
+        if fileType.isEmpty {
+            return [:]
+        }
+        
+        var fileDirPath = fileType
+        if fileType == StringConstant().reportNotesType {
+            fileDirPath = StringConstant().reportNotesFilePath
+        }
+        
+        for result in inputDirs {
+            
+            let pathURL = NSURL(fileURLWithPath: result.path, isDirectory: true)
+            var filePaths : [String : UInt64]    = [:]
+            
+            let enumerator = FileManager.default.enumerator(atPath: result.path)
+            
+            let fileExist = FileManager.default.fileExists(atPath: result.path)
+            
+            do {
+                let items = try FileManager.default.contentsOfDirectory(atPath: result.path)
+                
+                for item in items {
+                    print("Found \(item)")
+                }
+            } catch let error as NSError {
+                print("\(error.localizedDescription)")
+            }
+            
+            
+            while let element = enumerator?.nextObject() as? String {
+                let filename = URL(fileURLWithPath: element).lastPathComponent
+                if filename == ".DS_Store" {
+                    continue
+                }
+                if let fType = enumerator?.fileAttributes?[FileAttributeKey.type] as? FileAttributeType {
+                    
+                    switch fType{
+                    case .typeRegular:
+                        let path = NSURL(fileURLWithPath: element, relativeTo: pathURL as URL).path
+                        if let fSize = enumerator?.fileAttributes?[FileAttributeKey.size] as? UInt64 {
+                            filePaths[path!]=fSize
+                        }
+                    case .typeDirectory:
+                        break
+                    default:
+                        continue
+                    }
+                }
+                
+            }
+            
+            let scanItems = filePaths
+            var files = [[String:Any]]()
+            for scanItem in scanItems {
+                let filename = URL(fileURLWithPath: scanItem.key).lastPathComponent
+                let filefolder = URL(fileURLWithPath: scanItem.key).deletingLastPathComponent()
+                
+                var parsed = filefolder.path.replacingOccurrences(of: pathURL.deletingLastPathComponent!.path, with: "")
+                if parsed.hasPrefix("/") {
+                    parsed = String(parsed.dropFirst()) + "/"
+                }
+                // WARNING: special requirement to be compliant with backend we need to trim trailinig dot for each folder
+                //          if folder name ends with dot.
+                //   parsed = parsed.replacingOccurrences(of: "./", with: "/")
+                //  let filePath = parsed.isEmpty ? filename : parsed + filename
+                //   print("filePath : \(filePath)")
+                
+                let rmvDot:String  = removeDot(dirNameArray:parsed.components(separatedBy: "/"))
+                let filePath = rmvDot+filename
+                let item : [String : Any] = ["name":filename,
+                                             "filePath":fileDirPath + "/" + filePath,
+                                             "filesize":scanItem.value,
+                                             "checksum":fileDirPath + "/" + filePath, //randomString(length: 32),/* will be replaced latter by real checksum value */
+                                             "type":fileType]
+                files.append([scanItem.key : item])
+                
+            }
+            outputFiles[result.path] = files
+        }
+        return outputFiles
     }
+    
+    
+    func filesArrayFromResume(fileDirectoryURL : URL) -> [String]{
+        
+        let pathURL = NSURL(fileURLWithPath: fileDirectoryURL.path, isDirectory: true)
+        var filePaths : [String : UInt64]    = [:]
+        var fileList = [String]()
+        let enumerator = FileManager.default.enumerator(atPath: fileDirectoryURL.path)
+        
+        let fileExist = FileManager.default.fileExists(atPath: fileDirectoryURL.path)
+        if fileExist {
+            while let element = enumerator?.nextObject() as? String {
+                let filename = URL(fileURLWithPath: element).lastPathComponent
+                if filename == ".DS_Store" {
+                    continue
+                }
+                if let fType = enumerator?.fileAttributes?[FileAttributeKey.type] as? FileAttributeType {
+                    
+                    switch fType{
+                    case .typeRegular:
+                        let path = NSURL(fileURLWithPath: element, relativeTo: pathURL as URL).path
+                        if let fSize = enumerator?.fileAttributes?[FileAttributeKey.size] as? UInt64 {
+                            filePaths[path!]=fSize
+                        }
+                    case .typeDirectory:
+                        break
+                    default:
+                        continue
+                    }
+                }
+            }
+            
+            for(key,_) in filePaths{
+                fileList.append(key)
+            }
+        }
+        return fileList
+    }
+    
+    
+    
 }
 extension IconViewController : NSCollectionViewDataSource {
     
