@@ -1,0 +1,195 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workflows_Logic_GetVendorAssetDownloadCount_name": {
+            "defaultValue": "Logic-GetVendorAssetDownloadCount",
+            "type": "String"
+        },
+        "connections_commondataservice_externalid": {
+            "defaultValue": "[concat(subscription().id,'/resourceGroups/',resourceGroup().name,'/providers/Microsoft.Web/connections/commondataservice')]",
+            "type": "String"
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "type": "Microsoft.Logic/workflows",
+            "apiVersion": "2017-07-01",
+            "name": "[parameters('workflows_Logic_GetVendorAssetDownloadCount_name')]",
+            "location": "centralindia",
+            "properties": {
+                "state": "Enabled",
+                "definition": {
+                    "$schema": "https://schema.management.azure.com/schemas/2016-06-01/Microsoft.Logic.json",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {
+                        "$connections": {
+                            "defaultValue": {},
+                            "type": "Object"
+                        }
+                    },
+                    "triggers": {
+                        "manual": {
+                            "type": "Request",
+                            "kind": "Http",
+                            "inputs": {
+                                "method": "POST",
+                                "schema": {
+                                    "properties": {
+                                        "assetBlobPath": {
+                                            "type": "string"
+                                        },
+                                        "assetFileName": {
+                                            "type": "string"
+                                        },
+                                        "assetName": {
+                                            "type": "string"
+                                        },
+                                        "vendorContainer": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "actions": {
+                        "Initialize_variable_-_TrackVendorActionCount": {
+                            "runAfter": {},
+                            "type": "InitializeVariable",
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "TrackVendorActionCount",
+                                        "type": "integer"
+                                    }
+                                ]
+                            }
+                        },
+                        "Response_failure": {
+                            "runAfter": {
+                                "Scope": [
+                                    "Failed",
+                                    "TimedOut"
+                                ]
+                            },
+                            "type": "Response",
+                            "kind": "Http",
+                            "inputs": {
+                                "body": {
+                                    "Message": "Failed to get vendor asset download count"
+                                },
+                                "statusCode": 500
+                            }
+                        },
+                        "Scope": {
+                            "actions": {
+                                "Check_asset_downloaded_or_not": {
+                                    "actions": {
+                                        "For_each": {
+                                            "foreach": "@body('List_rows_TrackVendorActions')?['value']",
+                                            "actions": {
+                                                "Set_variable": {
+                                                    "runAfter": {},
+                                                    "type": "SetVariable",
+                                                    "inputs": {
+                                                        "name": "TrackVendorActionCount",
+                                                        "value": "@items('For_each')?['cr35f_count']"
+                                                    }
+                                                }
+                                            },
+                                            "runAfter": {},
+                                            "type": "Foreach"
+                                        },
+                                        "Response_success": {
+                                            "runAfter": {
+                                                "For_each": [
+                                                    "Succeeded"
+                                                ]
+                                            },
+                                            "type": "Response",
+                                            "kind": "Http",
+                                            "inputs": {
+                                                "body": {
+                                                    "Count": "@{variables('TrackVendorActionCount')}"
+                                                },
+                                                "statusCode": 200
+                                            }
+                                        }
+                                    },
+                                    "runAfter": {
+                                        "List_rows_TrackVendorActions": [
+                                            "Succeeded"
+                                        ]
+                                    },
+                                    "else": {
+                                        "actions": {
+                                            "download_count_zero": {
+                                                "runAfter": {},
+                                                "type": "Response",
+                                                "kind": "Http",
+                                                "inputs": {
+                                                    "body": {
+                                                        "Count": "0"
+                                                    },
+                                                    "statusCode": 200
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "expression": {
+                                        "and": [
+                                            {
+                                                "greater": [
+                                                    "@length(body('List_rows_TrackVendorActions')?['value'])",
+                                                    0
+                                                ]
+                                            }
+                                        ]
+                                    },
+                                    "type": "If"
+                                },
+                                "List_rows_TrackVendorActions": {
+                                    "runAfter": {},
+                                    "type": "ApiConnection",
+                                    "inputs": {
+                                        "host": {
+                                            "connection": {
+                                                "name": "@parameters('$connections')['commondataservice']['connectionId']"
+                                            }
+                                        },
+                                        "method": "get",
+                                        "path": "/v2/datasets/@{encodeURIComponent(encodeURIComponent('unq7df5913e396b48118865fe06ba29d.crm'))}/tables/@{encodeURIComponent(encodeURIComponent('cr35f_trackvendoractions'))}/items",
+                                        "queries": {
+                                            "$filter": "cr35f_name eq '@{triggerBody()?['vendorContainer']}/@{triggerBody()?['assetBlobPath']}'  and  cr35f_action eq 'Download'"
+                                        }
+                                    }
+                                }
+                            },
+                            "runAfter": {
+                                "Initialize_variable_-_TrackVendorActionCount": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "Scope"
+                        }
+                    },
+                    "outputs": {}
+                },
+                "parameters": {
+                    "$connections": {
+                        "value": {
+                            "commondataservice": {
+                                "connectionId": "[parameters('connections_commondataservice_externalid')]",
+                                "connectionName": "commondataservice",
+                                "id": "/subscriptions/e1945056-88e4-4a46-8bff-99912406c00a/providers/Microsoft.Web/locations/centralindia/managedApis/commondataservice"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    ]
+}

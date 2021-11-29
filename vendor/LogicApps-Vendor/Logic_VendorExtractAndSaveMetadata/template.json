@@ -1,0 +1,490 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workflows_Logic_VendorExtractAndSaveMetadata_name": {
+            "defaultValue": "Logic-VendorExtractAndSaveMetadata",
+            "type": "String"
+        },
+        "sites_func_durinmediatgoo7nanfx3ds_externalid": {
+            "defaultValue": "[concat(subscription().id,'/resourceGroups/',resourceGroup().name,'/providers/Microsoft.Web/sites/func-durinmediadgikfok37rgs6')]",
+            "type": "String"
+        },
+        "sites_VendorParseMetadataJson_externalid": {
+            "defaultValue": "[concat(subscription().id,'/resourceGroups/',resourceGroup().name,'/providers/Microsoft.Web/sites/Func-ParseMediaMetadata19102021')]",
+            "type": "String"
+        },
+        "connections_commondataservice_externalid": {
+            "defaultValue": "[concat(subscription().id,'/resourceGroups/',resourceGroup().name,'/providers/Microsoft.Web/connections/commondataservice')]",
+            "type": "String"
+        },
+        "crmOrg": {
+            "defaultValue": "durinplaceholdercrm",
+            "type": "String"
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "type": "Microsoft.Logic/workflows",
+            "apiVersion": "2017-07-01",
+            "name": "[parameters('workflows_Logic_VendorExtractAndSaveMetadata_name')]",
+            "location": "centralindia",
+            "properties": {
+                "state": "Enabled",
+                "definition": {
+                    "$schema": "https://schema.management.azure.com/schemas/2016-06-01/Microsoft.Logic.json",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {
+                        "$connections": {
+                            "defaultValue": {},
+                            "type": "Object"
+                        }
+                    },
+                    "triggers": {
+                        "manual": {
+                            "type": "Request",
+                            "kind": "Http",
+                            "inputs": {
+                                "method": "POST"
+                            }
+                        }
+                    },
+                    "actions": {
+                        "Condition_-_Check_BlobUri_and_RecordId": {
+                            "actions": {
+                                "Condition_-_Check_for_ErrorMessage": {
+                                    "actions": {
+                                        "Create_error_log_record": {
+                                            "runAfter": {
+                                                "Update_asset_file_record_status_Metadata_extraction_failed": [
+                                                    "Succeeded"
+                                                ]
+                                            },
+                                            "type": "ApiConnection",
+                                            "inputs": {
+                                                "body": {
+                                                    "_media_assetfiles_value": "@body('Parse_Request_Body_JSON')?['RecordId']",
+                                                    "media_description": "@{result('Scope')}",
+                                                    "media_name": "Error occured while extracting metadata"
+                                                },
+                                                "host": {
+                                                    "connection": {
+                                                        "name": "@parameters('$connections')['commondataservice']['connectionId']"
+                                                    }
+                                                },
+                                                "method": "post",
+                                                "path": "/v2/datasets/@{encodeURIComponent(encodeURIComponent('unq7df5913e396b48118865fe06ba29d.crm'))}/tables/@{encodeURIComponent(encodeURIComponent('media_asseterrorlogs'))}/items"
+                                            }
+                                        },
+                                        "Response_failure": {
+                                            "runAfter": {
+                                                "Create_error_log_record": [
+                                                    "Succeeded"
+                                                ]
+                                            },
+                                            "type": "Response",
+                                            "kind": "Http",
+                                            "inputs": {
+                                                "body": {
+                                                    "Message": "Failed to extract and save metadata"
+                                                },
+                                                "statusCode": 500
+                                            }
+                                        },
+                                        "Update_asset_file_record_status_Metadata_extraction_failed": {
+                                            "runAfter": {},
+                                            "type": "ApiConnection",
+                                            "inputs": {
+                                                "body": {
+                                                    "cr35f_metadatastatus": 207940002
+                                                },
+                                                "host": {
+                                                    "connection": {
+                                                        "name": "@parameters('$connections')['commondataservice']['connectionId']"
+                                                    }
+                                                },
+                                                "method": "patch",
+                                                "path": "/v2/datasets/@{encodeURIComponent(encodeURIComponent('unq7df5913e396b48118865fe06ba29d.crm'))}/tables/@{encodeURIComponent(encodeURIComponent('cr35f_vendorassetfileses'))}/items/@{encodeURIComponent(encodeURIComponent(body('Parse_Request_Body_JSON')?['RecordId']))}"
+                                            }
+                                        }
+                                    },
+                                    "runAfter": {
+                                        "Scope": [
+                                            "Succeeded",
+                                            "Failed"
+                                        ]
+                                    },
+                                    "else": {
+                                        "actions": {
+                                            "Response_success": {
+                                                "runAfter": {},
+                                                "type": "Response",
+                                                "kind": "Http",
+                                                "inputs": {
+                                                    "body": {
+                                                        "Message": "Metadata extracted and saved successfully"
+                                                    },
+                                                    "statusCode": 200
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "expression": {
+                                        "and": [
+                                            {
+                                                "greater": [
+                                                    "@length(variables('ErrorMessage'))",
+                                                    0
+                                                ]
+                                            }
+                                        ]
+                                    },
+                                    "type": "If"
+                                },
+                                "Scope": {
+                                    "actions": {
+                                        "Azure_function_MediaInfo": {
+                                            "runAfter": {
+                                                "Get_File_extension": [
+                                                    "Succeeded"
+                                                ]
+                                            },
+                                            "type": "Function",
+                                            "inputs": {
+                                                "body": {
+                                                    "blobUri": "@body('Parse_Request_Body_JSON')?['BlobUri']"
+                                                },
+                                                "function": {
+                                                    "id": "[concat(parameters('sites_func_durinmediatgoo7nanfx3ds_externalid'), '/functions/MediaInfo')]"
+                                                },
+                                                "method": "POST"
+                                            }
+                                        },
+                                        "Condition_metadata_is_found": {
+                                            "actions": {
+                                                "For_each_-_Track": {
+                                                    "foreach": "@body('Parse_JSON')?['media']",
+                                                    "actions": {
+                                                        "Add_a_new_row_-_Track": {
+                                                            "runAfter": {},
+                                                            "type": "ApiConnection",
+                                                            "inputs": {
+                                                                "body": {
+                                                                    "_cr35f_assetfile_value": "@body('Update_extracted_metadata_in_asset_file_record')?['cr35f_vendorassetfilesid']",
+                                                                    "_ownerid_type": "teams",
+                                                                    "cr35f_format": "@items('For_each_-_Track')?['format']",
+                                                                    "cr35f_type": "@items('For_each_-_Track')?['track']"
+                                                                },
+                                                                "host": {
+                                                                    "connection": {
+                                                                        "name": "@parameters('$connections')['commondataservice']['connectionId']"
+                                                                    }
+                                                                },
+                                                                "method": "post",
+                                                                "path": "/v2/datasets/@{encodeURIComponent(encodeURIComponent('unq7df5913e396b48118865fe06ba29d.crm'))}/tables/@{encodeURIComponent(encodeURIComponent('cr35f_vendortracks'))}/items"
+                                                            }
+                                                        },
+                                                        "For_each_-_metadata_key_value": {
+                                                            "foreach": "@items('For_each_-_Track')?['type']",
+                                                            "actions": {
+                                                                "Add_a_new_row": {
+                                                                    "runAfter": {},
+                                                                    "type": "ApiConnection",
+                                                                    "inputs": {
+                                                                        "body": {
+                                                                            "_cr35f_track_value": "@body('Add_a_new_row_-_Track')?['cr35f_vendortrackid']",
+                                                                            "cr35f_keyname": "@items('For_each_-_metadata_key_value')?['key']",
+                                                                            "cr35f_keyvalue": "@items('For_each_-_metadata_key_value')?['value']"
+                                                                        },
+                                                                        "host": {
+                                                                            "connection": {
+                                                                                "name": "@parameters('$connections')['commondataservice']['connectionId']"
+                                                                            }
+                                                                        },
+                                                                        "method": "post",
+                                                                        "path": "/v2/datasets/@{encodeURIComponent(encodeURIComponent('unq7df5913e396b48118865fe06ba29d.crm'))}/tables/@{encodeURIComponent(encodeURIComponent('cr35f_vendormetadatas'))}/items"
+                                                                    }
+                                                                },
+                                                                "Delay": {
+                                                                    "runAfter": {
+                                                                        "Add_a_new_row": [
+                                                                            "Succeeded"
+                                                                        ]
+                                                                    },
+                                                                    "type": "Wait",
+                                                                    "inputs": {
+                                                                        "interval": {
+                                                                            "count": 1,
+                                                                            "unit": "Second"
+                                                                        }
+                                                                    }
+                                                                }
+                                                            },
+                                                            "runAfter": {
+                                                                "Add_a_new_row_-_Track": [
+                                                                    "Succeeded"
+                                                                ]
+                                                            },
+                                                            "type": "Foreach"
+                                                        }
+                                                    },
+                                                    "runAfter": {
+                                                        "Parse_JSON": [
+                                                            "Succeeded"
+                                                        ]
+                                                    },
+                                                    "type": "Foreach"
+                                                },
+                                                "ParseMediaMetadata": {
+                                                    "runAfter": {},
+                                                    "type": "Function",
+                                                    "inputs": {
+                                                        "body": "@body('Azure_function_MediaInfo')",
+                                                        "function": {
+                                                            "id": "[concat(parameters('sites_VendorParseMetadataJson_externalid'), '/functions/ParseMediaMetadata')]"
+                                                        },
+                                                        "method": "POST"
+                                                    }
+                                                },
+                                                "Parse_JSON": {
+                                                    "runAfter": {
+                                                        "Update_extracted_metadata_in_asset_file_record": [
+                                                            "Succeeded"
+                                                        ]
+                                                    },
+                                                    "type": "ParseJson",
+                                                    "inputs": {
+                                                        "content": "@body('ParseMediaMetadata')",
+                                                        "schema": {
+                                                            "properties": {
+                                                                "media": {
+                                                                    "items": {
+                                                                        "properties": {
+                                                                            "format": {
+                                                                                "type": "string"
+                                                                            },
+                                                                            "track": {
+                                                                                "type": "string"
+                                                                            },
+                                                                            "type": {
+                                                                                "items": {
+                                                                                    "properties": {
+                                                                                        "key": {
+                                                                                            "type": "string"
+                                                                                        },
+                                                                                        "value": {
+                                                                                            "type": "string"
+                                                                                        }
+                                                                                    },
+                                                                                    "required": [
+                                                                                        "key",
+                                                                                        "value"
+                                                                                    ],
+                                                                                    "type": "object"
+                                                                                },
+                                                                                "type": "array"
+                                                                            }
+                                                                        },
+                                                                        "required": [
+                                                                            "track",
+                                                                            "format",
+                                                                            "type"
+                                                                        ],
+                                                                        "type": "object"
+                                                                    },
+                                                                    "type": "array"
+                                                                }
+                                                            },
+                                                            "type": "object"
+                                                        }
+                                                    }
+                                                },
+                                                "Set_variable_-_Update_extracted_metadata_-_ErrorMessage": {
+                                                    "runAfter": {
+                                                        "Update_extracted_metadata_in_asset_file_record": [
+                                                            "TimedOut",
+                                                            "Failed"
+                                                        ]
+                                                    },
+                                                    "type": "SetVariable",
+                                                    "inputs": {
+                                                        "name": "ErrorMessage",
+                                                        "value": "Failed to update Metadata with RecordId : @{body('Parse_Request_Body_JSON')?['RecordId']}"
+                                                    }
+                                                },
+                                                "Update_extracted_metadata_in_asset_file_record": {
+                                                    "runAfter": {
+                                                        "ParseMediaMetadata": [
+                                                            "Succeeded"
+                                                        ]
+                                                    },
+                                                    "type": "ApiConnection",
+                                                    "inputs": {
+                                                        "body": {
+                                                            "cr35f_mediainfometadata": "@{body('Azure_function_MediaInfo')}",
+                                                            "cr35f_metadatastatus": 207940000
+                                                        },
+                                                        "host": {
+                                                            "connection": {
+                                                                "name": "@parameters('$connections')['commondataservice']['connectionId']"
+                                                            }
+                                                        },
+                                                        "method": "patch",
+                                                        "path": "/v2/datasets/@{encodeURIComponent(encodeURIComponent('unq7df5913e396b48118865fe06ba29d.crm'))}/tables/@{encodeURIComponent(encodeURIComponent('cr35f_vendorassetfileses'))}/items/@{encodeURIComponent(encodeURIComponent(body('Parse_Request_Body_JSON')?['RecordId']))}"
+                                                    }
+                                                }
+                                            },
+                                            "runAfter": {
+                                                "Azure_function_MediaInfo": [
+                                                    "Succeeded"
+                                                ]
+                                            },
+                                            "else": {
+                                                "actions": {
+                                                    "Update_asset_file_status_metadata_not_found_record": {
+                                                        "runAfter": {},
+                                                        "type": "ApiConnection",
+                                                        "inputs": {
+                                                            "body": {
+                                                                "cr35f_metadatastatus": 207940001
+                                                            },
+                                                            "host": {
+                                                                "connection": {
+                                                                    "name": "@parameters('$connections')['commondataservice']['connectionId']"
+                                                                }
+                                                            },
+                                                            "method": "patch",
+                                                            "path": "/v2/datasets/@{encodeURIComponent(encodeURIComponent('unq7df5913e396b48118865fe06ba29d.crm'))}/tables/@{encodeURIComponent(encodeURIComponent('cr35f_vendorassetfileses'))}/items/@{encodeURIComponent(encodeURIComponent(body('Parse_Request_Body_JSON')?['RecordId']))}"
+                                                        }
+                                                    }
+                                                }
+                                            },
+                                            "expression": {
+                                                "and": [
+                                                    {
+                                                        "equals": [
+                                                            "@equals(body('Azure_function_MediaInfo')?['Media'], null)",
+                                                            "@false"
+                                                        ]
+                                                    }
+                                                ]
+                                            },
+                                            "type": "If"
+                                        },
+                                        "Get_File_extension": {
+                                            "runAfter": {},
+                                            "type": "Compose",
+                                            "inputs": "@split(body('Parse_Request_Body_JSON')?['BlobUri'],'.')?[1]"
+                                        },
+                                        "Set_variable_-_Extract_Metadata_-_ErrorMessage": {
+                                            "runAfter": {
+                                                "Azure_function_MediaInfo": [
+                                                    "TimedOut",
+                                                    "Failed"
+                                                ]
+                                            },
+                                            "type": "SetVariable",
+                                            "inputs": {
+                                                "name": "ErrorMessage",
+                                                "value": "Failed to extract Metadata of Asset file with AssetId: @{body('Parse_Request_Body_JSON')?['RecordId']}"
+                                            }
+                                        }
+                                    },
+                                    "runAfter": {},
+                                    "type": "Scope"
+                                }
+                            },
+                            "runAfter": {
+                                "Parse_Request_Body_JSON": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "else": {
+                                "actions": {
+                                    "Response": {
+                                        "runAfter": {},
+                                        "type": "Response",
+                                        "kind": "Http",
+                                        "inputs": {
+                                            "body": {
+                                                "message": "BlobUri and RecordId Required"
+                                            },
+                                            "headers": {
+                                                "Content-Type": "application/json; charset=utf-8"
+                                            },
+                                            "statusCode": 400
+                                        }
+                                    }
+                                }
+                            },
+                            "expression": {
+                                "and": [
+                                    {
+                                        "greater": [
+                                            "@length(body('Parse_Request_Body_JSON')?['BlobUri'])",
+                                            0
+                                        ]
+                                    },
+                                    {
+                                        "greater": [
+                                            "@length(body('Parse_Request_Body_JSON')?['RecordId'])",
+                                            0
+                                        ]
+                                    }
+                                ]
+                            },
+                            "type": "If"
+                        },
+                        "Initialize_variable_-_ErrorMessage": {
+                            "runAfter": {},
+                            "type": "InitializeVariable",
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "ErrorMessage",
+                                        "type": "string"
+                                    }
+                                ]
+                            }
+                        },
+                        "Parse_Request_Body_JSON": {
+                            "runAfter": {
+                                "Initialize_variable_-_ErrorMessage": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "ParseJson",
+                            "inputs": {
+                                "content": "@triggerBody()",
+                                "schema": {
+                                    "properties": {
+                                        "BlobUri": {
+                                            "type": "string"
+                                        },
+                                        "RecordId": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "outputs": {}
+                },
+                "parameters": {
+                    "$connections": {
+                        "value": {
+                            "commondataservice": {
+                                "connectionId": "[parameters('connections_commondataservice_externalid')]",
+                                "connectionName": "commondataservice",
+                                "id": "/subscriptions/e1945056-88e4-4a46-8bff-99912406c00a/providers/Microsoft.Web/locations/centralindia/managedApis/commondataservice"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    ]
+}

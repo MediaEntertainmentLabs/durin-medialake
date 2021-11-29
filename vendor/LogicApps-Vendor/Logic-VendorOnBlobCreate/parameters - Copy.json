@@ -1,0 +1,27 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workflows_Logic_VendorOnBlobCreate_name": {
+            "value": null
+        },
+        "storageAccounts_vendordurinstorageupload_externalid": {
+            "value": null
+        },
+        "workflows_Logic_VendorAntiVirusScan_externalid": {
+            "value": null
+        },
+        "workflows_Logic_VendorExtractAndSaveMetadata_externalid": {
+            "value": null
+        },
+        "connections_azureeventgrid_externalid": {
+            "value": null
+        },
+        "connections_commondataservice_externalid": {
+            "value": null
+        },
+        "crmOrg": {
+            "value": "unq7df5913e396b48118865fe06ba29d.crm"
+        }
+    }
+}
