@@ -1,0 +1,980 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workflows_Logic_VendorOnBlobCreate_name": {
+            "defaultValue": "Logic-VendorOnBlobCreate",
+            "type": "String"
+        },
+        "storageAccounts_vendordurinstorageupload_externalid": {
+            "defaultValue": "/subscriptions/e1945056-88e4-4a46-8bff-99912406c00a/resourceGroups/durindevrg/providers/Microsoft.Storage/storageAccounts/vendordurinstorageupload",
+            "type": "String"
+        },
+        "workflows_Logic_VendorAntiVirusScan_externalid": {
+            "defaultValue": "/subscriptions/e1945056-88e4-4a46-8bff-99912406c00a/resourceGroups/durindevrg/providers/Microsoft.Logic/workflows/Logic-VendorAntiVirusScan",
+            "type": "String"
+        },
+        "workflows_Logic_VendorExtractAndSaveMetadata_externalid": {
+            "defaultValue": "/subscriptions/e1945056-88e4-4a46-8bff-99912406c00a/resourceGroups/durindevrg/providers/Microsoft.Logic/workflows/Logic-VendorExtractAndSaveMetadata",
+            "type": "String"
+        },
+        "connections_azureeventgrid_externalid": {
+            "defaultValue": "/subscriptions/e1945056-88e4-4a46-8bff-99912406c00a/resourceGroups/durindevrg/providers/Microsoft.Web/connections/azureeventgrid",
+            "type": "String"
+        },
+        "connections_commondataservice_externalid": {
+            "defaultValue": "/subscriptions/e1945056-88e4-4a46-8bff-99912406c00a/resourceGroups/durindevrg/providers/Microsoft.Web/connections/commondataservice",
+            "type": "String"
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "type": "Microsoft.Logic/workflows",
+            "apiVersion": "2017-07-01",
+            "name": "[parameters('workflows_Logic_VendorOnBlobCreate_name')]",
+            "location": "centralindia",
+            "properties": {
+                "state": "Enabled",
+                "definition": {
+                    "$schema": "https://schema.management.azure.com/schemas/2016-06-01/Microsoft.Logic.json",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {
+                        "$connections": {
+                            "defaultValue": {},
+                            "type": "Object"
+                        }
+                    },
+                    "triggers": {
+                        "When_a_resource_event_occurs": {
+                            "splitOn": "@triggerBody()",
+                            "type": "ApiConnectionWebhook",
+                            "inputs": {
+                                "body": {
+                                    "properties": {
+                                        "destination": {
+                                            "endpointType": "webhook",
+                                            "properties": {
+                                                "endpointUrl": "@{listCallbackUrl()}"
+                                            }
+                                        },
+                                        "filter": {
+                                            "includedEventTypes": [
+                                                "Microsoft.Storage.BlobCreated"
+                                            ]
+                                        },
+                                        "topic": "[parameters('storageAccounts_vendordurinstorageupload_externalid')]"
+                                    }
+                                },
+                                "host": {
+                                    "connection": {
+                                        "name": "@parameters('$connections')['azureeventgrid']['connectionId']"
+                                    }
+                                },
+                                "path": "/subscriptions/e1945056-88e4-4a46-8bff-99912406c00a/providers/@{encodeURIComponent('Microsoft.Storage.StorageAccounts')}/resource/eventSubscriptions",
+                                "queries": {
+                                    "x-ms-api-version": "2017-09-15-preview"
+                                }
+                            }
+                        }
+                    },
+                    "actions": {
+                        "Condition_if_Blob_created": {
+                            "actions": {
+                                "Compose": {
+                                    "runAfter": {},
+                                    "type": "Compose",
+                                    "inputs": "@substring(triggerBody()?['subject'], add(indexOf(triggerBody()?['subject'],'/blobs/'), 7))"
+                                },
+                                "Condition_-_Check_for_ErrorMessage": {
+                                    "actions": {
+                                        "Create_error_log_record": {
+                                            "runAfter": {},
+                                            "type": "ApiConnection",
+                                            "inputs": {
+                                                "body": {
+                                                    "_media_assetcontainer_value": "@variables('ContainerId')",
+                                                    "media_name": "@variables('ErrorMessage')"
+                                                },
+                                                "host": {
+                                                    "connection": {
+                                                        "name": "@parameters('$connections')['commondataservice']['connectionId']"
+                                                    }
+                                                },
+                                                "method": "post",
+                                                "path": "/v2/datasets/@{encodeURIComponent(encodeURIComponent('unq50e2ec7e45344ace97f49f31b2dad.crm'))}/tables/@{encodeURIComponent(encodeURIComponent('media_asseterrorlogs'))}/items"
+                                            }
+                                        }
+                                    },
+                                    "runAfter": {
+                                        "Scope": [
+                                            "Succeeded",
+                                            "Failed"
+                                        ]
+                                    },
+                                    "expression": {
+                                        "and": [
+                                            {
+                                                "greater": [
+                                                    "@length(variables('ErrorMessage'))",
+                                                    0
+                                                ]
+                                            }
+                                        ]
+                                    },
+                                    "type": "If"
+                                },
+                                "Scope": {
+                                    "actions": {
+                                        "Add_a_new_row_-_Vendor_Asset_Files": {
+                                            "runAfter": {
+                                                "For_each_-_Vendors": [
+                                                    "Succeeded"
+                                                ]
+                                            },
+                                            "type": "ApiConnection",
+                                            "inputs": {
+                                                "body": {
+                                                    "_cr35f_asset_value": "@{variables('AssetId')}",
+                                                    "_cr35f_vendor_value": "@variables('VendorId')",
+                                                    "cr35f_blobpath": "@variables('DirectoryPath')",
+                                                    "cr35f_filesize": "@triggerBody()?['data']['contentLength']",
+                                                    "cr35f_filesizemb": "@div(int(triggerBody()?['data']['contentLength']) , 1048576)",
+                                                    "cr35f_filetype": 207940001,
+                                                    "cr35f_miscinfo": "@{triggerBody()?['data']['contentType']}",
+                                                    "cr35f_name": "@{variables('Names')[4]}",
+                                                    "cr35f_uploadstatus": 207940000
+                                                },
+                                                "host": {
+                                                    "connection": {
+                                                        "name": "@parameters('$connections')['commondataservice']['connectionId']"
+                                                    }
+                                                },
+                                                "method": "post",
+                                                "path": "/v2/datasets/@{encodeURIComponent(encodeURIComponent('unq50e2ec7e45344ace97f49f31b2dad.crm'))}/tables/@{encodeURIComponent(encodeURIComponent('cr35f_vendorassetfileses'))}/items"
+                                            }
+                                        },
+                                        "Condition": {
+                                            "actions": {
+                                                "Add_a_new_row": {
+                                                    "runAfter": {},
+                                                    "type": "ApiConnection",
+                                                    "inputs": {
+                                                        "body": {
+                                                            "_cr35f_asset_value": "@variables('AssetId')",
+                                                            "_cr35f_vendor_value": "@variables('VendorId')",
+                                                            "_cr35f_vendorassetfiles_value": "@body('Add_a_new_row_-_Vendor_Asset_Files')?['cr35f_vendorassetfilesid']",
+                                                            "cr35f_action": "Upload",
+                                                            "cr35f_count": "@1",
+                                                            "cr35f_name": "@{variables('VendorContainer')}/@{variables('DirectoryPath')}/@{body('Add_a_new_row_-_Vendor_Asset_Files')['cr35f_name']}"
+                                                        },
+                                                        "host": {
+                                                            "connection": {
+                                                                "name": "@parameters('$connections')['commondataservice']['connectionId']"
+                                                            }
+                                                        },
+                                                        "method": "post",
+                                                        "path": "/v2/datasets/@{encodeURIComponent(encodeURIComponent('unq50e2ec7e45344ace97f49f31b2dad.crm'))}/tables/@{encodeURIComponent(encodeURIComponent('cr35f_trackvendoractions'))}/items"
+                                                    }
+                                                }
+                                            },
+                                            "runAfter": {
+                                                "List_rows_TrackVendorActions": [
+                                                    "Succeeded"
+                                                ]
+                                            },
+                                            "else": {
+                                                "actions": {
+                                                    "For_each": {
+                                                        "foreach": "@body('List_rows_TrackVendorActions')?['value']",
+                                                        "actions": {
+                                                            "Increment_variable_-_count": {
+                                                                "runAfter": {
+                                                                    "Set_variable_-_count": [
+                                                                        "Succeeded"
+                                                                    ]
+                                                                },
+                                                                "type": "IncrementVariable",
+                                                                "inputs": {
+                                                                    "name": "count",
+                                                                    "value": 1
+                                                                }
+                                                            },
+                                                            "Set_variable_-_count": {
+                                                                "runAfter": {},
+                                                                "type": "SetVariable",
+                                                                "inputs": {
+                                                                    "name": "count",
+                                                                    "value": "@items('For_each')?['cr35f_count']"
+                                                                }
+                                                            },
+                                                            "Update_a_row__-_Track_Vendor_Actions": {
+                                                                "runAfter": {
+                                                                    "Increment_variable_-_count": [
+                                                                        "Succeeded"
+                                                                    ]
+                                                                },
+                                                                "type": "ApiConnection",
+                                                                "inputs": {
+                                                                    "body": {
+                                                                        "_cr35f_asset_value": "@variables('AssetId')",
+                                                                        "_cr35f_vendor_value": "@variables('VendorId')",
+                                                                        "_cr35f_vendorassetfiles_value": "@body('Add_a_new_row_-_Vendor_Asset_Files')?['cr35f_vendorassetfilesid']",
+                                                                        "cr35f_action": "Upload",
+                                                                        "cr35f_count": "@variables('count')",
+                                                                        "cr35f_name": "@{variables('VendorContainer')}/@{variables('DirectoryPath')}/@{body('Add_a_new_row_-_Vendor_Asset_Files')['cr35f_name']}"
+                                                                    },
+                                                                    "host": {
+                                                                        "connection": {
+                                                                            "name": "@parameters('$connections')['commondataservice']['connectionId']"
+                                                                        }
+                                                                    },
+                                                                    "method": "patch",
+                                                                    "path": "/v2/datasets/@{encodeURIComponent(encodeURIComponent('unq50e2ec7e45344ace97f49f31b2dad.crm'))}/tables/@{encodeURIComponent(encodeURIComponent('cr35f_trackvendoractions'))}/items/@{encodeURIComponent(encodeURIComponent(items('For_each')?['cr35f_trackvendoractionid']))}"
+                                                                }
+                                                            }
+                                                        },
+                                                        "runAfter": {},
+                                                        "type": "Foreach"
+                                                    }
+                                                }
+                                            },
+                                            "expression": {
+                                                "and": [
+                                                    {
+                                                        "equals": [
+                                                            "@length(body('List_rows_TrackVendorActions')?['value'])",
+                                                            0
+                                                        ]
+                                                    }
+                                                ]
+                                            },
+                                            "type": "If"
+                                        },
+                                        "For_each_-_Assets": {
+                                            "foreach": "@body('List_rows_-_Get_Assets')?['value']",
+                                            "actions": {
+                                                "Set_variable": {
+                                                    "runAfter": {},
+                                                    "type": "SetVariable",
+                                                    "inputs": {
+                                                        "name": "AssetId",
+                                                        "value": "@items('For_each_-_Assets')?['media_assetid']"
+                                                    }
+                                                }
+                                            },
+                                            "runAfter": {
+                                                "List_rows_-_Get_Assets": [
+                                                    "Succeeded"
+                                                ]
+                                            },
+                                            "type": "Foreach"
+                                        },
+                                        "For_each_-_Episodes": {
+                                            "foreach": "@body('List_rows_-_Get_Episodes')?['value']",
+                                            "actions": {
+                                                "Set_variable_-_EpisodeId": {
+                                                    "runAfter": {},
+                                                    "type": "SetVariable",
+                                                    "inputs": {
+                                                        "name": "EpisodeId",
+                                                        "value": "@items('For_each_-_Episodes')?['media_episodeid']"
+                                                    }
+                                                }
+                                            },
+                                            "runAfter": {
+                                                "List_rows_-_Get_Episodes": [
+                                                    "Succeeded"
+                                                ]
+                                            },
+                                            "type": "Foreach"
+                                        },
+                                        "For_each_-_Seasons": {
+                                            "foreach": "@body('List_rows_-_Get_Seasons')?['value']",
+                                            "actions": {
+                                                "Set_variable_-_SeasonId": {
+                                                    "runAfter": {},
+                                                    "type": "SetVariable",
+                                                    "inputs": {
+                                                        "name": "SeasonId",
+                                                        "value": "@items('For_each_-_Seasons')?['media_seasonid']"
+                                                    }
+                                                }
+                                            },
+                                            "runAfter": {
+                                                "List_rows_-_Get_Seasons": [
+                                                    "Succeeded"
+                                                ]
+                                            },
+                                            "type": "Foreach"
+                                        },
+                                        "For_each_-_Vendors": {
+                                            "foreach": "@body('List_rows_-_Get_Vendors')?['value']",
+                                            "actions": {
+                                                "Set_variable_2": {
+                                                    "runAfter": {},
+                                                    "type": "SetVariable",
+                                                    "inputs": {
+                                                        "name": "VendorId",
+                                                        "value": "@items('For_each_-_Vendors')?['media_vendorid']"
+                                                    }
+                                                }
+                                            },
+                                            "runAfter": {
+                                                "List_rows_-_Get_Vendors": [
+                                                    "Succeeded"
+                                                ]
+                                            },
+                                            "type": "Foreach"
+                                        },
+                                        "Get_Container_Id": {
+                                            "runAfter": {},
+                                            "type": "ApiConnection",
+                                            "inputs": {
+                                                "host": {
+                                                    "connection": {
+                                                        "name": "@parameters('$connections')['commondataservice']['connectionId']"
+                                                    }
+                                                },
+                                                "method": "get",
+                                                "path": "/v2/datasets/@{encodeURIComponent(encodeURIComponent('unq50e2ec7e45344ace97f49f31b2dad.crm'))}/tables/@{encodeURIComponent(encodeURIComponent('media_assetcontainers'))}/items",
+                                                "queries": {
+                                                    "$filter": "media_containerpath eq '@{variables('ContainerName')}'"
+                                                }
+                                            }
+                                        },
+                                        "Iterate_containers": {
+                                            "foreach": "@body('Get_Container_Id')?['value']",
+                                            "actions": {
+                                                "Set_variable_-_ContainerId": {
+                                                    "runAfter": {},
+                                                    "type": "SetVariable",
+                                                    "inputs": {
+                                                        "name": "ContainerId",
+                                                        "value": "@items('Iterate_containers')?['media_assetcontainerid']"
+                                                    }
+                                                }
+                                            },
+                                            "runAfter": {
+                                                "Get_Container_Id": [
+                                                    "Succeeded"
+                                                ]
+                                            },
+                                            "type": "Foreach"
+                                        },
+                                        "List_rows_-_Get_Assets": {
+                                            "runAfter": {
+                                                "For_each_-_Episodes": [
+                                                    "Succeeded"
+                                                ]
+                                            },
+                                            "type": "ApiConnection",
+                                            "inputs": {
+                                                "host": {
+                                                    "connection": {
+                                                        "name": "@parameters('$connections')['commondataservice']['connectionId']"
+                                                    }
+                                                },
+                                                "method": "get",
+                                                "path": "/v2/datasets/@{encodeURIComponent(encodeURIComponent('unq50e2ec7e45344ace97f49f31b2dad.crm'))}/tables/@{encodeURIComponent(encodeURIComponent('media_assets'))}/items",
+                                                "queries": {
+                                                    "$filter": "media_name eq '@{variables('AssetName')}' and _media_episode_value eq '@{variables('EpisodeId')}'"
+                                                }
+                                            }
+                                        },
+                                        "List_rows_-_Get_Episodes": {
+                                            "runAfter": {
+                                                "For_each_-_Seasons": [
+                                                    "Succeeded"
+                                                ]
+                                            },
+                                            "type": "ApiConnection",
+                                            "inputs": {
+                                                "host": {
+                                                    "connection": {
+                                                        "name": "@parameters('$connections')['commondataservice']['connectionId']"
+                                                    }
+                                                },
+                                                "method": "get",
+                                                "path": "/v2/datasets/@{encodeURIComponent(encodeURIComponent('unq50e2ec7e45344ace97f49f31b2dad.crm'))}/tables/@{encodeURIComponent(encodeURIComponent('media_episodes'))}/items",
+                                                "queries": {
+                                                    "$filter": "media_name eq '@{variables('EpisodeName')}' and _media_season_value eq  '@{variables('SeasonId')}'"
+                                                }
+                                            }
+                                        },
+                                        "List_rows_-_Get_Seasons": {
+                                            "runAfter": {
+                                                "Iterate_containers": [
+                                                    "Succeeded"
+                                                ]
+                                            },
+                                            "type": "ApiConnection",
+                                            "inputs": {
+                                                "host": {
+                                                    "connection": {
+                                                        "name": "@parameters('$connections')['commondataservice']['connectionId']"
+                                                    }
+                                                },
+                                                "method": "get",
+                                                "path": "/v2/datasets/@{encodeURIComponent(encodeURIComponent('unq50e2ec7e45344ace97f49f31b2dad.crm'))}/tables/@{encodeURIComponent(encodeURIComponent('media_seasons'))}/items",
+                                                "queries": {
+                                                    "$filter": "media_name eq '@{variables('SeasonName')}' and _media_show_value eq '@{variables('ContainerId')}'"
+                                                }
+                                            }
+                                        },
+                                        "List_rows_-_Get_Vendors": {
+                                            "runAfter": {
+                                                "For_each_-_Assets": [
+                                                    "Succeeded"
+                                                ]
+                                            },
+                                            "type": "ApiConnection",
+                                            "inputs": {
+                                                "host": {
+                                                    "connection": {
+                                                        "name": "@parameters('$connections')['commondataservice']['connectionId']"
+                                                    }
+                                                },
+                                                "method": "get",
+                                                "path": "/v2/datasets/@{encodeURIComponent(encodeURIComponent('unq50e2ec7e45344ace97f49f31b2dad.crm'))}/tables/@{encodeURIComponent(encodeURIComponent('media_vendors'))}/items",
+                                                "queries": {
+                                                    "$filter": "media_folderpath eq '@{variables('VendorContainer')}'"
+                                                }
+                                            }
+                                        },
+                                        "List_rows_TrackVendorActions": {
+                                            "runAfter": {
+                                                "Add_a_new_row_-_Vendor_Asset_Files": [
+                                                    "Succeeded"
+                                                ]
+                                            },
+                                            "type": "ApiConnection",
+                                            "inputs": {
+                                                "host": {
+                                                    "connection": {
+                                                        "name": "@parameters('$connections')['commondataservice']['connectionId']"
+                                                    }
+                                                },
+                                                "method": "get",
+                                                "path": "/v2/datasets/@{encodeURIComponent(encodeURIComponent('unq50e2ec7e45344ace97f49f31b2dad.crm'))}/tables/@{encodeURIComponent(encodeURIComponent('cr35f_trackvendoractions'))}/items",
+                                                "queries": {
+                                                    "$filter": "cr35f_name eq '@{variables('VendorContainer')}/@{variables('DirectoryPath')}/@{body('Add_a_new_row_-_Vendor_Asset_Files')['cr35f_name']}' and  cr35f_action eq 'Upload'"
+                                                }
+                                            }
+                                        },
+                                        "Logic-VendorAntiVirusScan": {
+                                            "runAfter": {
+                                                "Add_a_new_row_-_Vendor_Asset_Files": [
+                                                    "Succeeded"
+                                                ]
+                                            },
+                                            "type": "Workflow",
+                                            "inputs": {
+                                                "body": {
+                                                    "BlobUri": "@{triggerBody()?['data']?['url']}",
+                                                    "RecordId": "@body('Add_a_new_row_-_Vendor_Asset_Files')?['cr35f_vendorassetfilesid']"
+                                                },
+                                                "host": {
+                                                    "triggerName": "manual",
+                                                    "workflow": {
+                                                        "id": "[parameters('workflows_Logic_VendorAntiVirusScan_externalid')]"
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        "Logic-VendorExtractAndSaveMetadata": {
+                                            "runAfter": {
+                                                "Add_a_new_row_-_Vendor_Asset_Files": [
+                                                    "Succeeded"
+                                                ]
+                                            },
+                                            "type": "Workflow",
+                                            "inputs": {
+                                                "body": {
+                                                    "BlobUri": "@triggerBody()?['data']?['url']",
+                                                    "RecordId": "@body('Add_a_new_row_-_Vendor_Asset_Files')?['cr35f_vendorassetfilesid']"
+                                                },
+                                                "host": {
+                                                    "triggerName": "manual",
+                                                    "workflow": {
+                                                        "id": "[parameters('workflows_Logic_VendorExtractAndSaveMetadata_externalid')]"
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        "Set_variable_-_GetContainerId_-ErrorMessage": {
+                                            "runAfter": {
+                                                "Get_Container_Id": [
+                                                    "Failed",
+                                                    "TimedOut"
+                                                ]
+                                            },
+                                            "type": "SetVariable",
+                                            "inputs": {
+                                                "name": "ErrorMessage",
+                                                "value": "Failed to retrieve Container Id of @{variables('ContainerName')}"
+                                            }
+                                        }
+                                    },
+                                    "runAfter": {
+                                        "Set_Directory_Path_variable": [
+                                            "Succeeded"
+                                        ]
+                                    },
+                                    "type": "Scope"
+                                },
+                                "Set_Container_Name_variable": {
+                                    "runAfter": {
+                                        "Compose": [
+                                            "Succeeded"
+                                        ]
+                                    },
+                                    "type": "SetVariable",
+                                    "inputs": {
+                                        "name": "ContainerName",
+                                        "value": "@{substring(outputs('Compose'),0,indexOf(outputs('Compose'),'/'))}"
+                                    }
+                                },
+                                "Set_Directory_Path_variable": {
+                                    "runAfter": {
+                                        "Set_variable_-_AssetName": [
+                                            "Succeeded"
+                                        ]
+                                    },
+                                    "type": "SetVariable",
+                                    "inputs": {
+                                        "name": "DirectoryPath",
+                                        "value": "@{substring(outputs('Compose'),0,lastIndexOf(outputs('Compose'),'/'))}"
+                                    }
+                                },
+                                "Set_variable_-_AssetName": {
+                                    "runAfter": {
+                                        "Set_variable_-_EpisodeName": [
+                                            "Succeeded"
+                                        ]
+                                    },
+                                    "type": "SetVariable",
+                                    "inputs": {
+                                        "name": "AssetName",
+                                        "value": "@{variables('Names')[3]}"
+                                    }
+                                },
+                                "Set_variable_-_EpisodeName": {
+                                    "runAfter": {
+                                        "Set_variable_-_SeasonName": [
+                                            "Succeeded"
+                                        ]
+                                    },
+                                    "type": "SetVariable",
+                                    "inputs": {
+                                        "name": "EpisodeName",
+                                        "value": "@{variables('Names')[2]}"
+                                    }
+                                },
+                                "Set_variable_-_Names_array": {
+                                    "runAfter": {
+                                        "Set_variable_-_VendorContainer": [
+                                            "Succeeded"
+                                        ]
+                                    },
+                                    "type": "SetVariable",
+                                    "inputs": {
+                                        "name": "Names",
+                                        "value": "@split(outputs('Compose'), '/')"
+                                    }
+                                },
+                                "Set_variable_-_SeasonName": {
+                                    "runAfter": {
+                                        "Set_variable_-_Names_array": [
+                                            "Succeeded"
+                                        ]
+                                    },
+                                    "type": "SetVariable",
+                                    "inputs": {
+                                        "name": "SeasonName",
+                                        "value": "@{variables('Names')[1]}"
+                                    }
+                                },
+                                "Set_variable_-_SubjectSplit": {
+                                    "runAfter": {
+                                        "Set_Container_Name_variable": [
+                                            "Succeeded"
+                                        ]
+                                    },
+                                    "type": "SetVariable",
+                                    "inputs": {
+                                        "name": "SubjectSplit",
+                                        "value": "@split(triggerBody()?['subject'], '/')"
+                                    }
+                                },
+                                "Set_variable_-_VendorContainer": {
+                                    "runAfter": {
+                                        "Set_variable_-_SubjectSplit": [
+                                            "Succeeded"
+                                        ]
+                                    },
+                                    "type": "SetVariable",
+                                    "inputs": {
+                                        "name": "VendorContainer",
+                                        "value": "@{variables('SubjectSplit')[4]}"
+                                    }
+                                }
+                            },
+                            "runAfter": {
+                                "Initialize_variable": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "expression": {
+                                "and": [
+                                    {
+                                        "equals": [
+                                            "@triggerBody()?['eventType']",
+                                            "Microsoft.Storage.BlobCreated"
+                                        ]
+                                    }
+                                ]
+                            },
+                            "type": "If"
+                        },
+                        "Initialize_Directory_Path": {
+                            "runAfter": {
+                                "Initialize_variable_-_VendorId": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "InitializeVariable",
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "DirectoryPath",
+                                        "type": "string"
+                                    }
+                                ]
+                            }
+                        },
+                        "Initialize_variable": {
+                            "runAfter": {
+                                "Initialize_variable_NewAddedFileList": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "InitializeVariable",
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "count",
+                                        "type": "integer",
+                                        "value": 0
+                                    }
+                                ]
+                            }
+                        },
+                        "Initialize_variable_-_AssetId": {
+                            "runAfter": {
+                                "Initialize_variable_-_EpisodeId": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "InitializeVariable",
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "AssetId",
+                                        "type": "string"
+                                    }
+                                ]
+                            }
+                        },
+                        "Initialize_variable_-_AssetName": {
+                            "runAfter": {
+                                "Initialize_variable_-_EpisodeName": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "InitializeVariable",
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "AssetName",
+                                        "type": "string"
+                                    }
+                                ]
+                            }
+                        },
+                        "Initialize_variable_-_ContainerId": {
+                            "runAfter": {
+                                "Initialize_variable_-_AssetName": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "InitializeVariable",
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "ContainerId",
+                                        "type": "string"
+                                    }
+                                ]
+                            }
+                        },
+                        "Initialize_variable_-_ContainerName": {
+                            "runAfter": {},
+                            "type": "InitializeVariable",
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "ContainerName",
+                                        "type": "string"
+                                    }
+                                ]
+                            }
+                        },
+                        "Initialize_variable_-_EpisodeId": {
+                            "runAfter": {
+                                "Initialize_variable_-_SeasonId": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "InitializeVariable",
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "EpisodeId",
+                                        "type": "string"
+                                    }
+                                ]
+                            }
+                        },
+                        "Initialize_variable_-_EpisodeName": {
+                            "runAfter": {
+                                "Initialize_variable_-_SeasonName": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "InitializeVariable",
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "EpisodeName",
+                                        "type": "string"
+                                    }
+                                ]
+                            }
+                        },
+                        "Initialize_variable_-_ErrorMessage": {
+                            "runAfter": {
+                                "Initialize_variable_-_AssetId": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "InitializeVariable",
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "ErrorMessage",
+                                        "type": "string"
+                                    }
+                                ]
+                            }
+                        },
+                        "Initialize_variable_-_FilterAttributes": {
+                            "runAfter": {
+                                "Initialize_variable_-_UploadedFileCount": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "InitializeVariable",
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "FilterAttributes",
+                                        "type": "string"
+                                    }
+                                ]
+                            }
+                        },
+                        "Initialize_variable_-_SeasonId": {
+                            "runAfter": {
+                                "Initialize_variable_-_ContainerId": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "InitializeVariable",
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "SeasonId",
+                                        "type": "string"
+                                    }
+                                ]
+                            }
+                        },
+                        "Initialize_variable_-_SeasonName": {
+                            "runAfter": {
+                                "Initialize_variable__-_Names": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "InitializeVariable",
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "SeasonName",
+                                        "type": "string"
+                                    }
+                                ]
+                            }
+                        },
+                        "Initialize_variable_-_SubjectSplit": {
+                            "runAfter": {
+                                "Initialize_variable_-_ContainerName": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "InitializeVariable",
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "SubjectSplit",
+                                        "type": "array"
+                                    }
+                                ]
+                            }
+                        },
+                        "Initialize_variable_-_UploadedFileCount": {
+                            "runAfter": {
+                                "Initialize_variable_-_ErrorMessage": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "InitializeVariable",
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "UploadedFileCount",
+                                        "type": "integer",
+                                        "value": 0
+                                    }
+                                ]
+                            }
+                        },
+                        "Initialize_variable_-_VendorContainer": {
+                            "runAfter": {
+                                "Initialize_variable_-_SubjectSplit": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "InitializeVariable",
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "VendorContainer",
+                                        "type": "string"
+                                    }
+                                ]
+                            }
+                        },
+                        "Initialize_variable_-_VendorId": {
+                            "runAfter": {
+                                "Initialize_variable_-_VendorContainer": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "InitializeVariable",
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "VendorId",
+                                        "type": "string"
+                                    }
+                                ]
+                            }
+                        },
+                        "Initialize_variable_Blockingidattr": {
+                            "runAfter": {
+                                "Initialize_variable_-_FilterAttributes": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "InitializeVariable",
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "blockidattr",
+                                        "type": "string"
+                                    }
+                                ]
+                            }
+                        },
+                        "Initialize_variable_Episodeidattr": {
+                            "runAfter": {
+                                "Initialize_variable_Blockingidattr": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "InitializeVariable",
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "episodeidattr",
+                                        "type": "string"
+                                    }
+                                ]
+                            }
+                        },
+                        "Initialize_variable_NewAddedFileList": {
+                            "runAfter": {
+                                "Initialize_variable_Episodeidattr": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "InitializeVariable",
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "NewAddedFileList",
+                                        "type": "array"
+                                    }
+                                ]
+                            }
+                        },
+                        "Initialize_variable__-_Names": {
+                            "runAfter": {
+                                "Initialize_Directory_Path": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "InitializeVariable",
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "Names",
+                                        "type": "array"
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    "outputs": {}
+                },
+                "parameters": {
+                    "$connections": {
+                        "value": {
+                            "azureeventgrid": {
+                                "connectionId": "[parameters('connections_azureeventgrid_externalid')]",
+                                "connectionName": "azureeventgrid",
+                                "id": "/subscriptions/e1945056-88e4-4a46-8bff-99912406c00a/providers/Microsoft.Web/locations/centralindia/managedApis/azureeventgrid"
+                            },
+                            "commondataservice": {
+                                "connectionId": "[parameters('connections_commondataservice_externalid')]",
+                                "connectionName": "commondataservice",
+                                "id": "/subscriptions/e1945056-88e4-4a46-8bff-99912406c00a/providers/Microsoft.Web/locations/centralindia/managedApis/commondataservice"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    ]
+}
