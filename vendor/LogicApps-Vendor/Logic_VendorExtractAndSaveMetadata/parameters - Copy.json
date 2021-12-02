@@ -1,0 +1,21 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workflows_Logic_VendorExtractAndSaveMetadata_name": {
+            "value": null
+        },
+        "sites_func_durinmediatgoo7nanfx3ds_externalid": {
+            "value": null
+        },
+        "sites_VendorParseMetadataJson_externalid": {
+            "value": null
+        },
+        "connections_commondataservice_externalid": {
+            "value": null
+        },
+        "crmOrg": {
+            "value": "unq7df5913e396b48118865fe06ba29d.crm"
+        }
+    }
+}
